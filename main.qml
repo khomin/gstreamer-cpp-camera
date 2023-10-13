@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import "."
-import MyApp.Images
+import app.ImageAdapter
 
 Window {
     width: 1280 / 2;
@@ -14,8 +14,6 @@ Window {
         LiveImage {
             width: 1280;
             height: 720;
-            x: 0
-            y: 0
             image: LiveImageProvider.image
         }
     }
