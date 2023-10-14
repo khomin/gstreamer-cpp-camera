@@ -242,7 +242,7 @@ int tutorial_main (int argc, char *argv[]) {
 //    auto sinkToFile = std::make_shared<SinkFile>();
 
     srcFromScreen->addSink(sinkToImgFull);
-    sinkToImgFull->setImageProvider(provider);
+    sinkToImgFull->setImage(provider);
 
     sinkToImgFull->start();
     srcFromScreen->start();

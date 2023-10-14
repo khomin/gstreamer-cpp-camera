@@ -1,7 +1,7 @@
 #include "source_device.h"
 #include <iostream>
 
-GstFlowReturn on_new_sample_from_sink (GstElement * elt, SourceDevice* data);
+GstFlowReturn on_sample (GstElement * elt, SourceDevice* data);
 
 SourceDevice::SourceDevice() : SourceDevice(SourceDeviceType::Screen) {}
 
@@ -19,7 +19,7 @@ SourceDevice::SourceDevice(SourceDeviceType type) : m_type(type) {
     * push as fast as it can, hence the sync=false */
     auto sink_raw_image = gst_bin_get_by_name (GST_BIN (m_source), "sink_raw_image");
     g_object_set (G_OBJECT (sink_raw_image), "emit-signals", TRUE, "sync", FALSE, NULL);
-    g_signal_connect (sink_raw_image, "new-sample", G_CALLBACK (on_new_sample_from_sink), this);
+    g_signal_connect (sink_raw_image, "new-sample", G_CALLBACK (on_sample), this);
     gst_object_unref (sink_raw_image);
 }
 
@@ -32,7 +32,7 @@ void SourceDevice::pause() {}
 void SourceDevice::stop() {}
 
 /* called when the appsink notifies us that there is a new buffer ready for processing */
-GstFlowReturn on_new_sample_from_sink (GstElement * elt, SourceDevice* data) {
+GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
     GstSample *sample;
     GstBuffer *app_buffer, *buffer;
     GstFlowReturn ret = GstFlowReturn::GST_FLOW_OK;

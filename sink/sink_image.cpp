@@ -4,13 +4,13 @@
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
 
-GstFlowReturn on_sample_mirror(GstElement * elt, ImageProvider* data);
+GstFlowReturn on_sample(GstElement * elt, ImageProvider* data);
 
 SinkImage::SinkImage(ImageType type) : m_type(type) {
     if(m_type == ImageType::Full) {
-         m_sink_to_image = gst_parse_launch(cmd_full.c_str(), NULL);
+         m_sink_to_image = gst_parse_launch(cmd_full, NULL);
     } else if(m_type == ImageType::Preview) {
-        m_sink_to_image = gst_parse_launch(cmd_preview.c_str(), NULL);
+        m_sink_to_image = gst_parse_launch(cmd_preview, NULL);
     }
     if (m_sink_to_image == NULL) {
         std::cout << "not all elements created" << std::endl;
@@ -20,10 +20,9 @@ SinkImage::SinkImage(ImageType type) : m_type(type) {
 SinkImage::SinkImage() : SinkImage(ImageType::Preview) {}
 
 void SinkImage::start() {
-    // show mirror in canvas
     auto sink_to_image = gst_bin_get_by_name (GST_BIN (m_sink_to_image), "sink_to_image");
     g_object_set (G_OBJECT(sink_to_image), "emit-signals", TRUE, NULL);
-    g_signal_connect (sink_to_image, "new-sample", G_CALLBACK (on_sample_mirror), m_imageProvider);
+    g_signal_connect (sink_to_image, "new-sample", G_CALLBACK (on_sample), m_image);
     gst_element_set_state (m_sink_to_image, GST_STATE_PLAYING);
 }
 
@@ -40,11 +39,11 @@ void SinkImage::putSample(GstSample* sample) {
     gst_object_unref (source_to_image);
 }
 
-void SinkImage::setImageProvider(ImageProvider* imageProvider) {
-    m_imageProvider = imageProvider;
+void SinkImage::setImage(ImageProvider* image) {
+    m_image = image;
 }
 
-GstFlowReturn on_sample_mirror(GstElement * elt, ImageProvider* image) {
+GstFlowReturn on_sample(GstElement * elt, ImageProvider* image) {
     GstSample *sample;
     GstBuffer *app_buffer, *buffer;
     GstElement *source;
