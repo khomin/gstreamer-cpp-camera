@@ -16,10 +16,21 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 
 set(PROJECT_SOURCES
     main.cpp
-    image/imageProvider.cpp
-    image/imageProvider.h
-    image/liveImage.cpp
-    image/liveImage.h
+    # sources
+    source/source_base.cpp
+    source/source_base.h
+    source/source_device.h
+    source/source_device.cpp
+    # sinks
+    sink/sink_image.h
+    sink/sink_image.cpp
+    sink/sink_base.h
+    sink/sink_base.cpp
+    # image
+    image_provider/image_provider.cpp
+    image_provider/image_provider.h
+    image_provider/live_image.cpp
+    image_provider/live_image.h
     qml.qrc
 )
 #    gst_launch_pipeline.c
@@ -519,6 +530,10 @@ if(APPLE)
 endif()
 
 target_include_directories(${PROJECT} PUBLIC
+    ./
+    ./source
+    ./sink
+    ./image_provider
     ${LIBRARIES_INCLUDE}
 )
 

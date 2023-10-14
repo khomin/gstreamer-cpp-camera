@@ -1,4 +1,4 @@
-#include "imageProvider.h"
+#include "image_provider.h"
 
 ImageProvider::ImageProvider(QObject *parent)
     : QObject(parent)
