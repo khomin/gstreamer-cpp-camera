@@ -21,7 +21,7 @@
 #include "image_provider/image_provider.h"
 
 ImageProvider* provider = NULL;
-QFile* outFile;
+//QFile* outFile;
 
 //typedef struct {
 //    GMainLoop *loop;
@@ -226,6 +226,7 @@ GstDeviceMonitor* setup_raw_video_source_device_monitor (void) {
 
 #include "source/source_device.h"
 #include "sink/sink_image.h"
+#include "sink/sink_file.h"
 
 int tutorial_main (int argc, char *argv[]) {
     std::cout << "hello" << std::endl;
@@ -234,18 +235,27 @@ int tutorial_main (int argc, char *argv[]) {
 
     auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc);
     auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen);
-//    auto srcDecode = std::make_shared<SourceDecode>();
+    // TODO
+    //auto srcDecode = std::make_shared<SourceDecode>();
 
     auto sinkToImgPreview = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
     auto sinkToImgFull = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-//    auto sinkToEncode = std::make_shared<SinkEncode>();
-//    auto sinkToFile = std::make_shared<SinkFile>();
+    auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
+    // TODO
+    //auto sinkToEncode = std::make_shared<SinkEncode>();
 
+    //
+    // 1) web -> image
     srcFromScreen->addSink(sinkToImgFull);
     sinkToImgFull->setImage(provider);
-
     sinkToImgFull->start();
     srcFromScreen->start();
+
+    //
+    // 2) web -> file
+//    srcFromScreen->addSink(sinkToFile);
+//    srcFromScreen->start();
+//    sinkToFile->start();
 
     g_print ("Let's run!\n");
     auto loop = g_main_loop_new (NULL, FALSE);

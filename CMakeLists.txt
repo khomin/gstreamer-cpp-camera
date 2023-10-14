@@ -22,10 +22,14 @@ set(PROJECT_SOURCES
     source/source_device.h
     source/source_device.cpp
     # sinks
-    sink/sink_image.h
-    sink/sink_image.cpp
     sink/sink_base.h
     sink/sink_base.cpp
+    sink/sink_image.h
+    sink/sink_image.cpp
+    sink/sink_file.h
+    sink/sink_file.cpp
+    sink/sink_encode.h
+    sink/sink_encode.cpp
     # image
     image_provider/image_provider.cpp
     image_provider/image_provider.h
