@@ -65,13 +65,14 @@ int tutorial_main (int argc, char *argv[]) {
 //    srcFromScreen->start();
 //    sinkToFile->start();
 
-//    // 3) webc -> image
-//    //         -> encode -> decode -> image
+    // 3) webc -> image
+    //         -> encode -> decode -> image
     sinkToImgFull->setImage(image1);
     sinkToImgPreview->setImage(image2);
 
     srcFromScreen->addSink(sinkToEncode);
     srcFromScreen->addSink(sinkToImgFull);
+
     srcDecode->addSink(sinkToImgPreview);
 
     sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len) {

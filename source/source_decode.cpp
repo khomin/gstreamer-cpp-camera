@@ -5,7 +5,7 @@ GstFlowReturn on_sample (GstElement * elt, SourceDecode* data);
 
 SourceDecode::SourceDecode() : SourceDecode(SourceDecodeType::Todo1) {}
 
-std::vector<GstSample*> m_samples;
+//std::vector<GstSample*> m_samples;
 
 static void
 cb_need_data2 (GstElement *appsrc,
@@ -86,7 +86,7 @@ void SourceDecode::putData(uint8_t* data, uint32_t len) {
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
     gst_buffer_fill(buffer, 0, data, len);
 
-    std::chrono::nanoseconds ns = std::chrono::high_resolution_clock::now().time_since_epoch();
+//    std::chrono::nanoseconds ns = std::chrono::high_resolution_clock::now().time_since_epoch();
 //    buffer->pts = ns.count();
 //1947998612670
 //1970464120096
@@ -102,7 +102,7 @@ void SourceDecode::putData(uint8_t* data, uint32_t len) {
 
 void SourceDecode::putSample(GstSample* sample) {
     auto sample2 = gst_sample_copy(sample);
-    m_samples.push_back(sample2);
+//    m_samples.push_back(sample2);
 
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
     if (source == NULL) {
@@ -114,6 +114,8 @@ void SourceDecode::putSample(GstSample* sample) {
 //            "stream-type", GstAppStreamType::GST_APP_STREAM_TYPE_STREAM,
 //            "format", GST_FORMAT_TIME, NULL);
 //      g_signal_connect (source, "need-data", G_CALLBACK (cb_need_data2), m_pipe);
+
+//    buffer->pts
 
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source), sample2);
     if(ret != GST_FLOW_OK) {
@@ -151,7 +153,7 @@ GstFlowReturn on_sample(GstElement * elt, SourceDecode* data) {
     GstBuffer *app_buffer, *buffer;
     GstFlowReturn ret = GstFlowReturn::GST_FLOW_OK;
 
-    std::cout << "on_sample is called" << std::endl;
+//    std::cout << "on_sample is called" << std::endl;
 
     /* get the sample from appsink */
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
