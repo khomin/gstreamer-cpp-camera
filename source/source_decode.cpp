@@ -52,14 +52,14 @@ SourceDecode::SourceDecode(SourceDecodeType type) : m_type(type) {
 //        "is-live", TRUE,
 //        "block", TRUE,
 //        NULL);
-      g_object_set(
-          source,
-          "is-live", TRUE,
-          "stream-type", 0,
-          "format", GST_FORMAT_TIME,
-          "do-timestamp", TRUE,
-          NULL
-        );
+  g_object_set(
+      source,
+      "is-live", TRUE,
+      "stream-type", GstAppStreamType::GST_APP_STREAM_TYPE_STREAM,
+      "format", GST_FORMAT_TIME,
+      "do-timestamp", TRUE,
+      NULL
+    );
 
     gst_object_unref (source);
 
@@ -70,11 +70,11 @@ void SourceDecode::start() {
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     if (sink_out == NULL) {
         std::cout << "value is NULL" << std::endl;
+    } else {
+        g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
+        g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
+        gst_object_unref (sink_out);
     }
-    g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
-    gst_object_unref (sink_out);
-
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
@@ -87,7 +87,7 @@ void SourceDecode::putData(uint8_t* data, uint32_t len) {
     gst_buffer_fill(buffer, 0, data, len);
 
     std::chrono::nanoseconds ns = std::chrono::high_resolution_clock::now().time_since_epoch();
-    buffer->pts = ns.count();
+//    buffer->pts = ns.count();
 //1947998612670
 //1970464120096
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
