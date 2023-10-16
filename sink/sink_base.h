@@ -12,8 +12,10 @@ public:
     virtual void stop() {}
     virtual void putData(uint8_t* data, uint32_t len);
     virtual void putSample(GstSample* sample);
+    uint64_t getId();
 
-    uint64_t id;
+protected:
+    uint64_t m_id;
 };
 
 #endif // SINKBASE_H

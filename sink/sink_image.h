@@ -19,7 +19,7 @@ public:
 
 private:
     ImageProvider* m_image = NULL;
-    GstElement * m_sink  = NULL;
+    GstElement * m_pipe  = NULL;
     ImageType m_type = ImageType::Full;
 
 protected:

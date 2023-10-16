@@ -16,11 +16,11 @@ public:
     void putSample(GstSample* sample) override;
 
 private:
-    GstElement* m_sink  = NULL;
-    std::ofstream m_file ;
+    GstElement* m_pipe  = NULL;
+    std::ofstream m_file;
 
 protected:
-    static constexpr auto cmd = "appsrc name=source_to_out ! videoconvert ! x264enc ! flvmux ! appsink name=sink_out";
+    static constexpr auto cmd = "appsrc name=source_to_out ! videoconvert ! x264enc ! mp4mux ! appsink name=sink_out";
 };
 
 #endif

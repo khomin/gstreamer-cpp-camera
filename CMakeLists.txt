@@ -21,6 +21,8 @@ set(PROJECT_SOURCES
     source/source_base.h
     source/source_device.h
     source/source_device.cpp
+    source/source_decode.h
+    source/source_decode.cpp
     # sinks
     sink/sink_base.h
     sink/sink_base.cpp

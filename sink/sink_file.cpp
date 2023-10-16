@@ -8,8 +8,8 @@ GstFlowReturn on_sample(GstElement * elt, std::ofstream* file);
 
 SinkFile::SinkFile(std::string path) {
     m_file = std::ofstream(path.c_str(), std::ios::out | std::ios :: binary);
-    m_sink = gst_parse_launch(cmd, NULL);
-    if (m_sink == NULL) {
+    m_pipe = gst_parse_launch(cmd, NULL);
+    if (m_pipe == NULL) {
         std::cout << "not all elements created" << std::endl;
     }
 }
@@ -19,14 +19,14 @@ SinkFile::~SinkFile() {
 }
 
 void SinkFile::start() {
-    auto source = gst_bin_get_by_name (GST_BIN (m_sink), "source_to_out");
+    auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     g_object_set (source, "format", GST_FORMAT_TIME, NULL);
     gst_object_unref (source);
 
-    auto sink_out = gst_bin_get_by_name (GST_BIN (m_sink), "sink_out");
+    auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), &m_file);
-    gst_element_set_state (m_sink, GST_STATE_PLAYING);
+    gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
 void SinkFile::stop() {
@@ -34,7 +34,7 @@ void SinkFile::stop() {
 }
 
 void SinkFile::putSample(GstSample* sample) {
-    auto source_to_out = gst_bin_get_by_name (GST_BIN (m_sink), "source_to_out");
+    auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source_to_out), sample);
     if(ret != GST_FLOW_OK) {
         std::cout << "push_sample error: " << ret  << std::endl;

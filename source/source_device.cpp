@@ -7,24 +7,24 @@ SourceDevice::SourceDevice() : SourceDevice(SourceDeviceType::Screen) {}
 
 SourceDevice::SourceDevice(SourceDeviceType type) : m_type(type) {
     if(m_type == SourceDeviceType::Screen) {
-         m_source = gst_parse_launch(cmd_screen, NULL);
+         m_pipe = gst_parse_launch(cmd_screen, NULL);
     } else if(m_type == SourceDeviceType::Webc) {
-        m_source = gst_parse_launch(cmd_webc, NULL);
+        m_pipe = gst_parse_launch(cmd_webc, NULL);
     }
-    if (m_source == NULL) {
+    if (m_pipe == NULL) {
         std::cout << "not all elements created" << std::endl;
     }
     /* we use appsink in push mode, it sends us a signal when data is available
     * and we pull out the data in the signal callback. We want the appsink to
     * push as fast as it can, hence the sync=false */
-    auto sink_raw_image = gst_bin_get_by_name (GST_BIN (m_source), "sink_raw_image");
+    auto sink_raw_image = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_raw_image");
     g_object_set (G_OBJECT (sink_raw_image), "emit-signals", TRUE, "sync", FALSE, NULL);
     g_signal_connect (sink_raw_image, "new-sample", G_CALLBACK (on_sample), this);
     gst_object_unref (sink_raw_image);
 }
 
 void SourceDevice::start() {
-    gst_element_set_state (m_source, GST_STATE_PLAYING);
+    gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
 void SourceDevice::pause() {}

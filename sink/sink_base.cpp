@@ -2,7 +2,7 @@
 #include <random>
 
 SinkBase::SinkBase() {
-    id = arc4random();
+    m_id = arc4random();
 }
 
 SinkBase::~SinkBase() {}
@@ -10,3 +10,8 @@ SinkBase::~SinkBase() {}
 void SinkBase::putData(uint8_t* data, uint32_t len) {}
 
 void SinkBase::putSample(GstSample* sample) {}
+
+
+uint64_t SinkBase::getId() {
+    return m_id;
+}

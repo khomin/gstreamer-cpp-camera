@@ -12,9 +12,14 @@ Window {
 
     Row{
         LiveImage {
-            width: 1280;
-            height: 720;
-            image: LiveImageProvider.image
+            width: 200;//1280;
+            height: 200;//720;
+            image: provider1.image
+        }
+        LiveImage {
+            width: 200;//1280;
+            height: 200;//720;
+            image: provider2.image
         }
     }
 }
