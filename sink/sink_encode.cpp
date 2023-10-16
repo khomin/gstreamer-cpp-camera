@@ -24,11 +24,28 @@ SinkEncode::~SinkEncode() {
 void SinkEncode::start() {
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     g_object_set (source, "format", GST_FORMAT_TIME, NULL);
+//    g_object_set(source,
+//        "stream-type", GST_APP_STREAM_TYPE_STREAM,
+//        "format", GST_FORMAT_TIME,
+//        "do-timestamp", TRUE,
+//        "is-live", TRUE,
+//        "block", TRUE,
+//        NULL);
+    g_object_set(
+        source,
+        "is-live", TRUE,
+        "stream-type", 0,
+        "format", GST_FORMAT_TIME,
+        "do-timestamp", TRUE,
+        NULL
+      );
     gst_object_unref (source);
 
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
+    gst_object_unref (sink_out);
+
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
@@ -81,9 +98,7 @@ GstFlowReturn on_sample(GstElement * elt, SinkEncode* data) {
             GstMapInfo mapInfo;
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
-//            if(m_file != NULL) {
-//                m_file.write((char*)mapInfo.data, mapInfo.size);
-//            }
+//            m_file.write((char*)mapInfo.data, mapInfo.size);
 
             data->putEncoded((uint8_t*)mapInfo.data, mapInfo.size);
             data->putEncodedSample(sample);

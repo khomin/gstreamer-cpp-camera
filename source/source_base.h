@@ -18,7 +18,7 @@ public:
     virtual void stop() {}
 
     std::vector<std::shared_ptr<SinkBase>> m_sinks;
-    GstElement *m_pipe = NULL;
+    GstElement* m_pipe = NULL;
 };
 
 #endif // SOURCEBASE_H

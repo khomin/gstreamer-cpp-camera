@@ -34,6 +34,15 @@ int tutorial_main (int argc, char *argv[]) {
     // auto data = new ProgramData();
     gst_init(NULL, NULL);
 
+    if (!gst_debug_is_active()) {
+        gst_debug_set_active(TRUE);
+//        GstDebugLevel dbglevel = gst_debug_get_default_threshold();
+//        if (dbglevel < GST_LEVEL_ERROR) {
+//            dbglevel = GST_LEVEL_ERROR;
+            gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+//        }
+    }
+
     auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc);
     auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen);
     auto srcDecode = std::make_shared<SourceDecode>();
