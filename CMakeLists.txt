@@ -37,6 +37,9 @@ set(PROJECT_SOURCES
     image_provider/image_provider.h
     image_provider/live_image.cpp
     image_provider/live_image.h
+    # utils
+    utils/stringf.h
+    utils/config.h
     qml.qrc
 )
 #    gst_launch_pipeline.c
@@ -46,6 +49,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
+#    add_library(${PROJECT} SHARED
+#        ${PROJECT_SOURCES}
+#    )
+
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ${PROJECT} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -55,8 +62,6 @@ else()
         add_library(${PROJECT} SHARED
             ${PROJECT_SOURCES}
         )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(${PROJECT}
           ${PROJECT_SOURCES}
@@ -540,6 +545,7 @@ target_include_directories(${PROJECT} PUBLIC
     ./source
     ./sink
     ./image_provider
+    ./config
     ${LIBRARIES_INCLUDE}
 )
 

@@ -1,26 +1,38 @@
 #include "source_device.h"
+#include "utils/stringf.h"
 #include <iostream>
 
 GstFlowReturn on_sample (GstElement * elt, SourceDevice* data);
 
 SourceDevice::SourceDevice() : SourceDevice(SourceDeviceType::Screen) {}
 
-SourceDevice::SourceDevice(SourceDeviceType type) : m_type(type) {
-    if(m_type == SourceDeviceType::Screen) {
-         m_pipe = gst_parse_launch(cmd_screen, NULL);
-    } else if(m_type == SourceDeviceType::Webc) {
-        m_pipe = gst_parse_launch(cmd_webc, NULL);
-    }
+SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(type) {
+       std::string cmd = StringFormatter::format(
+                                type == SourceDeviceType::Screen ? cmd_screen : cmd_webc,
+#if __APPLE__
+                                cmd_screen_macos,
+#elif _WIN32
+                                cmd_screen_win,
+#else
+                                cmd_screen_linux,
+#endif
+                                option == OptionType::TimeOverlay ? show_timeoverlay : ""
+                                );
+    m_pipe = gst_parse_launch(cmd.c_str(), NULL);
     if (m_pipe == NULL) {
-        std::cout << "not all elements created" << std::endl;
+        std::cerr << "not all elements created" << std::endl;
     }
     /* we use appsink in push mode, it sends us a signal when data is available
     * and we pull out the data in the signal callback. We want the appsink to
     * push as fast as it can, hence the sync=false */
-    auto sink_raw_image = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_raw_image");
-    g_object_set (G_OBJECT (sink_raw_image), "emit-signals", TRUE, "sync", FALSE, NULL);
-    g_signal_connect (sink_raw_image, "new-sample", G_CALLBACK (on_sample), this);
-    gst_object_unref (sink_raw_image);
+    auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
+    g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", FALSE, NULL);
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
+    gst_object_unref (sink_out);
+}
+
+SourceDevice::~SourceDevice() {
+    std::cout << "SourceDevice - deleted" << std::endl;
 }
 
 void SourceDevice::start() {
@@ -55,7 +67,7 @@ GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
         gst_buffer_unmap(buffer, &mapInfo);
         gst_sample_unref(sample);
     } else {
-        printf ("BUFFER IS NULL \n\n\n");
+        std::cerr << "BUFFER IS NULL" << std::endl;
     }
     return ret; // return GstFlowReturn::GST_FLOW_OK;
 }

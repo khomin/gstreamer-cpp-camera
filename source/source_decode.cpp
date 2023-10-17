@@ -122,6 +122,7 @@ void SourceDecode::putSample(GstSample* sample) {
         std::cout << "push_sample error: " << ret  << std::endl;
     }
     gst_object_unref(source);
+    gst_sample_unref(sample);
 //    gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 
 //    GstMapInfo mapInfo;

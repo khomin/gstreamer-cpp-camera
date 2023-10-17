@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import "."
-import app.ImageAdapter
+import ImageAdapter
 
 Window {
     width: 1280 / 2;
