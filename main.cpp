@@ -14,20 +14,18 @@
 #include <TargetConditionals.h>
 #endif
 
-#include <QThread>
-#include <QFile>
 #include <QStandardPaths>
+
 #include "image_provider/live_image.h"
 #include "image_provider/image_provider.h"
-
-ImageProvider* image1 = NULL;
-ImageProvider* image2 = NULL;
-
 #include "source/source_device.h"
 #include "sink/sink_image.h"
 #include "sink/sink_file.h"
 #include "sink/sink_encode.h"
 #include "source/source_decode.h"
+
+ImageProvider* image1 = NULL;
+ImageProvider* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
@@ -115,50 +113,4 @@ int main(int argc, char *argv[]) {
 
     auto ret = app.exec();
     return ret;
-}
-
-static gboolean my_bus_func (GstBus * bus, GstMessage * message, gpointer user_data) {
-  GstDevice *device;
-  gchar *name;
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_DEVICE_ADDED:
-      gst_message_parse_device_added (message, &device);
-      name = gst_device_get_display_name (device);
-      g_print("Device added: %s\n", name);
-      g_free (name);
-      gst_object_unref (device);
-      break;
-    case GST_MESSAGE_DEVICE_REMOVED:
-      gst_message_parse_device_removed (message, &device);
-      name = gst_device_get_display_name (device);
-      g_print("Device removed: %s\n", name);
-      g_free (name);
-      gst_object_unref (device);
-      break;
-    default:
-      break;
-  }
-
-  return G_SOURCE_CONTINUE;
-}
-
-GstDeviceMonitor* setup_raw_video_source_device_monitor (void) {
-    GstDeviceMonitor *monitor;
-    GstBus *bus;
-    GstCaps *caps;
-
-    monitor = gst_device_monitor_new ();
-
-    bus = gst_device_monitor_get_bus (monitor);
-    gst_bus_add_watch (bus, my_bus_func, NULL);
-    gst_object_unref (bus);
-
-    caps = gst_caps_new_empty_simple ("video/x-raw");
-    gst_device_monitor_add_filter (monitor, "Video/Source", caps);
-    gst_caps_unref (caps);
-
-    gst_device_monitor_start (monitor);
-
-    return monitor;
 }

@@ -509,7 +509,9 @@ elseif(UNIX AND NOT APPLE)
     pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
     pkg_check_modules(GST_VIDEO REQUIRED gstreamer-video-1.0)
     set(LIBRARIES
-        ${GST_APP_LIBRARIES} ${GST_VIDEO_LIBRARIES}
+        ${GST_APP_LIBRARIES}
+        ${GST_VIDEO_LIBRARIES}
+        -lxcb
     )
     set(LIBRARIES_INCLUDE
         /usr/lib/x86_64-linux-gnu/glib-2.0/include

@@ -2,7 +2,7 @@
 #include <random>
 
 SinkBase::SinkBase() {
-    m_id = arc4random();
+    m_id = random();
 }
 
 SinkBase::~SinkBase() {}
