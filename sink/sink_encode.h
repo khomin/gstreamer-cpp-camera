@@ -22,7 +22,7 @@ private:
     std::function<void(uint8_t*, uint32_t,uint32_t, uint32_t)> m_on_encoded = NULL;
 
 protected:
-    static constexpr const auto cmd = "appsrc name=source_to_out ! videoconvert ! videoscale ! videorate ! video/x-raw,format=%s,width=%d,height=%d,framerate=%d/1 ! queue ! %s bitrate=%d ! appsink name=sink_out";
+    static constexpr const auto cmd = "appsrc name=source_to_out ! videoconvert ! videoscale ! videorate ! video/x-raw,format=%s,width=%d,height=%d,framerate=%d/1 ! queue ! %s bitrate=%d ! appsink name=sink_out max-buffers=1";
     // sync=false drop=true max-buffers=10";
 };
 

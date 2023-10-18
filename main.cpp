@@ -45,11 +45,12 @@ int tutorial_main (int argc, char *argv[]) {
 
     //auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{426,240,30,"I420","vp8enc",""});
 //    bitrate=30000 bframes=6 threads=15 subme=10 key-int-max=20
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{2560 /2,1600 /2,20,200000,"I420","x264enc","tune=zerolatency speed-preset=ultrafast"});
+//    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{2560 /2,1600 /2,10,200000,"I420","x264enc","tune=zerolatency speed-preset=ultrafast"});
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{2560 /4,1600 /4, 20, 400, "I420","x264enc","tune=zerolatency key-int-max=201"});
     //byte-stream=true tune=zerolatency
 
     //auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig{426,240,30,"x-vp8","I420","vp8dec"});
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig{2560 /2 ,1600 /2,20,200000,"x-h264","I420","avdec_h264"});
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig{2560 /4 ,1600 /4, 20, 400, "x-h264","I420","avdec_h264"});
 
     auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
     auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
