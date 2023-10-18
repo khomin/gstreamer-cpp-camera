@@ -1,19 +1,24 @@
 #include "sink_image.h"
-#include <iostream>
+#include "utils/stringf.h"
+#include "utils/measure.h"
 
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
+#include <iostream>
 
 GstFlowReturn on_sample(GstElement * elt, ImageProvider* data);
 
 SinkImage::SinkImage(ImageType type) : m_type(type) {
+    std::string cmdf;
     if(m_type == ImageType::Full) {
-         m_pipe = gst_parse_launch(cmd_full, NULL);
+        cmdf = StringFormatter::format(cmd, "");
     } else if(m_type == ImageType::Preview) {
-        m_pipe = gst_parse_launch(cmd_preview, NULL);
+        cmdf = StringFormatter::format(cmd,
+            StringFormatter::format("! videoscale ! video/x-raw,width=%d,height=%d", 380 * 2, 240 * 2).c_str());
     }
+    m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
     if (m_pipe == NULL) {
-        std::cout << "not all elements created" << std::endl;
+        std::cerr << "not all elements created" << std::endl;
     }
 }
 
@@ -70,13 +75,15 @@ GstFlowReturn on_sample(GstElement * elt, ImageProvider* image) {
             GstMapInfo mapInfo;
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
+            Measure::instance()->onImageSampleReady();
+
             if(image != NULL) {
                 image->setImage(imW, imH, (uint8_t*)mapInfo.data, mapInfo.size);
             }
             gst_buffer_unmap(buffer, &mapInfo);
             gst_sample_unref(sample);
         } else {
-            printf ("BUFFER IS NULL \n\n\n");
+            std::cerr << "buffer is null: " << ret  << std::endl;
         }
     }
     return ret;

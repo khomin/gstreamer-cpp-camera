@@ -1,9 +1,10 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import "."
-import ImageAdapter
+import ImageAdapter 1.0
 
 Window {
+    id: window
     width: 1280 / 2;
     height: 720 / 2;
     visible: true
@@ -12,13 +13,13 @@ Window {
 
     Row{
         LiveImage {
-            width: 200;//1280;
-            height: 200;//720;
+            width: window.width / 2
+            height: window.height
             image: provider1.image
         }
         LiveImage {
-            width: 200;//1280;
-            height: 200;//720;
+            width: window.width / 2
+            height: window.height
             image: provider2.image
         }
     }

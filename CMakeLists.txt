@@ -39,7 +39,9 @@ set(PROJECT_SOURCES
     image_provider/live_image.h
     # utils
     utils/stringf.h
-    utils/config.h
+    utils/decoder_config.h
+    utils/encoder_config.h
+    utils/measure.h
     qml.qrc
 )
 #    gst_launch_pipeline.c
@@ -511,7 +513,7 @@ elseif(UNIX AND NOT APPLE)
     set(LIBRARIES
         ${GST_APP_LIBRARIES}
         ${GST_VIDEO_LIBRARIES}
-        -lxcb
+        -lxcb -ldl -pthread
     )
     set(LIBRARIES_INCLUDE
         /usr/lib/x86_64-linux-gnu/glib-2.0/include

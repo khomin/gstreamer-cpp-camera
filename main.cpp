@@ -15,6 +15,7 @@
 #endif
 
 #include <QStandardPaths>
+#include <QDateTime>
 
 #include "image_provider/live_image.h"
 #include "image_provider/image_provider.h"
@@ -28,7 +29,7 @@ ImageProvider* image1 = NULL;
 ImageProvider* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
-//#define USE_VIDEO_TO_ENCODE_FILE
+//#define USE_VIDEO_TO_ENCODE_FIL E
 #define USE_VIDEO_TO_ENCODE_CODEC
 
 int tutorial_main (int argc, char *argv[]) {
@@ -36,19 +37,29 @@ int tutorial_main (int argc, char *argv[]) {
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
 
-    auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc);
-    auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen);
-    auto srcDecode = std::make_shared<SourceDecode>();
+    auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc,
+                                                      SourceDevice::OptionType::TimeOverlay);
 
-    auto sinkToImgPreview = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
-    auto sinkToImgFull = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
+    auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen,
+                                                        SourceDevice::OptionType::TimeOverlay);
+
+    //auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{426,240,30,"I420","vp8enc",""});
+//    bitrate=30000 bframes=6 threads=15 subme=10 key-int-max=20
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{2560 /2,1600 /2,20,200000,"I420","x264enc","tune=zerolatency speed-preset=ultrafast"});
+    //byte-stream=true tune=zerolatency
+
+    //auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig{426,240,30,"x-vp8","I420","vp8dec"});
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig{2560 /2 ,1600 /2,20,200000,"x-h264","I420","avdec_h264"});
+
+    auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
+    auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
+
     auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
-    auto sinkToEncode = std::make_shared<SinkEncode>();
 
 #ifdef USE_VIDEO_TO_IMAGE_PREVIEW
-    srcFromScreen->addSink(sinkToImgFull);
-    sinkToImgFull->setImage(image1);
-    sinkToImgFull->start();
+    srcFromScreen->addSink(sinkToImgLeft);
+    sinkToImgLeft->setImage(image1);
+    sinkToImgLeft->start();
     srcFromScreen->start();
 #endif
 
@@ -59,19 +70,19 @@ int tutorial_main (int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
-    sinkToImgFull->setImage(image1);
-    sinkToImgPreview->setImage(image2);
+    sinkToImgLeft->setImage(image1);
+    sinkToImgRight->setImage(image2);
 
     srcFromScreen->addSink(sinkToEncode);
-    srcFromScreen->addSink(sinkToImgFull);
+    srcFromScreen->addSink(sinkToImgLeft);
 
-    srcDecode->addSink(sinkToImgPreview);
+    srcDecode->addSink(sinkToImgRight);
 
-    sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len) {
-        srcDecode->putData(data, len);
+    sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len,uint32_t pts, uint32_t dts) {
+        srcDecode->putDataToDecode(data, len);
     });
-    sinkToImgFull->start();
-    sinkToImgPreview->start();
+    sinkToImgLeft->start();
+    sinkToImgRight->start();
     srcFromScreen->start();
     sinkToEncode->start();
     srcDecode->start();

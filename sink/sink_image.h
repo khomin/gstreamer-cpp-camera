@@ -23,8 +23,7 @@ private:
     ImageType m_type = ImageType::Full;
 
 protected:
-    static constexpr auto cmd_full = "appsrc name=source_to_out ! videoconvert ! appsink name=sink_out";
-    static constexpr auto cmd_preview = "appsrc name=source_to_out ! videoconvert ! videoscale ! video/x-raw,width=426,height=240 ! appsink name=sink_out";
+    static constexpr auto cmd = "appsrc name=source_to_out ! videoconvert %s ! queue ! appsink name=sink_out drop=true";
 };
 
 #endif
