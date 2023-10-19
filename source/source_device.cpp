@@ -1,6 +1,7 @@
 #include "source_device.h"
 #include "utils/stringf.h"
 #include <iostream>
+#include <thread>
 
 GstFlowReturn on_sample (GstElement * elt, SourceDevice* data);
 
@@ -20,7 +21,8 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(ty
                                 );
     m_pipe = gst_parse_launch(cmd.c_str(), NULL);
     if (m_pipe == NULL) {
-        std::cerr << "not all elements created" << std::endl;
+        std::cerr << tag << "pipe failed" << std::endl;
+        m_error = true;
     }
     /* we use appsink in push mode, it sends us a signal when data is available
     * and we pull out the data in the signal callback. We want the appsink to
@@ -29,14 +31,21 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(ty
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", FALSE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
     gst_object_unref (sink_out);
+    std::cout << tag << ": created" << std::endl;
 }
 
 SourceDevice::~SourceDevice() {
-    std::cout << "SourceDevice - deleted" << std::endl;
+    if(m_pipe != NULL) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(m_pipe);
+    }
+    std::cout << tag << ": destroyed" << std::endl;
 }
 
 void SourceDevice::start() {
-    gst_element_set_state (m_pipe, GST_STATE_PLAYING);
+    if(m_pipe != NULL) {
+        gst_element_set_state (m_pipe, GST_STATE_PLAYING);
+    }
 }
 
 void SourceDevice::pause() {}
@@ -61,13 +70,14 @@ GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
         GstMapInfo mapInfo;
         gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
-        for(auto & it : data->m_sinks) {
-            it->putSample(sample);
+        if(data != NULL) {
+            auto sinks = data->sinks;
+            for(auto & it : sinks) {
+                it->putSample(sample);
+            }
         }
         gst_buffer_unmap(buffer, &mapInfo);
         gst_sample_unref(sample);
-    } else {
-        std::cerr << "BUFFER IS NULL" << std::endl;
     }
-    return ret; // return GstFlowReturn::GST_FLOW_OK;
+    return ret;
 }

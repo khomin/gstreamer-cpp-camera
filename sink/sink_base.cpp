@@ -15,3 +15,7 @@ void SinkBase::putSample(GstSample* sample) {}
 uint64_t SinkBase::getId() {
     return m_id;
 }
+
+bool SinkBase::getError() {
+    return m_error;
+}

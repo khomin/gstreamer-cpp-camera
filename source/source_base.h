@@ -16,9 +16,13 @@ public:
     virtual void start() {}
     virtual void pause() {}
     virtual void stop() {}
+    bool getError();
 
-    std::vector<std::shared_ptr<SinkBase>> m_sinks;
+    std::vector<std::shared_ptr<SinkBase>> sinks;
+
+protected:
     GstElement* m_pipe = NULL;
+    bool m_error = false;
 };
 
 #endif // SOURCEBASE_H

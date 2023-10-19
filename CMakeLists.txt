@@ -42,6 +42,7 @@ set(PROJECT_SOURCES
     utils/decoder_config.h
     utils/encoder_config.h
     utils/measure.h
+    utils/codec_type.h
     qml.qrc
 )
 #    gst_launch_pipeline.c

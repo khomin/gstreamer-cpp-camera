@@ -21,6 +21,7 @@ public:
 
 private:
     SourceDeviceType m_type = SourceDeviceType::Screen;
+    static constexpr auto tag = "SourceDevice";
 
     static constexpr const char* cmd_screen = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=30/1 ! appsink name=sink_out sync=false";
     static constexpr const char* cmd_webc = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=30/1 ! appsink name=sink_out sync=false";

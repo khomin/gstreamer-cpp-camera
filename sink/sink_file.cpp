@@ -10,12 +10,18 @@ SinkFile::SinkFile(std::string path) {
     m_file = std::ofstream(path.c_str(), std::ios::out | std::ios :: binary);
     m_pipe = gst_parse_launch(cmd, NULL);
     if (m_pipe == NULL) {
-        std::cout << "not all elements created" << std::endl;
+        std::cerr << tag << "pipe failed" << std::endl;
     }
+    std::cout << tag << ": created" << std::endl;
 }
 
 SinkFile::~SinkFile() {
+    if(m_pipe != NULL) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(m_pipe);
+    }
     m_file.close();
+    std::cout << tag << ": destroyed" << std::endl;
 }
 
 void SinkFile::start() {
@@ -62,8 +68,6 @@ GstFlowReturn on_sample(GstElement * elt, std::ofstream* file) {
             }
             gst_buffer_unmap(buffer, &mapInfo);
             gst_sample_unref(sample);
-        } else {
-            printf ("BUFFER IS NULL \n\n\n");
         }
     }
     return ret;

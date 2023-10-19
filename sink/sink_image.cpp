@@ -18,22 +18,34 @@ SinkImage::SinkImage(ImageType type) : m_type(type) {
     }
     m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
     if (m_pipe == NULL) {
-        std::cerr << "not all elements created" << std::endl;
+        std::cerr << tag << "pipe failed" << std::endl;
+        m_error = true;
     }
+    std::cout << tag << ": created" << std::endl;
 }
 
 SinkImage::SinkImage() : SinkImage(ImageType::Preview) {}
 
-SinkImage::~SinkImage() {}
+SinkImage::~SinkImage() {
+    if(m_pipe != NULL) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(m_pipe);
+    }
+    std::cout << tag << ": destroyed" << std::endl;
+}
 
 void SinkImage::start() {
+    std::lock_guard<std::mutex> lock(m_lock);
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     g_object_set (source, "format", GST_FORMAT_TIME, NULL);
+    if(source == NULL) m_error = true;
     gst_object_unref (source);
 
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), m_image);
+    if(source == NULL) m_error = true;
+    gst_object_unref (sink_out);
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
@@ -42,6 +54,7 @@ void SinkImage::stop() {
 }
 
 void SinkImage::putSample(GstSample* sample) {
+    std::lock_guard<std::mutex> lock(m_lock);
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source_to_out), sample);
     if(ret != GST_FLOW_OK) {
@@ -51,6 +64,7 @@ void SinkImage::putSample(GstSample* sample) {
 }
 
 void SinkImage::setImage(ImageProvider* image) {
+    std::lock_guard<std::mutex> lock(m_lock);
     m_image = image;
 }
 
@@ -82,8 +96,6 @@ GstFlowReturn on_sample(GstElement * elt, ImageProvider* image) {
             }
             gst_buffer_unmap(buffer, &mapInfo);
             gst_sample_unref(sample);
-        } else {
-            std::cerr << "buffer is null: " << ret  << std::endl;
         }
     }
     return ret;

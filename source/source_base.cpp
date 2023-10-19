@@ -5,9 +5,13 @@ SourceBase::SourceBase() {
 }
 
 void SourceBase::addSink(std::shared_ptr<SinkBase> sink) {
-    m_sinks.push_back(sink);
+    sinks.push_back(sink);
 }
 
 void SourceBase::removeSink(std::shared_ptr<SinkBase> sink) {
 
+}
+
+bool SourceBase::getError() {
+    return m_error;
 }

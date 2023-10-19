@@ -20,6 +20,7 @@ private:
     std::ofstream m_file;
 
 protected:
+    static constexpr auto tag = "SinkFile";
     static constexpr auto cmd = "appsrc name=source_to_out ! videoconvert ! x264enc ! mp4mux ! appsink name=sink_out";
 };
 
