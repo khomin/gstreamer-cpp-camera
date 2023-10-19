@@ -17,16 +17,15 @@ public:
 
     void start() override;
     void pause() override;
-    void stop() override;
 
 private:
     SourceDeviceType m_type = SourceDeviceType::Screen;
     static constexpr auto tag = "SourceDevice";
 
-    static constexpr const char* cmd_screen = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=30/1 ! appsink name=sink_out sync=false";
-    static constexpr const char* cmd_webc = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=30/1 ! appsink name=sink_out sync=false";
+    static constexpr const char* cmd_screen = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=20/1 ! appsink name=sink_out sync=false";
+    static constexpr const char* cmd_webc = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=20/1 ! appsink name=sink_out sync=false";
 // avfvideosrc capture-screen=true capture-screen-cursor=true capture-screen-mouse-clicks=true ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=30/1 ! osxvideosink
-    static constexpr const char* cmd_screen_macos = "avfvideosrc capture-screen=true capture-screen-cursor=true capture-screen-mouse-clicks=true";
+    static constexpr const char* cmd_screen_macos = "avfvideosrc capture-screen=true capture-screen-cursor=true";
     static constexpr const char* cmd_screen_linux = "ximagesrc";
     static constexpr const char* cmd_screen_win = "TODO";
 

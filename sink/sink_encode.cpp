@@ -27,8 +27,9 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         "is-live", TRUE,
         "stream-type", 0,
         "format", GST_FORMAT_TIME,
-        "leaky-type", GST_APP_LEAKY_TYPE_DOWNSTREAM,
+//        "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
         "do-timestamp", TRUE,
+//        "max-buffers", 2, // didn't work
         NULL
       );
     if(source == NULL) {
@@ -59,10 +60,6 @@ void SinkEncode::start() {
         gst_object_unref (sink_out);
     }
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
-}
-
-void SinkEncode::stop() {
-    // TODO
 }
 
 void SinkEncode::putSample(GstSample* sample) {

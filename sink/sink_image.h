@@ -13,7 +13,6 @@ public:
     virtual ~SinkImage();
 
     void start() override;
-    void stop() override;
     void putSample(GstSample* sample) override;
     void setImage(ImageProvider* imageProvider);
 

@@ -50,8 +50,6 @@ void SourceDevice::start() {
 
 void SourceDevice::pause() {}
 
-void SourceDevice::stop() {}
-
 /* called when the appsink notifies us that there is a new buffer ready for processing */
 GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
     GstSample *sample;

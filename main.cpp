@@ -31,8 +31,8 @@ ImageProvider* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
-#define USE_CRASH_TEST
+#define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_CRASH_TEST
 
 int tutorial_main (int argc, char *argv[]) {
     gst_init(NULL, NULL);
@@ -135,6 +135,12 @@ int tutorial_main (int argc, char *argv[]) {
 
         g_print ("Let's run!\n");
         g_main_loop_run (loop);
+
+        srcFromWebc = NULL;
+        sinkToEncode = NULL;
+        srcDecode = NULL;
+        sinkToImgLeft = NULL;
+        sinkToImgRight = NULL;
 
         std::cout << "test " << i+1 << " end" << std::endl;
     }

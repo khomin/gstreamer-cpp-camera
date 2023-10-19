@@ -12,7 +12,6 @@ public:
     virtual ~SinkFile();
 
     void start() override;
-    void stop() override;
     void putSample(GstSample* sample) override;
 
 private:

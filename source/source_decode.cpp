@@ -42,6 +42,7 @@ void SourceDecode::start() {
         "stream-type", GstAppStreamType::GST_APP_STREAM_TYPE_STREAM,
         "format", GST_FORMAT_TIME,
         "do-timestamp", TRUE,
+//        "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
         NULL
     );
     gst_object_unref (source);
@@ -58,8 +59,6 @@ void SourceDecode::start() {
 }
 
 void SourceDecode::pause() {}
-
-void SourceDecode::stop() {}
 
 void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lock(m_lock);

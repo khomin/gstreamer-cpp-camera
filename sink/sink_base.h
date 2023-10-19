@@ -9,7 +9,6 @@ public:
     SinkBase();
     virtual ~SinkBase();
     virtual void start() {}
-    virtual void stop() {}
     virtual void putData(uint8_t* data, uint32_t len);
     virtual void putSample(GstSample* sample);
     uint64_t getId();

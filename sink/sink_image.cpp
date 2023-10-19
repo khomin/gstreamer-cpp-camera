@@ -49,10 +49,6 @@ void SinkImage::start() {
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
-void SinkImage::stop() {
-    // TODO
-}
-
 void SinkImage::putSample(GstSample* sample) {
     std::lock_guard<std::mutex> lock(m_lock);
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");

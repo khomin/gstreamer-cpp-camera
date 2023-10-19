@@ -15,7 +15,6 @@ public:
 
     virtual void start() {}
     virtual void pause() {}
-    virtual void stop() {}
     bool getError();
 
     std::vector<std::shared_ptr<SinkBase>> sinks;

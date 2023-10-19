@@ -35,10 +35,6 @@ void SinkFile::start() {
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
-void SinkFile::stop() {
-    // TODO
-}
-
 void SinkFile::putSample(GstSample* sample) {
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source_to_out), sample);

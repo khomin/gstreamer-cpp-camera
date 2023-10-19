@@ -17,7 +17,6 @@ public:
 
     void start() override;
     void pause() override;
-    void stop() override;
 
     void putDataToDecode(uint8_t* data, uint32_t len);
 
@@ -25,7 +24,7 @@ private:
     std::mutex m_lock;
 
     static constexpr auto tag = "SourceDecode";
-    static constexpr const char* cmd = "appsrc name=source_to_decode ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink_out drop=true";
+    static constexpr const char* cmd = "appsrc name=source_to_decode ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink_out";
 };
 
 #endif // SOURCE_DECODE_H
