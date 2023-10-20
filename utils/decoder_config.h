@@ -6,22 +6,22 @@
 #include "utils/codec_type.h"
 
 struct DecoderConfig {
-    int width = 0;
-    int height = 0;
-    int framerate = 0;
-    int bitrate = 0;
+    uint64_t  width = 0;
+    uint64_t  height = 0;
+    uint64_t  framerate = 0;
+    uint64_t bitrate = 0;
     std::string codecInVideo;
     std::string pixelFormat;
     std::string decoder;
 
-    static DecoderConfig make(CodecType type, int width, int height, int frameRate, int bitrate) {
+    static DecoderConfig make(CodecType type, uint64_t  width, uint64_t  height, uint64_t  frameRate, uint64_t  bitrate) {
         switch(type) {
         case CodecType::Codec3gp:
             return DecoderConfig{width, height, frameRate, bitrate, "","",""};
         case CodecType::Codecmp4:
             return DecoderConfig{width, height, frameRate, bitrate, "x-h264","I420","avdec_h264"};
         case CodecType::CodecAvc:{}
-            return DecoderConfig{width, height, frameRate, bitrate, "x-h264","I420","avdec_h264"};
+            return DecoderConfig{width, height, frameRate, bitrate, "x-h264","I420","h264parse ! avdec_h264"};
         case CodecType::CodecHevc:{}
             return DecoderConfig{width, height, frameRate, bitrate, "","",""};
         case CodecType::CodecVp8:{}

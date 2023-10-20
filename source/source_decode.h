@@ -11,7 +11,7 @@
 
 class SourceDecode : public SourceBase {
 public:
-    SourceDecode(DecoderConfig config);
+    explicit SourceDecode(DecoderConfig config);
     SourceDecode() = delete;
     ~SourceDecode();
 
@@ -24,7 +24,7 @@ private:
     std::mutex m_lock;
 
     static constexpr auto tag = "SourceDecode";
-    static constexpr const char* cmd = "appsrc name=source_to_decode ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink_out";
+    static constexpr const char* cmd = "appsrc name=source_to_decode ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif // SOURCE_DECODE_H

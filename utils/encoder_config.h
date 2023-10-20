@@ -6,15 +6,15 @@
 #include "utils/codec_type.h"
 
 struct EncoderConfig {
-    int width = 0;
-    int height = 0;
-    int framerate = 0;
-    int bitrate = 0;
+    uint64_t  width = 0;
+    uint64_t  height = 0;
+    uint64_t  framerate = 0;
+    uint64_t  bitrate = 0;
     std::string pixelFormat;
     std::string codec;
     std::string codecOptions;
 
-    static EncoderConfig make(CodecType type, int width, int height, int frameRate, int bitrate) {
+    static EncoderConfig make(CodecType type, uint64_t  width, uint64_t  height, uint64_t  frameRate, uint64_t  bitrate) {
         switch(type) {
         case CodecType::Codec3gp:
             return EncoderConfig{width, height, frameRate, bitrate, "","",""};

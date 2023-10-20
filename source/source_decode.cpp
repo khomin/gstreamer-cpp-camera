@@ -1,6 +1,7 @@
 #include "source_decode.h"
 #include "utils/stringf.h"
 #include "utils/measure.h"
+#include <gst/pbutils/codec-utils.h>
 #include <iostream>
 
 GstFlowReturn on_sample (GstElement * elt, SourceDecode* data);
@@ -64,7 +65,6 @@ void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lock(m_lock);
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
     gst_buffer_fill(buffer, 0, data, len);
-
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
     auto ret = gst_app_src_push_buffer(GST_APP_SRC (source_to_out), buffer);
     if(ret != GST_FLOW_OK) {
@@ -78,27 +78,22 @@ void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
 GstFlowReturn on_sample(GstElement * elt, SourceDecode* data) {
     GstSample *sample;
     GstBuffer *app_buffer, *buffer;
-    GstFlowReturn ret = GstFlowReturn::GST_FLOW_OK;
-
-    /* get the sample from appsink */
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
 
-    if(sample == NULL) {
-        return ret;
-    }
-    buffer = gst_sample_get_buffer(sample);
+    if(sample != NULL) {
+        buffer = gst_sample_get_buffer(sample);
+        if(buffer != NULL) {
+            GstMapInfo mapInfo;
+            gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
-    if(buffer != NULL) {
-        GstMapInfo mapInfo;
-        gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
+            Measure::instance()->onDecodeSampleReady();
 
-        Measure::instance()->onDecodeSampleReady();
-
-        for(auto & it : data->sinks) {
-            it->putSample(sample);
+            for(auto & it : data->sinks) {
+                it->putSample(sample);
+            }
+            gst_buffer_unmap(buffer, &mapInfo);
         }
-        gst_buffer_unmap(buffer, &mapInfo);
         gst_sample_unref(sample);
     }
-    return ret;
+    return GstFlowReturn::GST_FLOW_OK;
 }

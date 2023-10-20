@@ -54,28 +54,22 @@ void SourceDevice::pause() {}
 GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
     GstSample *sample;
     GstBuffer *app_buffer, *buffer;
-    GstFlowReturn ret = GstFlowReturn::GST_FLOW_OK;
-
-    /* get the sample from appsink */
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
+    if(sample != NULL) {
+        buffer = gst_sample_get_buffer(sample);
+        if (buffer != NULL) {
+            GstMapInfo mapInfo;
+            gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
-    if(sample == NULL) {
-        return ret;
-    }
-    buffer = gst_sample_get_buffer(sample);
-
-    if(buffer != NULL) {
-        GstMapInfo mapInfo;
-        gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
-
-        if(data != NULL) {
-            auto sinks = data->sinks;
-            for(auto & it : sinks) {
-                it->putSample(sample);
+            if (data != NULL) {
+                auto sinks = data->sinks;
+                for (auto &it: sinks) {
+                    it->putSample(sample);
+                }
             }
+            gst_buffer_unmap(buffer, &mapInfo);
         }
-        gst_buffer_unmap(buffer, &mapInfo);
         gst_sample_unref(sample);
     }
-    return ret;
+    return GstFlowReturn::GST_FLOW_OK;
 }

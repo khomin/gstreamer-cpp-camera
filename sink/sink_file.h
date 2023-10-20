@@ -7,7 +7,7 @@
 
 class SinkFile : public SinkBase {
 public:
-    SinkFile(std::string path);
+    explicit SinkFile(std::string path);
     SinkFile() = delete;
     virtual ~SinkFile();
 

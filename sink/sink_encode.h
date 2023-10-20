@@ -7,7 +7,7 @@
 
 class SinkEncode : public SinkBase {
 public:
-    SinkEncode(EncoderConfig config);
+    explicit SinkEncode(EncoderConfig config);
     SinkEncode() = delete;
     ~SinkEncode();
 

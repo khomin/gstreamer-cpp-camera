@@ -80,9 +80,6 @@ GstFlowReturn on_sample(GstElement * elt, std::function<void(uint8_t*, uint32_t,
     GstSample *sample;
     GstBuffer *app_buffer, *buffer;
     GstElement *source;
-    GstFlowReturn ret = GstFlowReturn::GST_FLOW_OK;
-
-    /* get the sample from appsink */
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
 
     if(sample != NULL) {
@@ -98,8 +95,8 @@ GstFlowReturn on_sample(GstElement * elt, std::function<void(uint8_t*, uint32_t,
                 (*data)((uint8_t*)mapInfo.data, mapInfo.size, buffer->pts, buffer->dts);
             }
             gst_buffer_unmap(buffer, &mapInfo);
-            gst_sample_unref(sample);
         }
+        gst_sample_unref(sample);
     }
-    return ret;
+    return GstFlowReturn::GST_FLOW_OK;
 }

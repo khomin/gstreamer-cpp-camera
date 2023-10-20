@@ -32,9 +32,10 @@ ImageProvider* image2 = NULL;
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
 #define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
 
-int tutorial_main (int argc, char *argv[]) {
+int runLoop (int argc, char *argv[]) {
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
@@ -87,14 +88,20 @@ int tutorial_main (int argc, char *argv[]) {
 
     srcDecode->addSink(sinkToImgRight);
 
-    sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len,uint32_t pts, uint32_t dts) {
+    sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len, uint32_t pts, uint32_t dts) {
         srcDecode->putDataToDecode(data, len);
     });
     sinkToImgLeft->start();
     sinkToImgRight->start();
-    srcFromScreen->start();
-    sinkToEncode->start();
-    srcDecode->start();
+    // make it more realtime like, activate encode when everything is ready
+    auto tr = std::thread([&] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        sinkToEncode->start();
+        srcFromScreen->start();
+        srcDecode->start();
+    });
+    tr.detach();
+
     g_print ("Let's run!\n");
     g_main_loop_run (loop);
 #endif
@@ -145,6 +152,41 @@ int tutorial_main (int argc, char *argv[]) {
         std::cout << "test " << i+1 << " end" << std::endl;
     }
 #endif
+
+#ifdef USE_DECODE_FROM_FILE
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 2560 /4 ,1600 /4, 20, 400));
+    auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
+    auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
+    sinkToImgLeft->setImage(image1);
+    sinkToImgRight->setImage(image2);
+    srcDecode->addSink(sinkToImgRight);
+
+    auto tr = std::thread([&] {
+        QFile inputFile("/Users/khominvladimir/Desktop/raw.json");
+        if (inputFile.open(QIODevice::ReadOnly)) {
+            QTextStream in(&inputFile);
+            while (!in.atEnd()) {
+                QString line = in.readLine();
+                auto raw = QByteArray::fromBase64(line.toUtf8());
+                srcDecode->putDataToDecode((uint8_t*)raw.data(), raw.length());
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
+            inputFile.close();
+        }
+    });
+    tr.detach();
+
+    srcDecode->start();
+    sinkToImgLeft->start();
+    sinkToImgRight->start();
+
+    g_print ("Let's run!\n");
+    g_main_loop_run (loop);
+
+    srcDecode = NULL;
+    sinkToImgLeft = NULL;
+    sinkToImgRight = NULL;
+#endif
     g_print ("Going out\n");
     return 0;
 }
@@ -169,7 +211,7 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("provider2", image2);
 
     auto tr = std::thread([&] {
-        tutorial_main(0, NULL);
+        runLoop(0, NULL);
         QCoreApplication::exit(-1);
     });
     tr.detach();

@@ -8,9 +8,9 @@ class SinkImage : public SinkBase {
 public:
     enum class ImageType { Full, Preview};
 
-    SinkImage(ImageType type);
+    explicit SinkImage(ImageType type);
     SinkImage();
-    virtual ~SinkImage();
+    ~SinkImage() override;
 
     void start() override;
     void putSample(GstSample* sample) override;

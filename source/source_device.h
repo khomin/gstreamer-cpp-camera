@@ -11,7 +11,7 @@ public:
     enum class SourceDeviceType { Webc, Screen };
     enum class OptionType { None, TimeOverlay };
 
-    SourceDevice(SourceDeviceType type, OptionType option = OptionType::None);
+    explicit SourceDevice(SourceDeviceType type, OptionType option = OptionType::None);
     SourceDevice();
     ~SourceDevice();
 
