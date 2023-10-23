@@ -35,8 +35,14 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(ty
 }
 
 SourceDevice::~SourceDevice() {
-    if(m_pipe != NULL) {
+    if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
+        auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
+        auto src = gst_bin_get_by_name (GST_BIN (m_pipe), "src");
+        auto rb = gst_bin_remove(GST_BIN(m_pipe),GST_ELEMENT(sink_out));
+        auto rb2 = gst_bin_remove(GST_BIN(m_pipe),GST_ELEMENT(src));
+        gst_object_unref (sink_out);
+        gst_object_unref (src);
         gst_object_unref(m_pipe);
     }
     std::cout << tag << ": destroyed" << std::endl;
@@ -48,12 +54,14 @@ void SourceDevice::start() {
     }
 }
 
-void SourceDevice::pause() {}
+void SourceDevice::pause() {
+    gst_element_set_state (m_pipe, GST_STATE_PAUSED);
+}
 
 /* called when the appsink notifies us that there is a new buffer ready for processing */
 GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
     GstSample *sample;
-    GstBuffer *app_buffer, *buffer;
+    GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
     if(sample != NULL) {
         buffer = gst_sample_get_buffer(sample);
