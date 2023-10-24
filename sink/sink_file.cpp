@@ -17,6 +17,7 @@ SinkFile::SinkFile(std::string path) {
 
 SinkFile::~SinkFile() {
     if(m_pipe != NULL) {
+        m_is_running = false;
         gst_element_set_state(m_pipe, GST_STATE_NULL);
         gst_object_unref(m_pipe);
     }
@@ -32,6 +33,7 @@ void SinkFile::start() {
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), &m_file);
+    m_is_running = true;
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 

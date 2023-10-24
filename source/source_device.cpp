@@ -50,6 +50,7 @@ SourceDevice::~SourceDevice() {
 
 void SourceDevice::start() {
     if(m_pipe != NULL) {
+        gst_element_set_state (m_pipe, GST_STATE_PAUSED);
         gst_element_set_state (m_pipe, GST_STATE_PLAYING);
     }
 }
@@ -58,7 +59,6 @@ void SourceDevice::pause() {
     gst_element_set_state (m_pipe, GST_STATE_PAUSED);
 }
 
-/* called when the appsink notifies us that there is a new buffer ready for processing */
 GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
     GstSample *sample;
     GstBuffer *buffer;
@@ -72,7 +72,9 @@ GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
             if (data != NULL) {
                 auto sinks = data->sinks;
                 for (auto &it: sinks) {
-                    it->putSample(sample);
+                    if(it->isRunning()) {
+                        it->putSample(sample);
+                    }
                 }
             }
             gst_buffer_unmap(buffer, &mapInfo);

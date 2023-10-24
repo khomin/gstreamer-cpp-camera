@@ -43,7 +43,6 @@ void SourceDecode::start() {
         "stream-type", GstAppStreamType::GST_APP_STREAM_TYPE_STREAM,
         "format", GST_FORMAT_TIME,
         "do-timestamp", TRUE,
-//        "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
         NULL
     );
     gst_object_unref (source);
@@ -56,6 +55,7 @@ void SourceDecode::start() {
         g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
         gst_object_unref (sink_out);
     }
+    gst_element_set_state (m_pipe, GST_STATE_PAUSED);
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
@@ -89,7 +89,9 @@ GstFlowReturn on_sample(GstElement * elt, SourceDecode* data) {
             Measure::instance()->onDecodeSampleReady();
 
             for(auto & it : data->sinks) {
-                it->putSample(sample);
+                if(it->isRunning()) {
+                    it->putSample(sample);
+                }
             }
             gst_buffer_unmap(buffer, &mapInfo);
         }

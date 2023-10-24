@@ -27,9 +27,8 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         "is-live", TRUE,
         "stream-type", 0,
         "format", GST_FORMAT_TIME,
-//        "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
+        //"leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // can be helpful but is only since 1.20
         "do-timestamp", TRUE,
-//        "max-buffers", 2, // didn't work
         NULL
       );
     if(source == NULL) {
@@ -43,6 +42,7 @@ SinkEncode::SinkEncode(EncoderConfig config) {
 SinkEncode::~SinkEncode() {
     m_on_encoded = NULL;
     if(m_pipe != NULL) {
+        m_is_running = false;
         gst_element_set_state(m_pipe, GST_STATE_NULL);
         gst_object_unref(m_pipe);
     }
@@ -59,6 +59,8 @@ void SinkEncode::start() {
         }
         gst_object_unref (sink_out);
     }
+    m_is_running = true;
+    gst_element_set_state (m_pipe, GST_STATE_PAUSED);
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
 }
 
@@ -72,7 +74,7 @@ void SinkEncode::putSample(GstSample* sample) {
     Measure::instance()->onEncodePutSample();
 }
 
-void SinkEncode::setOnEncoded(std::function<void(uint8_t*, uint32_t, uint32_t, uint32_t)> cb) {
+void SinkEncode::setOnEncoded(std::function<void(uint8_t*, uint32_t, uint64_t, uint64_t)> cb) {
     m_on_encoded = cb;
 }
 
