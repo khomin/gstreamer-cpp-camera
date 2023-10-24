@@ -8,18 +8,18 @@ GstFlowReturn on_sample (GstElement * elt, SourceDevice* data);
 SourceDevice::SourceDevice() : SourceDevice(SourceDeviceType::Screen) {}
 
 SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(type) {
-       std::string cmd = StringFormatter::format(
-                                type == SourceDeviceType::Screen ? cmd_screen : cmd_webc,
+    std::string cmdf = StringFormatter::format(
+            cmd,
 #if __APPLE__
-                                cmd_screen_macos,
+            type == SourceDeviceType::Screen ? cmd_screen_macos : cmd_camera_macos,
 #elif _WIN32
-                                cmd_screen_win,
+            type == SourceDeviceType::Screen ? cmd_screen_win : cmd_camera_win,
 #else
-                                cmd_screen_linux,
+            type == SourceDeviceType::Screen ? cmd_screen_linux : cmd_camera_linux,
 #endif
-                                option == OptionType::TimeOverlay ? show_timeoverlay : ""
-                                );
-    m_pipe = gst_parse_launch(cmd.c_str(), NULL);
+            option == OptionType::TimeOverlay ? show_time_overlay : ""
+    );
+    m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
