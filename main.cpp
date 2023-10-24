@@ -139,33 +139,39 @@ int runLoop (int argc, char *argv[]) {
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
     auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000));
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,7204, 20, 900000));
-    auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-    auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280 * 2,720 * 2, 20, 2000000 / 1000));
+    auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
+    auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
     srcFromScreen->addSink(sinkToEncode);
     srcFromScreen->addSink(sinkToImgLeft);
+    sinkToImgLeft->setImage(image1);
+    sinkToImgRight->setImage(image2);
+
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280 * 2,720 * 2, 20, 2000000 / 1000));
     srcDecode->addSink(sinkToImgRight);
     sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len, uint32_t pts, uint32_t dts) {
         srcDecode->putDataToDecode(data, len);
     });
-    sinkToImgLeft->setImage(image1);
-    sinkToImgRight->setImage(image2);
+
     sinkToImgRight->start();
     sinkToImgLeft->start();
     sinkToEncode->start();
+    srcDecode->start();
 
     // make it more realtime like, activate encode when everything is ready
-    auto tr = std::thread([&] {
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+//    auto tr = std::thread([&] {
+//        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         srcFromScreen->start();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        srcDecode->start();
+//        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        while(srcFromScreen->sinks.empty()) {}
+//        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//        sinkToEncode->start();
 
         g_print ("Let's run!\n");
+//        while(true) {}
         g_main_loop_run (loop);
-    });
-    tr.join();
+//    });
+//    tr.join();
 #endif
 
 #ifdef USE_CRASH_TEST

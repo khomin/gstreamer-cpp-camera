@@ -40,7 +40,7 @@ void SinkFile::start() {
 void SinkFile::putSample(GstSample* sample) {
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source_to_out), sample);
-    if(ret != GST_FLOW_OK) {
+    if(ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
         std::cout << "push_sample error: " << ret  << std::endl;
     }
     gst_object_unref(source_to_out);

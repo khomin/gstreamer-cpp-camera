@@ -56,7 +56,7 @@ void SinkImage::putSample(GstSample* sample) {
     std::lock_guard<std::mutex> lock(m_lock);
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source_to_out), sample);
-    if(ret != GST_FLOW_OK) {
+    if(ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
         std::cout << "push_sample error: " << ret  << std::endl;
     }
     gst_object_unref (source_to_out);
@@ -75,12 +75,11 @@ GstFlowReturn on_sample(GstElement * elt, ImageProvider* image) {
 
     if(sample != NULL) {
         GstCaps *caps = gst_sample_get_caps(sample);
-        GstStructure *s = gst_caps_get_structure(caps, 0);
-        int imW, imH;
-        gst_structure_get_int(s,"width", &imW);
-        gst_structure_get_int(s, "height", &imH);
+        GstStructure *capStr = gst_caps_get_structure(caps, 0);
+        int imW = 0, imH = 0;
+        gst_structure_get_int(capStr,"width", &imW);
+        gst_structure_get_int(capStr, "height", &imH);
         buffer = gst_sample_get_buffer(sample);
-
         if(buffer != NULL) {
             GstMapInfo mapInfo;
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);

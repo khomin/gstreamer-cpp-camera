@@ -50,7 +50,7 @@ SourceDevice::~SourceDevice() {
 
 void SourceDevice::start() {
     if(m_pipe != NULL) {
-        gst_element_set_state (m_pipe, GST_STATE_PAUSED);
+//        gst_element_set_state (m_pipe, GST_STATE_PAUSED);
         gst_element_set_state (m_pipe, GST_STATE_PLAYING);
     }
 }

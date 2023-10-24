@@ -21,7 +21,7 @@ struct EncoderConfig {
         case CodecType::Codecmp4:
             return EncoderConfig{width, height, frameRate, bitrate, "","",""};
         case CodecType::CodecAvc:{}
-            return EncoderConfig{width, height, frameRate, bitrate, "I420","x264enc","tune=zerolatency key-int-max=26"};
+            return EncoderConfig{width, height, frameRate, bitrate, "I420","x264enc","tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50"};
         case CodecType::CodecHevc:{}
             return EncoderConfig{width, height, frameRate, bitrate, "","",""};
         case CodecType::CodecVp8:{}

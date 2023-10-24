@@ -15,8 +15,14 @@ public:
 
     void setImage(int width, int height, uint8_t* data, uint32_t len) {
         std::lock_guard<std::mutex> lk(_lock);
-        auto image = QImage((const uchar *)data, width, height, QImage::Format_RGB888);
+        auto buf = new uint8_t[len];
+        memcpy(buf, data, len);
+        auto image = QImage((const uchar *)buf, width, height, QImage::Format_RGB888);
         setImage(image);
+        if(m_buf != nullptr) {
+            delete[] m_buf;
+        }
+        m_buf = buf;
     }
 
     void setImage(QImage const &image);
@@ -27,6 +33,7 @@ signals:
 
 private:
     QImage m_image;
+    uint8_t* m_buf = NULL;
     std::mutex _lock;
 };
 

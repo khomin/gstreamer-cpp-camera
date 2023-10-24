@@ -27,8 +27,8 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         "is-live", TRUE,
         "stream-type", 0,
         "format", GST_FORMAT_TIME,
-        //"leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // can be helpful but is only since 1.20
-        "do-timestamp", TRUE,
+        "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // can be helpful but is only since 1.20
+//        "do-timestamp", TRUE,
         NULL
       );
     if(source == NULL) {
@@ -67,7 +67,7 @@ void SinkEncode::start() {
 void SinkEncode::putSample(GstSample* sample) {
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source), sample);
-    if(ret != GST_FLOW_OK) {
+    if(ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
         std::cout << "push_sample error: " << ret  << std::endl;
     }
     gst_object_unref (source);
