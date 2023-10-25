@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <mutex>
 #include "sink_base.h"
 
 class SourceBase
@@ -22,6 +23,7 @@ public:
 protected:
     GstElement* m_pipe = NULL;
     bool m_error = false;
+    std::mutex m_lock;
 };
 
 #endif // SOURCEBASE_H

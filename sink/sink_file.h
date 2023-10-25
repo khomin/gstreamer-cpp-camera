@@ -14,6 +14,7 @@ public:
     void start() override;
     void putSample(GstSample* sample) override;
 private:
+    static GstFlowReturn on_sample(GstElement * elt, std::ofstream* file);
     std::ofstream m_file;
 protected:
     static constexpr auto tag = "SinkFile";

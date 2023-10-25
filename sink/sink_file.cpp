@@ -4,8 +4,6 @@
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
 
-GstFlowReturn on_sample(GstElement * elt, std::ofstream* file);
-
 SinkFile::SinkFile(std::string path) {
     m_file = std::ofstream(path.c_str(), std::ios::out | std::ios :: binary);
     m_pipe = gst_parse_launch(cmd, NULL);
@@ -16,9 +14,9 @@ SinkFile::SinkFile(std::string path) {
 }
 
 SinkFile::~SinkFile() {
+    std::lock_guard<std::mutex> lock(m_lock);
     if(m_pipe != NULL) {
-        m_is_running = false;
-        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        stopPipe();
         gst_object_unref(m_pipe);
     }
     m_file.close();
@@ -26,18 +24,20 @@ SinkFile::~SinkFile() {
 }
 
 void SinkFile::start() {
+    std::lock_guard<std::mutex> lock(m_lock);
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     g_object_set (source, "format", GST_FORMAT_TIME, NULL);
     gst_object_unref (source);
 
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), &m_file);
-    m_is_running = true;
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkFile::on_sample), &m_file);
     gst_element_set_state (m_pipe, GST_STATE_PLAYING);
+    startPipe();
 }
 
 void SinkFile::putSample(GstSample* sample) {
+    std::lock_guard<std::mutex> lock(m_lock);
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample (GST_APP_SRC (source_to_out), sample);
     if(ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
@@ -46,10 +46,9 @@ void SinkFile::putSample(GstSample* sample) {
     gst_object_unref(source_to_out);
 }
 
-GstFlowReturn on_sample(GstElement * elt, std::ofstream* file) {
+GstFlowReturn SinkFile::on_sample(GstElement * elt, std::ofstream* file) {
     GstSample *sample;
-    GstBuffer *app_buffer, *buffer;
-    GstElement *source;
+    GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
 
     if(sample != NULL) {

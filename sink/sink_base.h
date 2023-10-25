@@ -2,6 +2,7 @@
 #define SINKBASE_H
 
 #include <stdint.h>
+#include <mutex>
 #include <gst/gst.h>
 
 class SinkBase {
@@ -14,11 +15,17 @@ public:
     virtual bool isRunning();
     uint64_t getId();
     bool getError();
-
 protected:
+    void startPipe();
+    void pausePipe();
+    void stopPipe();
+
     GstElement * m_pipe  = nullptr;
     uint64_t m_id = 0;
     bool m_error = false;
+    std::mutex m_lock;
+private:
+    void cleanBusEvents();
     bool m_is_running = false;
 };
 

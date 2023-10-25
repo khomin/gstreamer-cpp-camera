@@ -19,7 +19,9 @@ public:
     void pause() override;
 
 private:
+    static GstFlowReturn on_sample(GstElement * elt, SourceDevice* data);
     SourceDeviceType m_type = SourceDeviceType::Screen;
+
     static constexpr auto tag = "SourceDevice";
     static constexpr const char* cmd = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=20/1 ! appsink name=sink_out max-buffers=1 drop=true";
     static constexpr const char* cmd_screen_macos = "avfvideosrc name=src capture-screen=true capture-screen-cursor=true";

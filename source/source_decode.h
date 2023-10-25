@@ -3,11 +3,9 @@
 
 #include "source_base.h"
 #include "utils/decoder_config.h"
-
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/app/app.h>
-#include <mutex>
 
 class SourceDecode : public SourceBase {
 public:
@@ -21,7 +19,7 @@ public:
     void putDataToDecode(uint8_t* data, uint32_t len);
 
 private:
-    std::mutex m_lock;
+    static GstFlowReturn on_sample(GstElement * elt, SourceDecode* data);
 
     static constexpr auto tag = "SourceDecode";
     static constexpr const char* cmd = "appsrc name=source_to_decode is-live=true ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! videoconvert ! video/x-raw,format=RGB ! queue ! appsink name=sink_out max-buffers=1 drop=true";

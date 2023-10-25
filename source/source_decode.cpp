@@ -4,8 +4,6 @@
 #include <gst/pbutils/codec-utils.h>
 #include <iostream>
 
-GstFlowReturn on_sample (GstElement * elt, SourceDecode* data);
-
 SourceDecode::SourceDecode(DecoderConfig config) {
     auto cmdf = StringFormatter::format(cmd,
                                        config.codecInVideo.c_str(),
@@ -52,7 +50,7 @@ void SourceDecode::start() {
         std::cout << "value is NULL" << std::endl;
     } else {
         g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
-        g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
+        g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceDecode::on_sample), this);
         gst_object_unref (sink_out);
     }
     gst_element_set_state (m_pipe, GST_STATE_PAUSED);
@@ -75,7 +73,7 @@ void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
     Measure::instance()->onDecodePutSample();
 }
 
-GstFlowReturn on_sample(GstElement * elt, SourceDecode* data) {
+GstFlowReturn SourceDecode::on_sample(GstElement * elt, SourceDecode* data) {
     GstSample *sample;
     GstBuffer *app_buffer, *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
@@ -88,8 +86,8 @@ GstFlowReturn on_sample(GstElement * elt, SourceDecode* data) {
 
             Measure::instance()->onDecodeSampleReady();
 
-            for(auto & it : data->sinks) {
-                if(it->isRunning()) {
+            for(auto it : data->sinks) {
+                if (it != nullptr && it->isRunning()) {
                     it->putSample(sample);
                 }
             }

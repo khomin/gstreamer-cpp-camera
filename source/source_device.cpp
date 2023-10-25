@@ -3,8 +3,6 @@
 #include <iostream>
 #include <thread>
 
-GstFlowReturn on_sample (GstElement * elt, SourceDevice* data);
-
 SourceDevice::SourceDevice() : SourceDevice(SourceDeviceType::Screen) {}
 
 SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(type) {
@@ -29,7 +27,7 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(ty
     * push as fast as it can, hence the sync=false */
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", FALSE, NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK (on_sample), this);
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceDevice::on_sample), this);
     gst_object_unref (sink_out);
     std::cout << tag << ": created" << std::endl;
 }
@@ -50,7 +48,6 @@ SourceDevice::~SourceDevice() {
 
 void SourceDevice::start() {
     if(m_pipe != NULL) {
-//        gst_element_set_state (m_pipe, GST_STATE_PAUSED);
         gst_element_set_state (m_pipe, GST_STATE_PLAYING);
     }
 }
@@ -59,7 +56,7 @@ void SourceDevice::pause() {
     gst_element_set_state (m_pipe, GST_STATE_PAUSED);
 }
 
-GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
+GstFlowReturn SourceDevice::on_sample(GstElement * elt, SourceDevice* data) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
@@ -70,9 +67,8 @@ GstFlowReturn on_sample(GstElement * elt, SourceDevice* data) {
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
             if (data != NULL) {
-                auto sinks = data->sinks;
-                for (auto &it: sinks) {
-                    if(it->isRunning()) {
+                for (auto it: data->sinks) {
+                    if (it != nullptr && it->isRunning()) {
                         it->putSample(sample);
                     }
                 }
