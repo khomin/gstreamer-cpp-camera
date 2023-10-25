@@ -21,7 +21,7 @@ private:
     std::shared_ptr<OnEncoded> m_on_encoded = nullptr;
     static GstFlowReturn on_sample(GstElement * elt, std::shared_ptr<SinkEncode::OnEncoded> cb);
 protected:
-    static constexpr auto tag = "SinkEncode";
+    static constexpr auto tag = "SinkEncode: ";
     static constexpr const auto cmd = "appsrc name=source_to_out ! videoconvert ! videoscale ! videorate ! video/x-raw,format=%s,width=%d,height=%d,framerate=%d/1 ! %s bitrate=%d ! queue ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
