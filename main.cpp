@@ -100,24 +100,21 @@ int runLoop (int argc, char *argv[]) {
 
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC)
     auto loop = g_main_loop_new(NULL, FALSE);
-//    auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc, SourceDevice::OptionType::TimeOverlay);
-//    auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-//
-//    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000));
-//    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,7204, 20, 900000));
-//
-//    auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-//    auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-//
-//    auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
+    auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc, SourceDevice::OptionType::TimeOverlay);
+    auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000));
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,7204, 20, 900000));
+    auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
+    auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
+    auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
 
-//    if(srcFromWebc->getError() || srcFromScreen->getError()
-//            || sinkToEncode->getError() || srcDecode->getError()
-//            || sinkToImgLeft->getError() || sinkToImgRight->getError()
-//            || sinkToFile->getError()) {
-//        std::cerr << "component failed" << std::endl;
-//        return -1;
-//    }
+    if(srcFromWebc->getError() || srcFromScreen->getError()
+            || sinkToEncode->getError() || srcDecode->getError()
+            || sinkToImgLeft->getError() || sinkToImgRight->getError()
+            || sinkToFile->getError()) {
+        std::cerr << "component failed" << std::endl;
+        return -1;
+    }
 #endif
 
 #ifdef USE_VIDEO_TO_IMAGE_PREVIEW
@@ -138,40 +135,22 @@ int runLoop (int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
-    auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280 * 2,720 * 2, 20, 2000000 / 1000));
-    auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
-    auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Preview);
     srcFromScreen->addSink(sinkToEncode);
     srcFromScreen->addSink(sinkToImgLeft);
+    srcDecode->addSink(sinkToImgRight);
     sinkToImgLeft->setImage(image1);
     sinkToImgRight->setImage(image2);
 
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280 * 2,720 * 2, 20, 2000000 / 1000));
-    srcDecode->addSink(sinkToImgRight);
-    sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len, uint32_t pts, uint32_t dts) {
+    sinkToEncode->setOnEncoded(std::make_shared<SinkEncode::OnEncoded>([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
         srcDecode->putDataToDecode(data, len);
-    });
-
+    }));
     sinkToImgRight->start();
     sinkToImgLeft->start();
     sinkToEncode->start();
     srcDecode->start();
-
-    // make it more realtime like, activate encode when everything is ready
-//    auto tr = std::thread([&] {
-//        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        srcFromScreen->start();
-//        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        while(srcFromScreen->sinks.empty()) {}
-//        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//        sinkToEncode->start();
-
-        g_print ("Let's run!\n");
-//        while(true) {}
-        g_main_loop_run (loop);
-//    });
-//    tr.join();
+    srcFromScreen->start();
+    g_print("Let's run!\n");
+    g_main_loop_run(loop);
 #endif
 
 #ifdef USE_CRASH_TEST
