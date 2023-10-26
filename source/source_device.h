@@ -28,8 +28,8 @@ private:
     static constexpr const char* cmd_camera_macos = "avfvideosrc name=src";
     static constexpr const char* cmd_screen_linux = "ximagesrc name=src";
     static constexpr const char* cmd_camera_linux = "ximagesrc name=src";
-    static constexpr const char* cmd_screen_win = "TODO";
-    static constexpr const char* cmd_camera_win = "TODO";
+    static constexpr const char* cmd_screen_win = "dx9screencapsrc name=src";
+    static constexpr const char* cmd_camera_win = "ksvideosrc name=src";
     static constexpr const char* show_time_overlay = "! timeoverlay draw-shadow=false draw-outline=false deltay=50 font-desc=\"Sans, 30\" color=0xFFFFFFFF";
 };
 
