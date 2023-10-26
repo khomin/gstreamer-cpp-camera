@@ -24,7 +24,8 @@ struct EncoderConfig {
                                  StringFormatter::format("bitrate=%d", bitrate) + " " +
                                  "tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50"};
         case CodecType::CodecHevc:
-            return EncoderConfig{width, height, frameRate,  "","",""};
+            return EncoderConfig{width, height, frameRate, "I420", "x265enc",
+                                 "tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50"};
             case CodecType::CodecVp8:
                 return EncoderConfig{width, height, frameRate, "I420", "vp8enc",
                                      StringFormatter::format(
@@ -33,9 +34,9 @@ struct EncoderConfig {
             case CodecType::CodecVp9:
                 return EncoderConfig{width, height, frameRate, "I420", "vp9enc",
                                      StringFormatter::format(
-                                             "target-bitrate=%d keyframe-max-dist=%d threads=%d deadline=%d",
-                                             bitrate * 1000, 0, 0, 1)};
+                                             "end-usage=cbr cpu-used=10 threads=4 target-bitrate=%d", bitrate * 1000)};
         }
+        // cq-level=5 end-usage=cbr dropframe-threshold=60 static-threshold=0 undershoot=95 keyframe-max-dist=50 buffer-size=6000 buffer-initial-size=4000 buffer-optimal-size=5000
     }
 };
 

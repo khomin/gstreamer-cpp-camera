@@ -23,6 +23,7 @@
 
 ImageProvider* image1 = NULL;
 ImageProvider* image2 = NULL;
+uint64_t maxPacketSize = 0;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
@@ -39,8 +40,8 @@ int runLoop (int argc, char *argv[]) {
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc, SourceDevice::OptionType::TimeOverlay);
     auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecVp8, 1280,720, 20, 900000));
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecVp8, 1280,720, 20, 900000));
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecVp8, 1280,720, 30, 1000000 / 1000));
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecVp8, 1280,720, 20, 1000000 / 1000));
     auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
@@ -79,6 +80,10 @@ int runLoop (int argc, char *argv[]) {
     sinkToImgRight->setImage(image2);
 
     sinkToEncode->setOnEncoded(std::make_shared<SinkEncode::OnEncoded>([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+        if(maxPacketSize < len) {
+            maxPacketSize = len;
+            std::cout << "BTEST_MAX: " << maxPacketSize << std::endl; // max 163840
+        }
         srcDecode->putDataToDecode(data, len);
     }));
     sinkToImgRight->start();
