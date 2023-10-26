@@ -115,7 +115,7 @@ int runLoop (int argc, char *argv[]) {
         srcDecode->start();
         srcFromScreen->start();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         srcFromScreen = nullptr;
         sinkToEncode = nullptr;

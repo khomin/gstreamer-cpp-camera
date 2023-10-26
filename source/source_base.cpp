@@ -40,12 +40,14 @@ void SourceBase::startPipe() {
 void SourceBase::pausePipe() {
     if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_PAUSED);
+        cleanBusEvents();
     }
 }
 
 void SourceBase::stopPipe() {
     if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
+        cleanBusEvents();
         m_is_running = false;
     }
 }
