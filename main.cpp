@@ -26,9 +26,9 @@ ImageProvider* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
+#define USE_VIDEO_TO_ENCODE_CODEC
 //#define USE_DECODE_FROM_FILE
-#define USE_CRASH_TEST
+//#define USE_CRASH_TEST
 
 int runLoop (int argc, char *argv[]) {
     gst_init(NULL, NULL);
@@ -39,8 +39,8 @@ int runLoop (int argc, char *argv[]) {
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc, SourceDevice::OptionType::TimeOverlay);
     auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000));
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000));
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecVp8, 1280,720, 20, 900000));
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecVp8, 1280,720, 20, 900000));
     auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());

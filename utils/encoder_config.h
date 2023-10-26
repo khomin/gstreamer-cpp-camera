@@ -28,8 +28,8 @@ struct EncoderConfig {
             case CodecType::CodecVp8:
                 return EncoderConfig{width, height, frameRate, "I420", "vp8enc",
                                      StringFormatter::format(
-                                             "target-bitrate=%d keyframe-max-dist=%d threads=%d deadline=%d",
-                                             bitrate * 1000, 0, 0, 1)};
+                                             "end-usage=cbr cpu-used=10 threads=4 target-bitrate=%d", bitrate * 1000
+                                     )};
             case CodecType::CodecVp9:
                 return EncoderConfig{width, height, frameRate, "I420", "vp9enc",
                                      StringFormatter::format(

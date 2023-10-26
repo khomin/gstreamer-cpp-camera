@@ -3,8 +3,6 @@
 #include <iostream>
 #include <thread>
 
-SourceDevice::SourceDevice() : SourceDevice(SourceDeviceType::Screen) {}
-
 SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(type) {
     std::string cmdf = StringFormatter::format(
             cmd,

@@ -12,7 +12,7 @@ public:
     enum class OptionType { None, TimeOverlay };
 
     explicit SourceDevice(SourceDeviceType type, OptionType option = OptionType::None);
-    SourceDevice();
+    SourceDevice() = delete;
     ~SourceDevice();
 
     void start() override;
