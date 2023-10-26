@@ -4,6 +4,12 @@ ImageProvider::ImageProvider(QObject *parent)
     : QObject(parent)
 {}
 
+ImageProvider::~ImageProvider() {
+    if(m_buf != nullptr) {
+        delete[] m_buf;
+    }
+}
+
 void ImageProvider::setImage(QImage const &image)
 {
     m_image = image;

@@ -12,17 +12,20 @@ class ImageProvider : public QObject
 
 public:
     explicit ImageProvider(QObject *parent = nullptr);
+    virtual ~ImageProvider();
 
     void setImage(int width, int height, uint8_t* data, uint32_t len) {
         std::lock_guard<std::mutex> lk(_lock);
-        auto buf = new uint8_t[len];
-        memcpy(buf, data, len);
-        auto image = QImage((const uchar *)buf, width, height, QImage::Format_RGB888);
-        setImage(image);
-        if(m_buf != nullptr) {
-            delete[] m_buf;
+        if(m_buf_len < len) {
+            if(m_buf != nullptr) {
+                delete[] m_buf;
+            }
+            m_buf = new uint8_t[len];
+            m_buf_len = len;
         }
-        m_buf = buf;
+        memcpy(m_buf, data, len);
+        auto image = QImage((const uchar *)m_buf, width, height, QImage::Format_RGB888);
+        setImage(image);
     }
 
     void setImage(QImage const &image);
@@ -34,6 +37,7 @@ signals:
 private:
     QImage m_image;
     uint8_t* m_buf = NULL;
+    uint32_t  m_buf_len = 0;
     std::mutex _lock;
 };
 

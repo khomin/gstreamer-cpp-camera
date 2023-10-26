@@ -10,20 +10,25 @@ class SourceBase
 {
 public:
     SourceBase();
-
     void addSink(std::shared_ptr<SinkBase> sink);
     void removeSink(std::shared_ptr<SinkBase> sink);
-
+    std::vector<std::shared_ptr<SinkBase>> getSinks();
     virtual void start() {}
     virtual void pause() {}
     bool getError();
 
-    std::vector<std::shared_ptr<SinkBase>> sinks;
-
 protected:
+    void startPipe();
+    void pausePipe();
+    void stopPipe();
+
     GstElement* m_pipe = NULL;
-    bool m_error = false;
     std::mutex m_lock;
+    bool m_error = false;
+private:
+    void cleanBusEvents();
+    std::vector<std::shared_ptr<SinkBase>> m_sinks;
+    bool m_is_running = false;
 };
 
 #endif // SOURCEBASE_H

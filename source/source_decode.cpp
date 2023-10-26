@@ -23,7 +23,7 @@ SourceDecode::SourceDecode(DecoderConfig config) {
 SourceDecode::~SourceDecode() {
     std::lock_guard<std::mutex> lock(m_lock);
     if(m_pipe != NULL) {
-        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        stopPipe();
         gst_object_unref(m_pipe);
     }
     std::cout << tag << ": destroyed" << std::endl;
@@ -53,8 +53,7 @@ void SourceDecode::start() {
         g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceDecode::on_sample), this);
         gst_object_unref (sink_out);
     }
-    gst_element_set_state (m_pipe, GST_STATE_PAUSED);
-    gst_element_set_state (m_pipe, GST_STATE_PLAYING);
+    startPipe();
 }
 
 void SourceDecode::pause() {}
@@ -85,8 +84,8 @@ GstFlowReturn SourceDecode::on_sample(GstElement * elt, SourceDecode* data) {
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
             Measure::instance()->onDecodeSampleReady();
-
-            for(auto it : data->sinks) {
+            auto sinks = data->getSinks();
+            for(auto it : sinks) {
                 if (it != nullptr && it->isRunning()) {
                     it->putSample(sample);
                 }
