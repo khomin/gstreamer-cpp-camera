@@ -1,15 +1,14 @@
 #ifndef ENC_CONFIG_H
 #define ENC_CONFIG_H
 
-#include <stdio.h>
 #include <string>
 #include "utils/codec_type.h"
+#include "utils/stringf.h"
 
 struct EncoderConfig {
     uint64_t  width = 0;
     uint64_t  height = 0;
     uint64_t  framerate = 0;
-    uint64_t  bitrate = 0;
     std::string pixelFormat;
     std::string codec;
     std::string codecOptions;
@@ -17,23 +16,27 @@ struct EncoderConfig {
     static EncoderConfig make(CodecType type, uint64_t  width, uint64_t  height, uint64_t  frameRate, uint64_t  bitrate) {
         switch(type) {
         case CodecType::Codec3gp:
-            return EncoderConfig{width, height, frameRate, bitrate, "","",""};
+            return EncoderConfig{width, height, frameRate,  "","",""};
         case CodecType::Codecmp4:
-            return EncoderConfig{width, height, frameRate, bitrate, "","",""};
-        case CodecType::CodecAvc:{}
-            return EncoderConfig{width, height, frameRate, bitrate, "I420","x264enc","tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50"};
-        case CodecType::CodecHevc:{}
-            return EncoderConfig{width, height, frameRate, bitrate, "","",""};
-        case CodecType::CodecVp8:{}
-            return EncoderConfig{width, height, frameRate, bitrate, "I420","vp8enc",""};
-        case CodecType::CodecVp9:
-            return EncoderConfig{width, height, frameRate, bitrate, "I420","vp9enc",""};
+            return EncoderConfig{width, height, frameRate,  "","",""};
+        case CodecType::CodecAvc:
+            return EncoderConfig{width, height, frameRate, "I420", "x264enc",
+                                 StringFormatter::format("bitrate=%d", bitrate) + " " +
+                                 "tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50"};
+        case CodecType::CodecHevc:
+            return EncoderConfig{width, height, frameRate,  "","",""};
+            case CodecType::CodecVp8:
+                return EncoderConfig{width, height, frameRate, "I420", "vp8enc",
+                                     StringFormatter::format(
+                                             "target-bitrate=%d keyframe-max-dist=%d threads=%d deadline=%d",
+                                             bitrate * 1000, 0, 0, 1)};
+            case CodecType::CodecVp9:
+                return EncoderConfig{width, height, frameRate, "I420", "vp9enc",
+                                     StringFormatter::format(
+                                             "target-bitrate=%d keyframe-max-dist=%d threads=%d deadline=%d",
+                                             bitrate * 1000, 0, 0, 1)};
         }
     }
 };
 
 #endif // ENC_CONFIG_H
-
-//auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{426,240,30,"I420","vp8enc",""});
-//bitrate=30000 bframes=6 threads=15 subme=10 key-int-max=20
-//auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig{2560 /2,1600 /2,10,200000,"I420","x264enc","tune=zerolatency speed-preset=ultrafast"});

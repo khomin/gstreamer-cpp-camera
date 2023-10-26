@@ -20,11 +20,11 @@ struct DecoderConfig {
             return DecoderConfig{width, height, frameRate, bitrate, "","",""};
         case CodecType::Codecmp4:
             return DecoderConfig{width, height, frameRate, bitrate, "x-h264","I420","avdec_h264"};
-        case CodecType::CodecAvc:{}
+        case CodecType::CodecAvc:
             return DecoderConfig{width, height, frameRate, bitrate, "x-h264","I420","h264parse ! avdec_h264"};
-        case CodecType::CodecHevc:{}
+        case CodecType::CodecHevc:
             return DecoderConfig{width, height, frameRate, bitrate, "","",""};
-        case CodecType::CodecVp8:{}
+        case CodecType::CodecVp8:
             return DecoderConfig{width, height, frameRate, bitrate, "x-vp8","I420","vp8dec"};
         case CodecType::CodecVp9:
             return DecoderConfig{width, height, frameRate, bitrate, "x-vp9","I420","vp9dec"};

@@ -8,12 +8,11 @@
 SinkEncode::SinkEncode(EncoderConfig config) {
     m_config = config;
     std::string cmdf = StringFormatter::format(cmd,
-                config.pixelFormat.c_str(),
-                config.width, config.height,
-                config.framerate,
-                (config.codec + " " + config.codecOptions).c_str(),
-                config.bitrate
-                );
+                                               config.pixelFormat.c_str(),
+                                               config.width, config.height,
+                                               config.framerate,
+                                               (config.codec + " " + config.codecOptions).c_str()
+    );
     m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
@@ -26,7 +25,7 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         "stream-type", 0,
         "format", GST_FORMAT_TIME,
         "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // can be helpful but is only since 1.20
-        //"do-timestamp", TRUE,
+        "do-timestamp", TRUE,
         NULL
       );
     if(source == NULL) {
