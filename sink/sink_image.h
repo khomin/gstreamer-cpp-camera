@@ -2,7 +2,7 @@
 #define SINK_IMAGE_H
 
 #include "sink_base.h"
-#include "image_provider/image_provider.h"
+#include "image_provider/image_provider_abstract.h"
 
 class SinkImage : public SinkBase {
 public:
@@ -14,12 +14,12 @@ public:
 
     void start() override;
     void putSample(GstSample* sample) override;
-    void setImage(ImageProvider* imageProvider);
+    void setImage(ImageProviderAbstract* imageProvider);
 
 private:
-    static GstFlowReturn on_sample(GstElement * elt, ImageProvider* image);
+    static GstFlowReturn on_sample(GstElement * elt, ImageProviderAbstract* image);
 
-    ImageProvider* m_image = NULL;
+    ImageProviderAbstract* m_image = NULL;
     ImageType m_type = ImageType::Full;
 protected:
     static constexpr auto tag = "SinkImage: ";

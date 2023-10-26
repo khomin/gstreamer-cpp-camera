@@ -74,7 +74,7 @@ void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
 
 GstFlowReturn SourceDecode::on_sample(GstElement * elt, SourceDecode* data) {
     GstSample *sample;
-    GstBuffer *app_buffer, *buffer;
+    GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
 
     if(sample != NULL) {
