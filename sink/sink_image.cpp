@@ -9,7 +9,10 @@
 SinkImage::SinkImage(ImageType type) : m_type(type) {
     std::string cmdf;
     if(m_type == ImageType::Full) {
-        cmdf = StringFormatter::format(cmd, "! video/x-raw,format=RGBA");
+        cmdf = StringFormatter::format(cmd,
+                                       StringFormatter::format(
+                                               "! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", 1280,
+                                               720).c_str());
     } else if(m_type == ImageType::Preview) {
         cmdf = StringFormatter::format(cmd,
             StringFormatter::format("! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", 380, 240).c_str());
