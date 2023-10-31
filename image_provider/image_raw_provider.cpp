@@ -17,7 +17,25 @@ void ImageRawProvider::setImage(int width, int height, uint8_t* data, uint32_t l
         m_buf = new uint8_t[len];
         m_buf_len = len;
     }
-//        memcpy(m_buf, data, len);
-//        auto image = QImage((const uchar *)m_buf, width, height, QImage::Format_RGB888);
-//        setImage(image);
+    m_width = width;
+    m_height = height;
+    memcpy(m_buf, data, len);
+}
+
+uint8_t * ImageRawProvider::getBuffer() {
+    std::lock_guard<std::mutex> lk(_lock);
+    return m_buf;
+}
+
+uint64_t ImageRawProvider::getBufferLen() {
+    std::lock_guard<std::mutex> lk(_lock);
+    return m_buf_len;
+}
+
+uint32_t ImageRawProvider::getWidth() {
+    return m_width;
+}
+
+uint32_t  ImageRawProvider::getHeight() {
+    return m_height;
 }

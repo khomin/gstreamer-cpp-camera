@@ -11,7 +11,7 @@ class SourceDecode : public SourceBase {
 public:
     explicit SourceDecode(DecoderConfig config);
     SourceDecode() = delete;
-    ~SourceDecode();
+    virtual ~SourceDecode();
 
     void start() override;
     void pause() override;

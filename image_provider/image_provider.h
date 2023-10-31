@@ -6,7 +6,7 @@
 #include <mutex>
 #include "image_provider_abstract.h"
 
-class ImageProvider : public QObject, ImageProviderAbstract
+class ImageProvider : public QObject, public ImageProviderAbstract
 {
     Q_OBJECT
     Q_PROPERTY(QImage image MEMBER m_image READ image WRITE setImage NOTIFY imageChanged)

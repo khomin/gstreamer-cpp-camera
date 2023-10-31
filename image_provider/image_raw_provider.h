@@ -8,6 +8,15 @@ public:
     ImageRawProvider();
     ~ImageRawProvider() override;
     void setImage(int width, int height, uint8_t* data, uint32_t len) override;
+
+    uint8_t * getBuffer();
+    uint64_t  getBufferLen();
+    uint32_t getWidth();
+    uint32_t getHeight();
+
+private:
+    uint32_t m_width = 0;
+    uint32_t m_height = 0;
 };
 
 #endif // IMG_RAW_PROVIDER_H
