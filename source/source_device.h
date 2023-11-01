@@ -23,7 +23,7 @@ private:
     SourceDeviceType m_type = SourceDeviceType::Screen;
 
     static constexpr auto tag = "SourceDevice: ";
-    static constexpr const char* cmd = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGB,framerate=20/1 ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr const char* cmd = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGBA,framerate=20/1 ! appsink name=sink_out max-buffers=1 drop=true";
     static constexpr const char* cmd_screen_macos = "avfvideosrc name=src capture-screen=true capture-screen-cursor=true";
     static constexpr const char* cmd_camera_macos = "avfvideosrc name=src";
     static constexpr const char* cmd_screen_linux = "ximagesrc name=src";

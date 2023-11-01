@@ -24,7 +24,7 @@ public:
             m_buf_len = len;
         }
         memcpy(m_buf, data, len);
-        auto image = QImage((const uchar *)m_buf, width, height, QImage::Format_RGB888);
+        auto image = QImage((const uchar *)m_buf, width, height, QImage::Format_RGBA8888);
         setImage(image);
     }
 
