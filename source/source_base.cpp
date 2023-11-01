@@ -1,5 +1,6 @@
 #include "source_base.h"
 #include <iostream>
+#include <algorithm>
 
 SourceBase::SourceBase() {
 

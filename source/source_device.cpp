@@ -3,7 +3,7 @@
 #include <iostream>
 #include <thread>
 
-SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) : m_type(type) {
+SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
     std::string cmdf = StringFormatter::format(
             cmd,
 #if __APPLE__

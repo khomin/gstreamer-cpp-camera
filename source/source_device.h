@@ -20,14 +20,13 @@ public:
 
 private:
     static GstFlowReturn on_sample(GstElement * elt, SourceDevice* data);
-    SourceDeviceType m_type = SourceDeviceType::Screen;
 
     static constexpr auto tag = "SourceDevice: ";
-    static constexpr const char* cmd = "%s %s ! videoconvert ! videorate ! video/x-raw,format=RGBA,framerate=20/1 ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr const char* cmd = "%s %s ! videoconvert ! videorate ! videoscale ! video/x-raw,format=RGB,framerate=20/1,width=1280,height=720 ! appsink name=sink_out max-buffers=1 drop=true";
     static constexpr const char* cmd_screen_macos = "avfvideosrc name=src capture-screen=true capture-screen-cursor=true";
     static constexpr const char* cmd_camera_macos = "avfvideosrc name=src";
     static constexpr const char* cmd_screen_linux = "ximagesrc name=src";
-    static constexpr const char* cmd_camera_linux = "ximagesrc name=src";
+    static constexpr const char* cmd_camera_linux = "v4l2src name=src";
     static constexpr const char* cmd_screen_win = "dx9screencapsrc name=src";
     static constexpr const char* cmd_camera_win = "ksvideosrc name=src";
     static constexpr const char* show_time_overlay = "! timeoverlay draw-shadow=false draw-outline=false deltay=50 font-desc=\"Sans, 30\" color=0xFFFFFFFF";

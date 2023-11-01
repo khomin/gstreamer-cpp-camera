@@ -4,6 +4,7 @@
 #include "sink_base.h"
 #include "utils/encoder_config.h"
 #include <functional>
+#include <memory>
 
 class SinkEncode : public SinkBase {
 public:

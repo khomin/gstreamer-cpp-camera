@@ -21,7 +21,7 @@ SourceDecode::SourceDecode(DecoderConfig config) {
 }
 
 SourceDecode::~SourceDecode() {
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     if(m_pipe != NULL) {
         stopPipe();
         gst_object_unref(m_pipe);
@@ -30,7 +30,7 @@ SourceDecode::~SourceDecode() {
 }
 
 void SourceDecode::start() {
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
     if (source == NULL) {
         std::cout << "value is NULL" << std::endl;
@@ -59,7 +59,7 @@ void SourceDecode::start() {
 void SourceDecode::pause() {}
 
 void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
     gst_buffer_fill(buffer, 0, data, len);
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
@@ -74,7 +74,7 @@ void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
 
 GstFlowReturn SourceDecode::on_sample(GstElement * elt, SourceDecode* data) {
     GstSample *sample;
-    GstBuffer *app_buffer, *buffer;
+    GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
 
     if(sample != NULL) {

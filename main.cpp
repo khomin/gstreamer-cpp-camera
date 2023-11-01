@@ -21,8 +21,8 @@
 #include "source/source_decode.h"
 #include "utils/codec_type.h"
 
-ImageProvider* image1 = NULL;
-ImageProvider* image2 = NULL;
+ImageProviderAbstract* image1 = NULL;
+ImageProviderAbstract* image2 = NULL;
 uint64_t maxPacketSize = 0;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW

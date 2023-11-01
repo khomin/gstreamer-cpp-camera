@@ -9,10 +9,13 @@
 SinkImage::SinkImage(ImageType type) : m_type(type) {
     std::string cmdf;
     if(m_type == ImageType::Full) {
-        cmdf = StringFormatter::format(cmd, "");
+        cmdf = StringFormatter::format(cmd,
+                                       StringFormatter::format(
+                                               "! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", 1280,
+                                               720).c_str());
     } else if(m_type == ImageType::Preview) {
         cmdf = StringFormatter::format(cmd,
-            StringFormatter::format("! videoscale ! video/x-raw,width=%d,height=%d", 380 * 2, 240 * 2).c_str());
+            StringFormatter::format("! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", 380, 240).c_str());
     }
     m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
     if (m_pipe == NULL) {
@@ -58,15 +61,14 @@ void SinkImage::putSample(GstSample* sample) {
     gst_object_unref (source_to_out);
 }
 
-void SinkImage::setImage(ImageProvider* image) {
+void SinkImage::setImage(ImageProviderAbstract* image) {
     std::lock_guard<std::mutex> lock(m_lock);
     m_image = image;
 }
 
-GstFlowReturn SinkImage::on_sample(GstElement * elt, ImageProvider* image) {
+GstFlowReturn SinkImage::on_sample(GstElement * elt, ImageProviderAbstract* image) {
     GstSample *sample;
-    GstBuffer *app_buffer, *buffer;
-    GstElement *source;
+    GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
 
     if(sample != NULL) {
