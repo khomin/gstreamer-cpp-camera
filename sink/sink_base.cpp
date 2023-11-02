@@ -1,9 +1,8 @@
 #include "sink_base.h"
 #include <iostream>
-#include <random>
 
 SinkBase::SinkBase() {
-    m_id = random();
+    m_id = m_id_cnt++;
 }
 
 SinkBase::~SinkBase() {}

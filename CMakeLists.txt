@@ -23,7 +23,7 @@ set(PROJECT_SOURCES
   source/source_device.cpp
   source/source_decode.h
   source/source_decode.cpp
-  # sinks
+#  # sinks
   sink/sink_base.h
   sink/sink_base.cpp
   sink/sink_image.h
@@ -32,19 +32,20 @@ set(PROJECT_SOURCES
   sink/sink_file.cpp
   sink/sink_encode.h
   sink/sink_encode.cpp
-  # image
+#  # image
   image_provider/image_provider.cpp
   image_provider/image_provider.h
   image_provider/live_image.cpp
   image_provider/live_image.h
   # utils
-  utils/stringf.h
   utils/decoder_config.h
   utils/encoder_config.h
   utils/measure.h
   utils/codec_type.h
   qml.qrc
 )
+
+add_subdirectory(utils/fmt)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
   qt_add_executable(${PROJECT}
@@ -106,10 +107,142 @@ elseif (UNIX AND NOT APPLE)
     /usr/include/gstreamer-1.0/
   )
 elseif (WIN32)
-  #
-  # none
-  #
+    if(NOT DEFINED GSTREAMER_PATH)
+        set(GSTREAMER_PATH "E:/gstreamer/1.0/mingw_x86_64")
+    endif()
+  set(LIBRARIES_INCLUDE
+    ${GSTREAMER_PATH}/include/gstreamer-1.0
+    ${GSTREAMER_PATH}/include/gstreamer-1.0/gst
+    ${GSTREAMER_PATH}/include/glib-2.0
+    ${GSTREAMER_PATH}/lib/glib-2.0/include
+  )
+  set(LIBRARIES ${LIBRARIES}
+    -liphlpapi
+    -lwinmm
+    -limm32
+    -lws2_32 -liphlpapi -lpsapi -lIphlpapi
+    -static-libgcc -static-libstdc++
+    ${GSTREAMER_PATH}/bin/libass-9.dll
+    ${GSTREAMER_PATH}/bin/libbz2.dll
+    ${GSTREAMER_PATH}/bin/libcairo-2.dll
+    ${GSTREAMER_PATH}/bin/libcairo-gobject-2.dll
+    ${GSTREAMER_PATH}/bin/libcairo-script-interpreter-2.dll
+    ${GSTREAMER_PATH}/bin/libcharset-1.dll
+    ${GSTREAMER_PATH}/bin/libcroco-0.6-3.dll
+    ${GSTREAMER_PATH}/bin/libcrypto-1_1-x64.dll
+    ${GSTREAMER_PATH}/bin/libdav1d.dll
+    ${GSTREAMER_PATH}/bin/libdv-4.dll
+    ${GSTREAMER_PATH}/bin/libexpat-1.dll
+    ${GSTREAMER_PATH}/bin/libffi-7.dll
+    ${GSTREAMER_PATH}/bin/libFLAC-8.dll
+    ${GSTREAMER_PATH}/bin/libfontconfig-1.dll
+    ${GSTREAMER_PATH}/bin/libfreetype-6.dll
+    ${GSTREAMER_PATH}/bin/libfribidi-0.dll
+    ${GSTREAMER_PATH}/bin/libgcc_s_seh-1.dll
+    ${GSTREAMER_PATH}/bin/libgdk_pixbuf-2.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgio-2.0-0.dll
+    ${GSTREAMER_PATH}/bin/libglib-2.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgmodule-2.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgobject-2.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgraphene-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstadaptivedemux-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstallocators-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstapp-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstaudio-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstbadaudio-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstbase-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstbasecamerabinsrc-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstcheck-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstcodecparsers-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstcodecs-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstcontroller-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstcuda-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstd3d11-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstfft-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstgl-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstinsertbin-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstisoff-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstmpegts-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstnet-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstpbutils-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstphotography-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstplay-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstplayer-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstreamer-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstriff-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstrtp-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstrtsp-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstrtspserver-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstsctp-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstsdp-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgsttag-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgsttranscoder-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgsturidownloader-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstvideo-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstwebrtc-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgstwebrtcnice-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libgthread-2.0-0.dll
+    ${GSTREAMER_PATH}/bin/libharfbuzz-0.dll
+    ${GSTREAMER_PATH}/bin/libiconv-2.dll
+    ${GSTREAMER_PATH}/bin/libintl-8.dll
+    ${GSTREAMER_PATH}/bin/libjpeg-8.dll
+    ${GSTREAMER_PATH}/bin/libjson-glib-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libkate-1.dll
+    ${GSTREAMER_PATH}/bin/libltc-11.dll
+    ${GSTREAMER_PATH}/bin/libmp3lame-0.dll
+    ${GSTREAMER_PATH}/bin/libmpg123-0.dll
+    ${GSTREAMER_PATH}/bin/libnice-10.dll
+    ${GSTREAMER_PATH}/bin/libogg-0.dll
+    ${GSTREAMER_PATH}/bin/liboggkate-1.dll
+    ${GSTREAMER_PATH}/bin/libopenh264-6.dll
+    ${GSTREAMER_PATH}/bin/libopenjp2.dll
+    ${GSTREAMER_PATH}/bin/libopus-0.dll
+    ${GSTREAMER_PATH}/bin/liborc-0.4-0.dll
+    ${GSTREAMER_PATH}/bin/liborc-test-0.4-0.dll
+    ${GSTREAMER_PATH}/bin/libpango-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libpangocairo-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libpangoft2-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libpangowin32-1.0-0.dll
+    ${GSTREAMER_PATH}/bin/libpcre2-8-0.dll
+    ${GSTREAMER_PATH}/bin/libpixman-1-0.dll
+    ${GSTREAMER_PATH}/bin/libpng16-16.dll
+    ${GSTREAMER_PATH}/bin/libpsl-5.dll
+    ${GSTREAMER_PATH}/bin/librsvg-2-2.dll
+    ${GSTREAMER_PATH}/bin/libsbc-1.dll
+    ${GSTREAMER_PATH}/bin/libSoundTouch-1.dll
+    ${GSTREAMER_PATH}/bin/libsoup-2.4-1.dll
+    ${GSTREAMER_PATH}/bin/libspandsp-2.dll
+    ${GSTREAMER_PATH}/bin/libspeex-1.dll
+    ${GSTREAMER_PATH}/bin/libsqlite3-0.dll
+    ${GSTREAMER_PATH}/bin/libsrt.dll
+    ${GSTREAMER_PATH}/bin/libsrtp2-1.dll
+    ${GSTREAMER_PATH}/bin/libssl-1_1-x64.dll
+    ${GSTREAMER_PATH}/bin/libstdc++-6.dll
+    ${GSTREAMER_PATH}/bin/libtag.dll
+    ${GSTREAMER_PATH}/bin/libtheora-0.dll
+    ${GSTREAMER_PATH}/bin/libtheoradec-1.dll
+    ${GSTREAMER_PATH}/bin/libtheoraenc-1.dll
+    ${GSTREAMER_PATH}/bin/libtiff-5.dll
+    ${GSTREAMER_PATH}/bin/libturbojpeg-0.dll
+    ${GSTREAMER_PATH}/bin/libvorbis-0.dll
+    ${GSTREAMER_PATH}/bin/libvorbisenc-2.dll
+    ${GSTREAMER_PATH}/bin/libvorbisfile-3.dll
+    ${GSTREAMER_PATH}/bin/libwavpack.dll
+    ${GSTREAMER_PATH}/bin/libwebrtc_audio_processing-0.dll
+    ${GSTREAMER_PATH}/bin/libwinpthread-1.dll
+    ${GSTREAMER_PATH}/bin/libxml2-2.dll
+    ${GSTREAMER_PATH}/bin/libz-1.dll
+    ${GSTREAMER_PATH}/bin/libzbar-0.dll
+)
 endif ()
+
+# common libraries (all platforms)
+set(LIBRARIES_INCLUDE ${LIBRARIES_INCLUDE}
+  utils/fmt/include
+)
+set(LIBRARIES ${LIBRARIES}
+  fmt
+)
 
 target_link_libraries(${PROJECT} PRIVATE
   Qt${QT_VERSION_MAJOR}::Core

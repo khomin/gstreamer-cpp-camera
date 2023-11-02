@@ -1,10 +1,10 @@
 #include "source_device.h"
-#include "utils/stringf.h"
+#include "fmt/core.h"
 #include <iostream>
 #include <thread>
 
 SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
-    std::string cmdf = StringFormatter::format(
+    auto cmdF = fmt::format(
             cmd,
 #if __APPLE__
             type == SourceDeviceType::Screen ? cmd_screen_macos : cmd_camera_macos,
@@ -15,7 +15,7 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
 #endif
             option == OptionType::TimeOverlay ? show_time_overlay : ""
     );
-    m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
+    m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;

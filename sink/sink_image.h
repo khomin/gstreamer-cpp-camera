@@ -23,7 +23,7 @@ private:
     ImageType m_type = ImageType::Full;
 protected:
     static constexpr auto tag = "SinkImage: ";
-    static constexpr auto cmd = "appsrc name=source_to_out is-live=true ! videoconvert %s ! queue ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr auto cmd = "appsrc name=source_to_out is-live=true ! videoconvert {} ! queue ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif

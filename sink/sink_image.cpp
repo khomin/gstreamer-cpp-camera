@@ -1,23 +1,19 @@
 #include "sink_image.h"
-#include "utils/stringf.h"
+#include "fmt/core.h"
 #include "utils/measure.h"
-
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
 #include <iostream>
+#include "fmt/core.h"
 
 SinkImage::SinkImage(ImageType type) : m_type(type) {
-    std::string cmdf;
+    std::string cmdF;
     if(m_type == ImageType::Full) {
-        cmdf = StringFormatter::format(cmd,
-                                       StringFormatter::format(
-                                               "! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", 1280,
-                                               720).c_str());
+        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width={},height={}", 1280, 720));
     } else if(m_type == ImageType::Preview) {
-        cmdf = StringFormatter::format(cmd,
-            StringFormatter::format("! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", 380, 240).c_str());
+        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width={},height={}", 380, 240));
     }
-    m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
+    m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;

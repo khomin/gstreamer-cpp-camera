@@ -27,10 +27,10 @@ uint64_t maxPacketSize = 0;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
+#define USE_VIDEO_TO_ENCODE_CODEC
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
-#define USE_CRASH_TEST_2
+//#define USE_CRASH_TEST_2
 
 int runLoop (int argc, char *argv[]) {
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC)
@@ -139,33 +139,16 @@ int runLoop (int argc, char *argv[]) {
         gst_debug_set_default_threshold(GST_LEVEL_WARNING);
 
         auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000));
-        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000));
         auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-        auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-
-        srcFromScreen->addSink(sinkToEncode);
         srcFromScreen->addSink(sinkToImgLeft);
-        srcDecode->addSink(sinkToImgRight);
         sinkToImgLeft->setImage(image1);
-        sinkToImgRight->setImage(image2);
-
-        sinkToEncode->setOnEncoded(std::make_shared<SinkEncode::OnEncoded>([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
-            srcDecode->putDataToDecode(data, len);
-        }));
-        sinkToImgRight->start();
         sinkToImgLeft->start();
-        sinkToEncode->start();
-        srcDecode->start();
         srcFromScreen->start();
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(00));
 
         srcFromScreen.reset();
-        sinkToEncode.reset();
-        srcDecode.reset();;
         sinkToImgLeft.reset();
-        sinkToImgRight.reset();
+
         std::cout << "test " << i+1 << " end" << std::endl;
     }
     gst_deinit();
@@ -225,8 +208,8 @@ int main(int argc, char *argv[]) {
     image2 = new ImageProvider();
 
     qmlRegisterType<LiveImage>("ImageAdapter", 1, 0, "LiveImage");
-    engine.rootContext()->setContextProperty("provider1", image1);
-    engine.rootContext()->setContextProperty("provider2", image2);
+    engine.rootContext()->setContextProperty("provider1", (ImageProvider*) image1);
+    engine.rootContext()->setContextProperty("provider2", (ImageProvider*) image2);
 
     auto tr = std::thread([&] {
         runLoop(0, NULL);

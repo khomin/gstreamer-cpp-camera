@@ -1,5 +1,5 @@
 #include "sink_encode.h"
-#include "utils/stringf.h"
+#include "fmt/core.h"
 #include "utils/measure.h"
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
@@ -7,11 +7,11 @@
 
 SinkEncode::SinkEncode(EncoderConfig config) {
     m_config = config;
-    std::string cmdf = StringFormatter::format(cmd,
-                                               config.pixelFormat.c_str(),
-                                               config.width, config.height,
-                                               config.framerate,
-                                               (config.codec + " " + config.codecOptions).c_str()
+    std::string cmdf = fmt::format(cmd,
+            config.pixelFormat.c_str(),
+            config.width, config.height,
+            config.framerate,
+            (config.codec + " " + config.codecOptions).c_str()
     );
     m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
     if (m_pipe == NULL) {
