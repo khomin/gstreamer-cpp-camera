@@ -23,7 +23,7 @@ private:
 
     static constexpr auto tag = "SourceDevice: ";
     static constexpr const char* cmd = "{} {} ! videoconvert ! videorate ! videoscale ! video/x-raw,format=RGB,framerate=30/1,width=2560,height=1600 ! appsink name=sink_out";
-    static constexpr const char* cmd_screen_macos = "videotestsrc name=src";
+    static constexpr const char* cmd_screen_macos = "avfvideosrc name=src capture-screen=true capture-screen-cursor=true";
     static constexpr const char* cmd_camera_macos = "avfvideosrc name=src";
     static constexpr const char* cmd_screen_linux = "ximagesrc name=src";
     static constexpr const char* cmd_camera_linux = "v4l2src name=src";
