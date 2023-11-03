@@ -17,8 +17,8 @@ public:
     void setImage(ImageProviderAbstract* imageProvider);
 
 private:
-    static GstFlowReturn on_sample(GstElement * elt, ImageProviderAbstract* image);
-
+    static GstFlowReturn on_sample(GstElement * elt, SinkImage* image);
+    uint64_t m_signal_id = 0;
     ImageProviderAbstract* m_image = NULL;
     ImageType m_type = ImageType::Full;
 protected:

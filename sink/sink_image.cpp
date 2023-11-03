@@ -28,10 +28,12 @@ SinkImage::SinkImage(ImageType type) : m_type(type) {
 SinkImage::SinkImage() : SinkImage(ImageType::Preview) {}
 
 SinkImage::~SinkImage() {
-    if(m_pipe != NULL) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
+    std::lock_guard<std::mutex> lock(m_lock);
+    auto bus = gst_element_get_bus (m_pipe);
+    g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkImage::on_sample), this);
+    g_signal_handler_disconnect(this, m_signal_id);
+    m_image = nullptr;
+    gst_object_unref (bus);
     std::cout << tag << ": destroyed" << std::endl;
 }
 
@@ -44,7 +46,7 @@ void SinkImage::start() {
     // sink
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkImage::on_sample), m_image);
+    m_signal_id = g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkImage::on_sample), this);
     if(source == NULL) m_error = true;
     gst_object_unref (sink_out);
     gst_object_unref (source);
@@ -66,7 +68,7 @@ void SinkImage::setImage(ImageProviderAbstract* image) {
     m_image = image;
 }
 
-GstFlowReturn SinkImage::on_sample(GstElement * elt, ImageProviderAbstract* image) {
+GstFlowReturn SinkImage::on_sample(GstElement * elt, SinkImage* data) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
@@ -84,8 +86,8 @@ GstFlowReturn SinkImage::on_sample(GstElement * elt, ImageProviderAbstract* imag
 
             Measure::instance()->onImageSampleReady();
 
-            if(image != NULL) {
-                image->setImage(imW, imH, (uint8_t*)mapInfo.data, mapInfo.size);
+            if(data != NULL && data->m_image != NULL) {
+                data->m_image->setImage(imW, imH, (uint8_t*)mapInfo.data, mapInfo.size);
             }
             gst_buffer_unmap(buffer, &mapInfo);
         }
