@@ -20,7 +20,7 @@ void ImageProvider::setImage(int width, int height, uint8_t* data, uint32_t len)
         m_buf_len = len;
     }
     memcpy(m_buf, data, len);
-    auto image = QImage((const uchar *)m_buf, width, height, QImage::Format_RGB888);
+    auto image = QImage((const uchar *)m_buf, width, height, QImage::Format_RGBA8888);
     setImage(image);
 }
 

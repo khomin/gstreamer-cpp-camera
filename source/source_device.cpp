@@ -1,10 +1,10 @@
 #include "source_device.h"
-#include "utils/stringf.h"
+#include "fmt/core.h"
 #include <iostream>
 #include <thread>
 
 SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
-    std::string cmdf = StringFormatter::format(
+    auto cmdF = fmt::format(
             cmd,
 #if __APPLE__
             type == SourceDeviceType::Screen ? cmd_screen_macos : cmd_camera_macos,
@@ -15,7 +15,7 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
 #endif
             option == OptionType::TimeOverlay ? show_time_overlay : ""
     );
-    m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
+    m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
@@ -24,17 +24,19 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
     * and we pull out the data in the signal callback. We want the appsink to
     * push as fast as it can, hence the sync=false */
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
-    g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", FALSE, NULL);
+    g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceDevice::on_sample), this);
     gst_object_unref (sink_out);
     std::cout << tag << ": created" << std::endl;
 }
 
 SourceDevice::~SourceDevice() {
-    if(m_pipe != nullptr) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto bus = gst_element_get_bus (m_pipe);
+    auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
+    g_signal_handlers_disconnect_by_data(sink_out, this);
+    gst_object_unref (sink_out);
+    gst_object_unref (bus);
     std::cout << tag << ": destroyed" << std::endl;
 }
 

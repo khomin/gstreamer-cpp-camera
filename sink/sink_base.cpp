@@ -1,12 +1,22 @@
 #include "sink_base.h"
 #include <iostream>
-#include <random>
 
 SinkBase::SinkBase() {
-    m_id = random();
+    m_id = m_id_cnt++;
 }
 
-SinkBase::~SinkBase() {}
+SinkBase::~SinkBase() {
+    if(m_pipe != nullptr) {
+        gst_element_send_event(m_pipe, gst_event_new_eos());
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        cleanBusEvents();
+        auto bus = gst_element_get_bus (m_pipe);
+        //gst_bus_remove_watch(bus);
+        gst_object_unref(m_pipe);
+        gst_object_unref (bus);
+        m_pipe = nullptr;
+    }
+}
 
 void SinkBase::putData(uint8_t* data, uint32_t len) {}
 
@@ -42,7 +52,6 @@ void SinkBase::pausePipe() {
 void SinkBase::stopPipe() {
     if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
-        cleanBusEvents();
         m_is_running = false;
     }
 }
@@ -51,14 +60,15 @@ void SinkBase::cleanBusEvents() {
     //// https://stackoverflow.com/questions/76753673/gstreamer-memory-leak-when-switching-between-states#comment135328339_76757393
     GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(m_pipe));
     for (;;) {
-        //std::cout << "SinkBase: polling bus events and cleaning them" << std::endl;
         GstMessage *msg = gst_bus_timed_pop_filtered(bus, 1, GST_MESSAGE_STATE_CHANGED);
-        if (msg == NULL || msg->src == GST_OBJECT(m_pipe)) {
+        if(msg == NULL) {
+            break;
+        }
+        if (msg->src == GST_OBJECT(m_pipe)) {
             gst_message_unref(msg);
             break;
         }
         gst_message_unref(msg);
     }
     gst_object_unref(bus);
-    std::cout << "SinkBase: cleaned event" << std::endl;
 }

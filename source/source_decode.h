@@ -22,7 +22,7 @@ private:
     static GstFlowReturn on_sample(GstElement * elt, SourceDecode* data);
 
     static constexpr auto tag = "SourceDecode: ";
-    static constexpr const char* cmd = "appsrc name=source_to_decode ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! videoconvert ! video/x-raw,format=RGBA ! queue ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr const char* cmd = "appsrc name=source_to_decode ! video/{},format={},width={},height={},stream-format=byte-stream,framerate={}/1,alignment=au,bitrate={} ! {} ! videoconvert ! video/x-raw,format=RGBA ! queue ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif // SOURCE_DECODE_H

@@ -1,5 +1,5 @@
 #include "sink_encode.h"
-#include "utils/stringf.h"
+#include "fmt/core.h"
 #include "utils/measure.h"
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
@@ -7,11 +7,11 @@
 
 SinkEncode::SinkEncode(EncoderConfig config) {
     m_config = config;
-    std::string cmdf = StringFormatter::format(cmd,
-                                               config.pixelFormat.c_str(),
-                                               config.width, config.height,
-                                               config.framerate,
-                                               (config.codec + " " + config.codecOptions).c_str()
+    std::string cmdf = fmt::format(cmd,
+            config.pixelFormat.c_str(),
+            config.width, config.height,
+            config.framerate,
+            (config.codec + " " + config.codecOptions).c_str()
     );
     m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
     if (m_pipe == NULL) {
@@ -37,12 +37,12 @@ SinkEncode::SinkEncode(EncoderConfig config) {
 
 SinkEncode::~SinkEncode() {
     std::lock_guard<std::mutex> lock(m_lock);
-    m_on_encoded = NULL;
-    if(m_pipe != NULL) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
-    std::cout << tag << ": destroyed" << std::endl;
+    auto bus = gst_element_get_bus (m_pipe);
+    g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkEncode::on_sample), this);
+    g_signal_handler_disconnect(this, m_signal_id);
+    m_on_encoded = nullptr;
+    gst_object_unref (bus);
+    std::cout << tag << ": destroyed, id: " << m_signal_id << std::endl;
 }
 
 void SinkEncode::start() {
@@ -50,13 +50,14 @@ void SinkEncode::start() {
     if(m_on_encoded != NULL) {
         auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
         g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
-        g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkEncode::on_sample), &m_on_encoded);
+        m_signal_id = g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkEncode::on_sample), this);
+        std::cout << tag << ": GOT signal id: " << m_signal_id << std::endl;
         if(sink_out == NULL) {
             m_error = true;
         }
         gst_object_unref (sink_out);
+        startPipe();
     }
-    startPipe();
 }
 
 void SinkEncode::putSample(GstSample* sample) {
@@ -70,12 +71,12 @@ void SinkEncode::putSample(GstSample* sample) {
     Measure::instance()->onEncodePutSample();
 }
 
-void SinkEncode::setOnEncoded(std::shared_ptr<std::function<void(uint8_t*,uint32_t,uint64_t,uint64_t)>> cb) {
+void SinkEncode::setOnEncoded(OnEncoded cb) {
     std::lock_guard<std::mutex> lock(m_lock);
     m_on_encoded = cb;
 }
 
-GstFlowReturn SinkEncode::on_sample(GstElement * elt, std::shared_ptr<SinkEncode::OnEncoded> cb) {
+GstFlowReturn SinkEncode::on_sample(GstElement * elt, SinkEncode* data) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
@@ -87,8 +88,8 @@ GstFlowReturn SinkEncode::on_sample(GstElement * elt, std::shared_ptr<SinkEncode
             GstMapInfo mapInfo;
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
             Measure::instance()->onEncodeSampleReady();
-            if(cb != NULL) {
-                (*cb)((uint8_t*)mapInfo.data, mapInfo.size, buffer->pts, buffer->dts);
+            if(data != NULL && data->m_on_encoded != NULL) {
+                data->m_on_encoded((uint8_t*)mapInfo.data, mapInfo.size, buffer->pts, buffer->dts);
             }
             gst_buffer_unmap(buffer, &mapInfo);
         }

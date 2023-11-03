@@ -1,18 +1,18 @@
 #include "source_decode.h"
-#include "utils/stringf.h"
+#include "fmt/core.h"
 #include "utils/measure.h"
 #include <gst/pbutils/codec-utils.h>
 #include <iostream>
 
 SourceDecode::SourceDecode(DecoderConfig config) {
-    auto cmdf = StringFormatter::format(cmd,
-                                       config.codecInVideo.c_str(),
-                                       config.pixelFormat.c_str(),
-                                       config.width, config.height,
-                                       config.framerate,
-                                       config.bitrate,
-                                       config.decoder.c_str());
-    m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
+    auto cmdF = fmt::format(cmd,
+                            config.codecInVideo.c_str(),
+                            config.pixelFormat.c_str(),
+                            config.width, config.height,
+                            config.framerate,
+                            config.bitrate,
+                            config.decoder.c_str());
+    m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
@@ -22,10 +22,7 @@ SourceDecode::SourceDecode(DecoderConfig config) {
 
 SourceDecode::~SourceDecode() {
     std::lock_guard<std::mutex> lk(m_lock);
-    if(m_pipe != NULL) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
+    stopPipe();
     std::cout << tag << ": destroyed" << std::endl;
 }
 

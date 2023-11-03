@@ -27,6 +27,7 @@ protected:
 private:
     void cleanBusEvents();
     bool m_is_running = false;
+    uint64_t m_id_cnt = 0;
 };
 
 #endif // SINKBASE_H
