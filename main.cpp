@@ -136,10 +136,10 @@ int runLoop (int argc, char *argv[]) {
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
-    Measure::instance()->Loop = g_main_loop_new(NULL, FALSE);
-    auto tr = std::thread([&] {
-        g_main_loop_run(Measure::instance()->Loop);
-    });
+//    Measure::instance()->Loop = g_main_loop_new(NULL, FALSE);
+//    auto tr = std::thread([&] {
+//        g_main_loop_run(Measure::instance()->Loop);
+//    });
     for(int i=0; i<1000; i++) {
         std::cout << "test " << i+1 << " start" << std::endl;
 
@@ -178,7 +178,7 @@ int runLoop (int argc, char *argv[]) {
         }
     }
     gst_deinit();
-    tr.join();
+//    tr.join();
 #endif
 
 #ifdef USE_DECODE_FROM_FILE
