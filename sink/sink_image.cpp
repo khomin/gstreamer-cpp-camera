@@ -24,10 +24,8 @@ SinkImage::SinkImage(ImageType type) : m_type(type) {
 SinkImage::SinkImage() : SinkImage(ImageType::Preview) {}
 
 SinkImage::~SinkImage() {
-    if(m_pipe != NULL) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
+    std::lock_guard<std::mutex> lk(m_lock);
+    stopPipe();
     std::cout << tag << ": destroyed" << std::endl;
 }
 

@@ -22,10 +22,7 @@ SourceDecode::SourceDecode(DecoderConfig config) {
 
 SourceDecode::~SourceDecode() {
     std::lock_guard<std::mutex> lk(m_lock);
-    if(m_pipe != NULL) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
+    stopPipe();
     std::cout << tag << ": destroyed" << std::endl;
 }
 

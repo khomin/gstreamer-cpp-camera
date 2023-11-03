@@ -10,6 +10,7 @@ class SourceBase
 {
 public:
     SourceBase();
+    virtual ~SourceBase();
     void addSink(std::shared_ptr<SinkBase> sink);
     void removeSink(std::shared_ptr<SinkBase> sink);
     std::vector<std::shared_ptr<SinkBase>> getSinks();

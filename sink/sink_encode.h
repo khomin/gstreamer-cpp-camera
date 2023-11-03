@@ -16,11 +16,12 @@ public:
 
     void start() override;
     void putSample(GstSample* sample) override;
-    void setOnEncoded(std::shared_ptr<OnEncoded> cb);
+    void setOnEncoded(OnEncoded cb);
 private:
     EncoderConfig m_config;
-    std::shared_ptr<OnEncoded> m_on_encoded = nullptr;
-    static GstFlowReturn on_sample(GstElement * elt, std::shared_ptr<SinkEncode::OnEncoded> cb);
+    OnEncoded m_on_encoded = nullptr;
+    uint64_t m_signal_id = 0;
+    static GstFlowReturn on_sample(GstElement * elt, SinkEncode* cb);
 protected:
     static constexpr auto tag = "SinkEncode: ";
     static constexpr const auto cmd = "appsrc name=source_to_out ! videoconvert ! videoscale ! videorate ! video/x-raw,format={},width={},height={},framerate={}/1 ! {} ! queue ! appsink name=sink_out max-buffers=1 drop=true";

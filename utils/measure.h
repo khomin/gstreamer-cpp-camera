@@ -20,6 +20,8 @@ struct Measure {
 
     ~Measure() {}
 
+    _GMainLoop* Loop;
+
     void onEncodePutSample() {
         static bool m = false;
         if(!m) {

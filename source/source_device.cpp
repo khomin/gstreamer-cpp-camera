@@ -24,17 +24,19 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
     * and we pull out the data in the signal callback. We want the appsink to
     * push as fast as it can, hence the sync=false */
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
-    g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", FALSE, NULL);
+    g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceDevice::on_sample), this);
     gst_object_unref (sink_out);
     std::cout << tag << ": created" << std::endl;
 }
 
 SourceDevice::~SourceDevice() {
-    if(m_pipe != nullptr) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto bus = gst_element_get_bus (m_pipe);
+    auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
+    g_signal_handlers_disconnect_by_data(sink_out, this);
+    gst_object_unref (sink_out);
+    gst_object_unref (bus);
     std::cout << tag << ": destroyed" << std::endl;
 }
 

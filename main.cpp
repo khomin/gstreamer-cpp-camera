@@ -20,6 +20,7 @@
 #include "sink/sink_encode.h"
 #include "source/source_decode.h"
 #include "utils/codec_type.h"
+#include "utils/measure.h"
 
 ImageProviderAbstract* image1 = NULL;
 ImageProviderAbstract* image2 = NULL;
@@ -27,10 +28,10 @@ uint64_t maxPacketSize = 0;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-#define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_VIDEO_TO_ENCODE_CODEC
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
-//#define USE_CRASH_TEST_2
+#define USE_CRASH_TEST_2
 
 int runLoop (int argc, char *argv[]) {
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC)
@@ -79,7 +80,7 @@ int runLoop (int argc, char *argv[]) {
     sinkToImgLeft->setImage(image1);
     sinkToImgRight->setImage(image2);
 
-    sinkToEncode->setOnEncoded(std::make_shared<SinkEncode::OnEncoded>([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+    sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
         if(maxPacketSize < len) {
             maxPacketSize = len;
             std::cout << "BTEST_MAX: " << maxPacketSize << std::endl; // max 163840
@@ -111,7 +112,7 @@ int runLoop (int argc, char *argv[]) {
         sinkToImgLeft->setImage(image1);
         sinkToImgRight->setImage(image2);
 
-        sinkToEncode->setOnEncoded(std::make_shared<SinkEncode::OnEncoded>([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
             srcDecode->putDataToDecode(data, len);
         }));
         sinkToImgRight->start();
@@ -133,25 +134,51 @@ int runLoop (int argc, char *argv[]) {
 
 #ifdef USE_CRASH_TEST_2
     gst_init(NULL, NULL);
+    gst_debug_set_active(TRUE);
+    gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+    Measure::instance()->Loop = g_main_loop_new(NULL, FALSE);
+    auto tr = std::thread([&] {
+        g_main_loop_run(Measure::instance()->Loop);
+    });
     for(int i=0; i<1000; i++) {
         std::cout << "test " << i+1 << " start" << std::endl;
-        gst_debug_set_active(TRUE);
-        gst_debug_set_default_threshold(GST_LEVEL_WARNING);
 
-        auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
+        auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::None);
         auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-        srcFromScreen->addSink(sinkToImgLeft);
+        auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
+        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecVp8, 1280,720, 20, 400));
+        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecVp8, 1280 ,720, 20, 400));
         sinkToImgLeft->setImage(image1);
-        sinkToImgLeft->start();
-        srcFromScreen->start();
-        std::this_thread::sleep_for(std::chrono::milliseconds(00));
+        sinkToImgRight->setImage(image2);
 
-        srcFromScreen.reset();
-        sinkToImgLeft.reset();
+        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([&, srcDecode](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+            srcDecode->putDataToDecode(data, len);
+        }));
+        srcDecode->addSink(sinkToImgRight);
+        srcFromScreen->addSink(sinkToImgLeft);
+        srcFromScreen->addSink(sinkToEncode);
+        sinkToImgLeft->start();
+        sinkToImgRight->start();
+        sinkToEncode->start();
+        srcDecode->start();
+        srcFromScreen->start();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        sinkToEncode = nullptr;
+        srcFromScreen = nullptr;
+        sinkToImgLeft = nullptr;
+        sinkToImgRight = nullptr;
+        srcDecode = nullptr;
+
+//        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
         std::cout << "test " << i+1 << " end" << std::endl;
+        if(i == 300) {
+            std::cout << "test " << i+1 << " end" << std::endl;
+        }
     }
     gst_deinit();
+    tr.join();
 #endif
 
 #ifdef USE_DECODE_FROM_FILE

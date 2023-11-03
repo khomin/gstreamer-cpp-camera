@@ -15,10 +15,7 @@ SinkFile::SinkFile(std::string path) {
 
 SinkFile::~SinkFile() {
     std::lock_guard<std::mutex> lock(m_lock);
-    if(m_pipe != NULL) {
-        stopPipe();
-        gst_object_unref(m_pipe);
-    }
+    stopPipe();
     m_file.close();
     std::cout << tag << ": destroyed" << std::endl;
 }
