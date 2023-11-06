@@ -6,6 +6,9 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
+#include <gst/video/video.h>
+//#include <gio/gio.h>
+#include <gst/gstplugin.h>
 #include <iostream>
 #include <thread>
 
@@ -28,21 +31,51 @@ uint64_t maxPacketSize = 0;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
+#define USE_VIDEO_TO_ENCODE_CODEC
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
-#define USE_CRASH_TEST_2
+//#define USE_CRASH_TEST_2
+
+extern "C" {
+GST_PLUGIN_STATIC_DECLARE(coreelements);
+GST_PLUGIN_STATIC_DECLARE(libav);
+GST_PLUGIN_STATIC_DECLARE(openh264);
+GST_PLUGIN_STATIC_DECLARE(app);
+GST_PLUGIN_STATIC_DECLARE(appsink);
+GST_PLUGIN_STATIC_DECLARE(videoparsersbad);
+GST_PLUGIN_STATIC_DECLARE(x264);
+GST_PLUGIN_STATIC_DECLARE(isomp4);
+GST_PLUGIN_STATIC_DECLARE(applemedia);
+GST_PLUGIN_STATIC_DECLARE(videoconvertscale);
+GST_PLUGIN_STATIC_DECLARE(videorate);
+GST_PLUGIN_STATIC_DECLARE(pango);
+GST_PLUGIN_STATIC_DECLARE(videotestsrc);
+}
 
 int runLoop (int argc, char *argv[]) {
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC)
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+
+    GST_PLUGIN_STATIC_REGISTER(coreelements);
+    GST_PLUGIN_STATIC_REGISTER(libav);
+    GST_PLUGIN_STATIC_REGISTER(app);
+    GST_PLUGIN_STATIC_REGISTER(openh264);
+    GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
+    GST_PLUGIN_STATIC_REGISTER(x264);
+    GST_PLUGIN_STATIC_REGISTER(isomp4);
+    GST_PLUGIN_STATIC_REGISTER(applemedia);
+    GST_PLUGIN_STATIC_REGISTER(videoconvertscale);
+    GST_PLUGIN_STATIC_REGISTER(videorate);
+    GST_PLUGIN_STATIC_REGISTER(pango);
+    GST_PLUGIN_STATIC_REGISTER(videotestsrc);
+
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc, SourceDevice::OptionType::TimeOverlay);
     auto srcFromScreen = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecVp8, 1280,720, 30, 1000000 / 1000));
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecVp8, 1280,720, 20, 1000000 / 1000));
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 30, 1000000 / 1000));
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 1000000 / 1000));
     auto sinkToImgLeft = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToImgRight = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());

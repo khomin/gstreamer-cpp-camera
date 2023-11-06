@@ -23,7 +23,7 @@ set(PROJECT_SOURCES
   source/source_device.cpp
   source/source_decode.h
   source/source_decode.cpp
-#  # sinks
+  # sinks
   sink/sink_base.h
   sink/sink_base.cpp
   sink/sink_image.h
@@ -32,7 +32,7 @@ set(PROJECT_SOURCES
   sink/sink_file.cpp
   sink/sink_encode.h
   sink/sink_encode.cpp
-#  # image
+  # image
   image_provider/image_provider.cpp
   image_provider/image_provider.h
   image_provider/live_image.cpp
@@ -82,12 +82,35 @@ elseif (APPLE)
     /Library/Frameworks/GStreamer.framework/Versions/1.0/include
     /Library/Frameworks/GStreamer.framework/Versions/1.0/Headers
   )
+  file(GLOB_RECURSE GSTREAMER_LIBS
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/*.a
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gio/modules/*.a
+  )
+
   set(LIBRARIES ${LIBRARIES}
     -liconv
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libglib-2.0.dylib
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libgobject-2.0.dylib
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libgstapp-1.0.dylib
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libgstreamer-1.0.dylib
+    ${GSTREAMER_LIBS}
+    "-framework Cocoa"
+    "-framework Security"
+    "-framework Foundation"
+    "-framework ServiceManagement"
+    "-framework ScreenCaptureKit"
+    "-framework AVFoundation"
+    "-framework AudioToolbox"
+    "-framework AGL"
+    "-framework VideoToolbox"
+    "-framework GLKit"
+    "-framework OpenGL"
+    "-framework CoreMedia"
+    "-framework CoreVideo"
+    "-framework IOSurface"
+    "-framework QuartzCore"
+    "-framework Metal"
+    "-framework MetalKit"
+    "-framework MetalFX"
+    "-framework IOKit"
   )
 elseif (UNIX AND NOT APPLE)
   find_package(PkgConfig REQUIRED)
@@ -107,9 +130,9 @@ elseif (UNIX AND NOT APPLE)
     /usr/include/gstreamer-1.0/
   )
 elseif (WIN32)
-    if(NOT DEFINED GSTREAMER_PATH)
-        set(GSTREAMER_PATH "E:/gstreamer/1.0/mingw_x86_64/bin")
-    endif()
+  if (NOT DEFINED GSTREAMER_PATH)
+    set(GSTREAMER_PATH "E:/gstreamer/1.0/mingw_x86_64/bin")
+  endif ()
   set(LIBRARIES_INCLUDE
     ${GSTREAMER_PATH}/include/gstreamer-1.0
     ${GSTREAMER_PATH}/include/gstreamer-1.0/gst
@@ -233,7 +256,7 @@ elseif (WIN32)
     ${GSTREAMER_PATH}/libxml2-2.dll
     ${GSTREAMER_PATH}/libz-1.dll
     ${GSTREAMER_PATH}/libzbar-0.dll
-)
+  )
 endif ()
 
 # common libraries (all platforms)
