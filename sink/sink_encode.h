@@ -20,7 +20,6 @@ public:
 private:
     EncoderConfig m_config;
     OnEncoded m_on_encoded = nullptr;
-    uint64_t m_signal_id = 0;
     static GstFlowReturn on_sample(GstElement * elt, SinkEncode* cb);
 protected:
     static constexpr auto tag = "SinkEncode: ";

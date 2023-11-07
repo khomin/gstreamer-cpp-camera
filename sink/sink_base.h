@@ -22,6 +22,7 @@ protected:
 
     GstElement * m_pipe  = nullptr;
     uint64_t m_id = 0;
+    uint64_t m_signal_id = 0;
     bool m_error = false;
     std::mutex m_lock;
 private:

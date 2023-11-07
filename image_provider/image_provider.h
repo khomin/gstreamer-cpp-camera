@@ -17,6 +17,8 @@ public:
     void setImage(int width, int height, uint8_t* data, uint32_t len) override;
     void setImage(QImage const &image);
     QImage image() const;
+
+    void start() override;
 signals:
     void imageChanged();
 

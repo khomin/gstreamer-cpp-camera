@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.14)
 
 set(PROJECT test2)
-
 project(${PROJECT} VERSION 0.1 LANGUAGES CXX)
-
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
+if (USE_QT)
+  set(CMAKE_AUTOUIC ON)
+  set(CMAKE_AUTOMOC ON)
+  set(CMAKE_AUTORCC ON)
+  find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
+  find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
+  add_definitions(-DUSE_QT)
+endif ()
 
 set(PROJECT_SOURCES
   main.cpp
@@ -32,46 +32,64 @@ set(PROJECT_SOURCES
   sink/sink_file.cpp
   sink/sink_encode.h
   sink/sink_encode.cpp
-  # image
-  image_provider/image_provider.cpp
-  image_provider/image_provider.h
-  image_provider/live_image.cpp
-  image_provider/live_image.h
   # utils
   utils/decoder_config.h
   utils/encoder_config.h
   utils/measure.h
   utils/codec_type.h
-  qml.qrc
 )
+
+if (USE_QT)
+  set(PROJECT_SOURCES ${PROJECT_SOURCES}
+    qml.qrc
+    # image
+    image_provider/image_provider.cpp
+    image_provider/image_provider.h
+    image_provider/live_image.cpp
+    image_provider/live_image.h
+  )
+else ()
+  set(PROJECT_SOURCES ${PROJECT_SOURCES}
+    image_provider/image_videosink.cpp
+    image_provider/image_videosink.h
+  )
+endif ()
 
 add_subdirectory(utils/fmt)
 
-if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-  qt_add_executable(${PROJECT}
-    MANUAL_FINALIZATION
+if (USE_QT)
+  if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_executable(${PROJECT}
+      MANUAL_FINALIZATION
+      ${PROJECT_SOURCES}
+    )
+    # Define target properties for Android with Qt 6 as:
+    #    set_property(TARGET ${PROJECT} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+    #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
+    # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
+  else ()
+    if (ANDROID)
+      add_library(${PROJECT} SHARED
+        ${PROJECT_SOURCES}
+      )
+    else ()
+      add_executable(${PROJECT}
+        ${PROJECT_SOURCES}
+      )
+    endif ()
+  endif ()
+else ()
+  add_executable(${PROJECT}
     ${PROJECT_SOURCES}
   )
-  # Define target properties for Android with Qt 6 as:
-  #    set_property(TARGET ${PROJECT} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-  #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-  # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-else ()
-  if (ANDROID)
-    add_library(${PROJECT} SHARED
-      ${PROJECT_SOURCES}
-    )
-  else ()
-    add_executable(${PROJECT}
-      ${PROJECT_SOURCES}
-    )
-  endif ()
 endif ()
 
-set_target_properties(${PROJECT} PROPERTIES
-  MACOSX_BUNDLE TRUE
-  MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
-)
+if (USE_QT)
+  set_target_properties(${PROJECT} PROPERTIES
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
+  )
+endif ()
 
 if (IOS)
   #
@@ -83,12 +101,11 @@ elseif (APPLE)
     /Library/Frameworks/GStreamer.framework/Versions/1.0/Headers
   )
   file(GLOB_RECURSE GSTREAMER_LIBS
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/*.a
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gio/modules/*.a
+#    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
+#    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.dylib
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.dylib
   )
-
   set(LIBRARIES ${LIBRARIES}
     -liconv
     ${GSTREAMER_LIBS}
@@ -97,20 +114,18 @@ elseif (APPLE)
     "-framework Foundation"
     "-framework ServiceManagement"
     "-framework ScreenCaptureKit"
-    "-framework AVFoundation"
-    "-framework AudioToolbox"
-    "-framework AGL"
-    "-framework VideoToolbox"
-    "-framework GLKit"
-    "-framework OpenGL"
-    "-framework CoreMedia"
-    "-framework CoreVideo"
-    "-framework IOSurface"
-    "-framework QuartzCore"
-    "-framework Metal"
-    "-framework MetalKit"
-    "-framework MetalFX"
-    "-framework IOKit"
+#    "-framework AVFoundation"
+#    "-framework AudioToolbox"
+#    "-framework AGL"
+#    "-framework VideoToolbox"
+#    "-framework GLKit"
+#    "-framework OpenGL"
+#    "-framework CoreMedia"
+#    "-framework CoreVideo"
+#    "-framework IOSurface"
+#    "-framework QuartzCore"
+#    "-framework Metal"
+#    "-framework IOKit"
   )
 elseif (UNIX AND NOT APPLE)
   find_package(PkgConfig REQUIRED)
@@ -267,11 +282,17 @@ set(LIBRARIES ${LIBRARIES}
   fmt
 )
 
-target_link_libraries(${PROJECT} PRIVATE
-  Qt${QT_VERSION_MAJOR}::Core
-  Qt${QT_VERSION_MAJOR}::Quick
-  ${LIBRARIES}
-)
+if (USE_QT)
+  target_link_libraries(${PROJECT} PRIVATE
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Quick
+    ${LIBRARIES}
+  )
+else ()
+  target_link_libraries(${PROJECT} PRIVATE
+    ${LIBRARIES}
+  )
+endif ()
 
 # macos need info.plist
 if (APPLE)
@@ -297,7 +318,9 @@ install(TARGETS ${PROJECT}
   BUNDLE DESTINATION .
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-if (QT_VERSION_MAJOR EQUAL 6)
-  qt_import_qml_plugins(${PROJECT})
-  qt_finalize_executable(${PROJECT})
+if (USE_QT)
+  if (QT_VERSION_MAJOR EQUAL 6)
+    qt_import_qml_plugins(${PROJECT})
+    qt_finalize_executable(${PROJECT})
+  endif ()
 endif ()

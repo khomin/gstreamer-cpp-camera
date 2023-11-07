@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <iostream>
-#include <QDateTime>
+#include <chrono>
 
 struct Measure {
     Measure() {}
@@ -26,7 +26,7 @@ struct Measure {
         static bool m = false;
         if(!m) {
             m = true;
-            t1 = QDateTime::currentMSecsSinceEpoch();
+            t1 = std::chrono::system_clock::now().time_since_epoch().count();
             std::cout << "BTEST: encode put sample capture: " << t1 << std::endl;
         }
     }
@@ -35,7 +35,7 @@ struct Measure {
         static bool m = false;
         if(!m) {
             m = true;
-            t2 = QDateTime::currentMSecsSinceEpoch();
+            t2 = std::chrono::system_clock::now().time_since_epoch().count();
             std::cout << "BTEST: image sample capture: " << (t2-t1)/1000 << std::endl;
         }
     }
@@ -44,7 +44,7 @@ struct Measure {
         static bool m = false;
         if(!m) {
             m = true;
-            t3 = QDateTime::currentMSecsSinceEpoch();
+            t3 = std::chrono::system_clock::now().time_since_epoch().count();
             std::cout << "BTEST: encode sample ready capture: " << (t3-t2)/1000 << std::endl;
         }
     }
@@ -53,7 +53,7 @@ struct Measure {
         static bool m = false;
         if(!m) {
             m = true;
-            t4 = QDateTime::currentMSecsSinceEpoch();
+            t4 = std::chrono::system_clock::now().time_since_epoch().count();
             std::cout << "BTEST: decode put sample capture: " << (t4) << std::endl;
         }
     }
@@ -62,7 +62,7 @@ struct Measure {
         static bool m = false;
         if(!m) {
             m = true;
-            t5 = QDateTime::currentMSecsSinceEpoch();
+            t5 = std::chrono::system_clock::now().time_since_epoch().count();
             std::cout << "BTEST: decode sample ready capture: " << ((t5-t4)) << std::endl;
         }
     }

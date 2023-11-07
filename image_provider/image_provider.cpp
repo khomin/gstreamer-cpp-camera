@@ -30,6 +30,8 @@ void ImageProvider::setImage(QImage const &image)
     emit imageChanged();
 }
 
+void ImageProvider::start() {}
+
 QImage ImageProvider::image() const
 {
     return m_image;
