@@ -39,7 +39,7 @@ SinkEncode::~SinkEncode() {
     std::lock_guard<std::mutex> lock(m_lock);
     auto bus = gst_element_get_bus (m_pipe);
     g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkEncode::on_sample), this);
-    g_signal_handler_disconnect(this, m_signal_id);
+//    g_signal_handler_disconnect(this, m_signal_id);
     m_on_encoded = nullptr;
     gst_object_unref (bus);
     std::cout << tag << ": destroyed, id: " << m_signal_id << std::endl;

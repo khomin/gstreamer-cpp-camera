@@ -35,9 +35,9 @@ ImageProviderAbstract* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-#define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_VIDEO_TO_ENCODE_CODEC
 //#define USE_DECODE_FROM_FILE
-//#define USE_CRASH_TEST
+#define USE_CRASH_TEST
 //#define USE_CRASH_TEST_2
 
 #if __APPLE__
@@ -56,6 +56,7 @@ ImageProviderAbstract* image2 = NULL;
     GST_PLUGIN_STATIC_DECLARE(pango);
     GST_PLUGIN_STATIC_DECLARE(videotestsrc);
     GST_PLUGIN_STATIC_DECLARE(osxvideo);
+    }
 #endif
 
 int runLoop (int argc, char *argv[]) {
@@ -63,33 +64,32 @@ int runLoop (int argc, char *argv[]) {
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
-#if __APPLE__
-    GST_PLUGIN_STATIC_REGISTER(coreelements);
-    GST_PLUGIN_STATIC_REGISTER(libav);
-    GST_PLUGIN_STATIC_REGISTER(app);
-    GST_PLUGIN_STATIC_REGISTER(openh264);
-    GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
-    GST_PLUGIN_STATIC_REGISTER(x264);
-    GST_PLUGIN_STATIC_REGISTER(isomp4);
-    GST_PLUGIN_STATIC_REGISTER(applemedia);
-    GST_PLUGIN_STATIC_REGISTER(videoconvertscale);
-    GST_PLUGIN_STATIC_REGISTER(videorate);
-    GST_PLUGIN_STATIC_REGISTER(pango);
-    GST_PLUGIN_STATIC_REGISTER(videotestsrc);
-    GST_PLUGIN_STATIC_REGISTER(osxvideo);
-#endif
-#endif
-
+    #if __APPLE__
+        GST_PLUGIN_STATIC_REGISTER(coreelements);
+        GST_PLUGIN_STATIC_REGISTER(libav);
+        GST_PLUGIN_STATIC_REGISTER(app);
+        GST_PLUGIN_STATIC_REGISTER(openh264);
+        GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
+        GST_PLUGIN_STATIC_REGISTER(x264);
+        GST_PLUGIN_STATIC_REGISTER(isomp4);
+        GST_PLUGIN_STATIC_REGISTER(applemedia);
+        GST_PLUGIN_STATIC_REGISTER(videoconvertscale);
+        GST_PLUGIN_STATIC_REGISTER(videorate);
+        GST_PLUGIN_STATIC_REGISTER(pango);
+        GST_PLUGIN_STATIC_REGISTER(videotestsrc);
+        GST_PLUGIN_STATIC_REGISTER(osxvideo);
+    #endif
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
     auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 30, 1000000 / 1000));
     auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 1000000 / 1000));
     auto sinkToImgPrimary = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToImgSecond = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-#ifdef USE_QT
+    #ifdef USE_QT
     auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
-#else
+    #else
     auto videoSink = std::make_shared<ImageVideoSink>();
+    #endif
 #endif
 
 #ifdef USE_VIDEO_TO_IMAGE_PREVIEW
@@ -138,6 +138,26 @@ int runLoop (int argc, char *argv[]) {
 #endif
 
 #ifdef USE_CRASH_TEST
+    gst_init(NULL, NULL);
+    gst_debug_set_active(TRUE);
+    gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+
+#if __APPLE__
+    GST_PLUGIN_STATIC_REGISTER(coreelements);
+    GST_PLUGIN_STATIC_REGISTER(libav);
+    GST_PLUGIN_STATIC_REGISTER(app);
+    GST_PLUGIN_STATIC_REGISTER(openh264);
+    GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
+    GST_PLUGIN_STATIC_REGISTER(x264);
+    GST_PLUGIN_STATIC_REGISTER(isomp4);
+    GST_PLUGIN_STATIC_REGISTER(applemedia);
+    GST_PLUGIN_STATIC_REGISTER(videoconvertscale);
+    GST_PLUGIN_STATIC_REGISTER(videorate);
+    GST_PLUGIN_STATIC_REGISTER(pango);
+    GST_PLUGIN_STATIC_REGISTER(videotestsrc);
+    GST_PLUGIN_STATIC_REGISTER(osxvideo);
+#endif
+
     for(int i=0; i<1000; i++) {
         std::cout << "test " << i+1 << " start" << std::endl;
 
@@ -162,13 +182,34 @@ int runLoop (int argc, char *argv[]) {
         srcDecode->start();
         srcFromDevice->start();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
         srcFromDevice = nullptr;
         sinkToEncode = nullptr;
         srcDecode = nullptr;
         sinkToImgPrimary = nullptr;
         sinkToImgSecond = nullptr;
+
+////        list<string> GstToolkit::all_plugins()
+////        {
+//            std::list<std::string> pluginlist;
+//            GList *l, *g;
+//
+//            l = gst_registry_get_plugin_list (gst_registry_get ());
+//
+//            for (g = l; g; g = g->next) {
+//                GstPlugin *plugin = GST_PLUGIN (g->data);
+//                pluginlist.push_front(std::string( gst_plugin_get_name (plugin) ) );
+//            }
+//
+//            gst_plugin_list_free (l);
+
+//            gst_plugin_fr
+
+//            return pluginlist;
+//        }
+
+
         std::cout << "test " << i+1 << " end" << std::endl;
     }
 #endif
@@ -179,6 +220,22 @@ int runLoop (int argc, char *argv[]) {
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
     for(int i=0; i<1000; i++) {
         std::cout << "test " << i+1 << " start" << std::endl;
+
+#if __APPLE__
+        GST_PLUGIN_STATIC_REGISTER(coreelements);
+        GST_PLUGIN_STATIC_REGISTER(libav);
+        GST_PLUGIN_STATIC_REGISTER(app);
+        GST_PLUGIN_STATIC_REGISTER(openh264);
+        GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
+        GST_PLUGIN_STATIC_REGISTER(x264);
+        GST_PLUGIN_STATIC_REGISTER(isomp4);
+        GST_PLUGIN_STATIC_REGISTER(applemedia);
+        GST_PLUGIN_STATIC_REGISTER(videoconvertscale);
+        GST_PLUGIN_STATIC_REGISTER(videorate);
+        GST_PLUGIN_STATIC_REGISTER(pango);
+        GST_PLUGIN_STATIC_REGISTER(videotestsrc);
+        GST_PLUGIN_STATIC_REGISTER(osxvideo);
+#endif
 
         auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::None);
         auto sinkToImgPrimary = std::make_shared<SinkImage>(SinkImage::ImageType::Full);

@@ -4,7 +4,7 @@ set(PROJECT test2)
 project(${PROJECT} VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set(USE_QT ON)
 if (USE_QT)
   set(CMAKE_AUTOUIC ON)
   set(CMAKE_AUTOMOC ON)
@@ -40,6 +40,7 @@ set(PROJECT_SOURCES
 )
 
 if (USE_QT)
+  message("Using Qt")
   set(PROJECT_SOURCES ${PROJECT_SOURCES}
     qml.qrc
     # image
@@ -49,6 +50,7 @@ if (USE_QT)
     image_provider/live_image.h
   )
 else ()
+  message("Not using Qt")
   set(PROJECT_SOURCES ${PROJECT_SOURCES}
     image_provider/image_videosink.cpp
     image_provider/image_videosink.h
@@ -101,31 +103,28 @@ elseif (APPLE)
     /Library/Frameworks/GStreamer.framework/Versions/1.0/Headers
   )
   file(GLOB_RECURSE GSTREAMER_LIBS
-#    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
-#    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.dylib
-    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.dylib
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
+    /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
   )
+  list(REMOVE_ITEM GSTREAMER_LIBS "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libopencore-amrwb.a")
+
   set(LIBRARIES ${LIBRARIES}
     -liconv
     ${GSTREAMER_LIBS}
     "-framework Cocoa"
-    "-framework Security"
     "-framework Foundation"
-    "-framework ServiceManagement"
     "-framework ScreenCaptureKit"
-#    "-framework AVFoundation"
-#    "-framework AudioToolbox"
-#    "-framework AGL"
-#    "-framework VideoToolbox"
-#    "-framework GLKit"
-#    "-framework OpenGL"
-#    "-framework CoreMedia"
-#    "-framework CoreVideo"
-#    "-framework IOSurface"
-#    "-framework QuartzCore"
-#    "-framework Metal"
-#    "-framework IOKit"
+    "-framework AVFoundation"
+    "-framework AudioToolbox"
+    "-framework VideoToolbox"
+    "-framework GLKit"
+    "-framework OpenGL"
+    "-framework CoreMedia"
+    "-framework CoreVideo"
+    "-framework IOSurface"
+    "-framework QuartzCore"
+    "-framework Metal"
+    "-framework IOKit"
   )
 elseif (UNIX AND NOT APPLE)
   find_package(PkgConfig REQUIRED)
@@ -146,7 +145,7 @@ elseif (UNIX AND NOT APPLE)
   )
 elseif (WIN32)
   if (NOT DEFINED GSTREAMER_PATH)
-    set(GSTREAMER_PATH "E:/gstreamer/1.0/mingw_x86_64/bin")
+    set(GSTREAMER_PATH "E:/gstreamer/1.0/mingw_x86_64/")
   endif ()
   set(LIBRARIES_INCLUDE
     ${GSTREAMER_PATH}/include/gstreamer-1.0
@@ -154,123 +153,19 @@ elseif (WIN32)
     ${GSTREAMER_PATH}/include/glib-2.0
     ${GSTREAMER_PATH}/lib/glib-2.0/include
   )
+  file(GLOB_RECURSE GSTREAMER_LIBS
+    ${GSTREAMER_PATH}/lib/*.a
+    ${GSTREAMER_PATH}/lib/gstreamer-1.0/*.a
+  )
+  list(REMOVE_ITEM GSTREAMER_LIBS "${GSTREAMER_PATH}/lib/libstdc++.a")
+  list(REMOVE_ITEM GSTREAMER_LIBS "${GSTREAMER_PATH}/lib/libmingw32.a")
   set(LIBRARIES ${LIBRARIES}
     -liphlpapi
     -lwinmm
     -limm32
     -lws2_32 -liphlpapi -lpsapi -lIphlpapi
     -static-libgcc -static-libstdc++
-    ${GSTREAMER_PATH}/libass-9.dll
-    ${GSTREAMER_PATH}/libbz2.dll
-    ${GSTREAMER_PATH}/libcairo-2.dll
-    ${GSTREAMER_PATH}/libcairo-gobject-2.dll
-    ${GSTREAMER_PATH}/libcairo-script-interpreter-2.dll
-    ${GSTREAMER_PATH}/libcharset-1.dll
-    ${GSTREAMER_PATH}/libcroco-0.6-3.dll
-    ${GSTREAMER_PATH}/libcrypto-1_1-x64.dll
-    ${GSTREAMER_PATH}/libdav1d.dll
-    ${GSTREAMER_PATH}/libdv-4.dll
-    ${GSTREAMER_PATH}/libexpat-1.dll
-    ${GSTREAMER_PATH}/libffi-7.dll
-    ${GSTREAMER_PATH}/libFLAC-8.dll
-    ${GSTREAMER_PATH}/libfontconfig-1.dll
-    ${GSTREAMER_PATH}/libfreetype-6.dll
-    ${GSTREAMER_PATH}/libfribidi-0.dll
-    ${GSTREAMER_PATH}/libgcc_s_seh-1.dll
-    ${GSTREAMER_PATH}/libgdk_pixbuf-2.0-0.dll
-    ${GSTREAMER_PATH}/libgio-2.0-0.dll
-    ${GSTREAMER_PATH}/libglib-2.0-0.dll
-    ${GSTREAMER_PATH}/libgmodule-2.0-0.dll
-    ${GSTREAMER_PATH}/libgobject-2.0-0.dll
-    ${GSTREAMER_PATH}/libgraphene-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstadaptivedemux-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstallocators-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstapp-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstaudio-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstbadaudio-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstbase-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstbasecamerabinsrc-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstcheck-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstcodecparsers-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstcodecs-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstcontroller-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstcuda-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstd3d11-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstfft-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstgl-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstinsertbin-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstisoff-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstmpegts-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstnet-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstpbutils-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstphotography-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstplay-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstplayer-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstreamer-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstriff-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstrtp-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstrtsp-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstrtspserver-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstsctp-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstsdp-1.0-0.dll
-    ${GSTREAMER_PATH}/libgsttag-1.0-0.dll
-    ${GSTREAMER_PATH}/libgsttranscoder-1.0-0.dll
-    ${GSTREAMER_PATH}/libgsturidownloader-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstvideo-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstwebrtc-1.0-0.dll
-    ${GSTREAMER_PATH}/libgstwebrtcnice-1.0-0.dll
-    ${GSTREAMER_PATH}/libgthread-2.0-0.dll
-    ${GSTREAMER_PATH}/libharfbuzz-0.dll
-    ${GSTREAMER_PATH}/libiconv-2.dll
-    ${GSTREAMER_PATH}/libintl-8.dll
-    ${GSTREAMER_PATH}/libjpeg-8.dll
-    ${GSTREAMER_PATH}/libjson-glib-1.0-0.dll
-    ${GSTREAMER_PATH}/libkate-1.dll
-    ${GSTREAMER_PATH}/libltc-11.dll
-    ${GSTREAMER_PATH}/libmp3lame-0.dll
-    ${GSTREAMER_PATH}/libmpg123-0.dll
-    ${GSTREAMER_PATH}/libnice-10.dll
-    ${GSTREAMER_PATH}/libogg-0.dll
-    ${GSTREAMER_PATH}/liboggkate-1.dll
-    ${GSTREAMER_PATH}/libopenh264-6.dll
-    ${GSTREAMER_PATH}/libopenjp2.dll
-    ${GSTREAMER_PATH}/libopus-0.dll
-    ${GSTREAMER_PATH}/liborc-0.4-0.dll
-    ${GSTREAMER_PATH}/liborc-test-0.4-0.dll
-    ${GSTREAMER_PATH}/libpango-1.0-0.dll
-    ${GSTREAMER_PATH}/libpangocairo-1.0-0.dll
-    ${GSTREAMER_PATH}/libpangoft2-1.0-0.dll
-    ${GSTREAMER_PATH}/libpangowin32-1.0-0.dll
-    ${GSTREAMER_PATH}/libpcre2-8-0.dll
-    ${GSTREAMER_PATH}/libpixman-1-0.dll
-    ${GSTREAMER_PATH}/libpng16-16.dll
-    ${GSTREAMER_PATH}/libpsl-5.dll
-    ${GSTREAMER_PATH}/librsvg-2-2.dll
-    ${GSTREAMER_PATH}/libsbc-1.dll
-    ${GSTREAMER_PATH}/libSoundTouch-1.dll
-    ${GSTREAMER_PATH}/libsoup-2.4-1.dll
-    ${GSTREAMER_PATH}/libspandsp-2.dll
-    ${GSTREAMER_PATH}/libspeex-1.dll
-    ${GSTREAMER_PATH}/libsqlite3-0.dll
-    ${GSTREAMER_PATH}/libsrt.dll
-    ${GSTREAMER_PATH}/libsrtp2-1.dll
-    ${GSTREAMER_PATH}/libssl-1_1-x64.dll
-    ${GSTREAMER_PATH}/libstdc++-6.dll
-    ${GSTREAMER_PATH}/libtag.dll
-    ${GSTREAMER_PATH}/libtheora-0.dll
-    ${GSTREAMER_PATH}/libtheoradec-1.dll
-    ${GSTREAMER_PATH}/libtheoraenc-1.dll
-    ${GSTREAMER_PATH}/libtiff-5.dll
-    ${GSTREAMER_PATH}/libturbojpeg-0.dll
-    ${GSTREAMER_PATH}/libvorbis-0.dll
-    ${GSTREAMER_PATH}/libvorbisenc-2.dll
-    ${GSTREAMER_PATH}/libvorbisfile-3.dll
-    ${GSTREAMER_PATH}/libwavpack.dll
-    ${GSTREAMER_PATH}/libwebrtc_audio_processing-0.dll
-    ${GSTREAMER_PATH}/libwinpthread-1.dll
-    ${GSTREAMER_PATH}/libxml2-2.dll
-    ${GSTREAMER_PATH}/libz-1.dll
-    ${GSTREAMER_PATH}/libzbar-0.dll
+    ${GSTREAMER_LIBS}
   )
 endif ()
 
