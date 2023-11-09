@@ -36,6 +36,8 @@ uint32_t ImageRawProvider::getWidth() {
     return m_width;
 }
 
-uint32_t  ImageRawProvider::getHeight() {
+uint32_t ImageRawProvider::getHeight() {
     return m_height;
 }
+
+void ImageRawProvider::start() {}
