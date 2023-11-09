@@ -35,9 +35,9 @@ ImageProviderAbstract* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
+#define USE_VIDEO_TO_ENCODE_CODEC
 //#define USE_DECODE_FROM_FILE
-#define USE_CRASH_TEST
+//#define USE_CRASH_TEST
 //#define USE_CRASH_TEST_2
 
 #if __APPLE__
@@ -81,8 +81,8 @@ int runLoop (int argc, char *argv[]) {
     #endif
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 30, 1000000 / 1000));
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 1000000 / 1000));
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000 / 1000));
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000 / 1000));
     auto sinkToImgPrimary = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToImgSecond = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     #ifdef USE_QT
