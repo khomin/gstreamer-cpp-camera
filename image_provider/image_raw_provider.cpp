@@ -1,4 +1,5 @@
 #include "image_raw_provider.h"
+#include <cstring>
 
 ImageRawProvider::ImageRawProvider() {}
 
