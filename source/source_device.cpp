@@ -50,17 +50,37 @@ void SourceDevice::pause() {
     gst_element_set_state (m_pipe, GST_STATE_PAUSED);
 }
 
+void SourceDevice::onConfig(std::function<void(uint32_t ,uint32_t)> cb) {
+    m_config_changed = cb;
+}
+
 GstFlowReturn SourceDevice::on_sample(GstElement * elt, SourceDevice* data) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
-    if(sample != NULL) {
+    if(sample != nullptr) {
+        int imW = 0, imH = 0;
+        GstCaps *caps = gst_sample_get_caps(sample);
+        GstStructure *capStr = gst_caps_get_structure(caps, 0);
+        gst_structure_get_int(capStr,"width", &imW);
+        gst_structure_get_int(capStr, "height", &imH);
+
+        if (data != nullptr) {
+            if(data->m_width != imW || data->m_height != imH) {
+                data->m_width = imW;
+                data->m_height = imH;
+                if(data->m_config_changed != nullptr) {
+                    data->m_config_changed(imW, imH);
+                }
+            }
+        }
+
         buffer = gst_sample_get_buffer(sample);
-        if (buffer != NULL) {
+        if (buffer != nullptr) {
             GstMapInfo mapInfo;
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
-            if (data != NULL) {
+            if (data != nullptr) {
                 auto sinks = data->getSinks();
                 for (auto it: sinks) {
                     if (it != nullptr && it->isRunning()) {

@@ -81,8 +81,6 @@ int runLoop (int argc, char *argv[]) {
     #endif
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000 / 1000));
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 1280,720, 20, 900000 / 1000));
     auto sinkToImgPrimary = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     auto sinkToImgSecond = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     #ifdef USE_QT
@@ -110,15 +108,22 @@ int runLoop (int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
-    srcFromDevice->addSink(sinkToEncode);
     srcFromDevice->addSink(sinkToImgSecond);
-    srcDecode->addSink(sinkToImgPrimary);
     sinkToImgSecond->setImage(image1);
     sinkToImgPrimary->setImage(image2);
 
-    sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([&](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
-        srcDecode->putDataToDecode(data, len);
-    }));
+    srcFromDevice->onConfig([=](uint32_t w, uint32_t h) {
+        std::cout << "srcDeviceConfig " << "width: " << w << ", height: " << h << std::endl;
+        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 2560/2,1600 /2, 20, 900000 / 1000));
+        srcFromDevice->addSink(sinkToEncode);
+        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 2560/2,1600 /2, 20, 900000 / 1000));
+        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+            srcDecode->putDataToDecode(data, len);
+        }));
+        srcDecode->addSink(sinkToImgPrimary);
+        sinkToEncode->start();
+        srcDecode->start();
+    });
 #ifndef USE_QT
     image1 = new ImageVideoSink();
     image2 = new ImageVideoSink();
@@ -127,8 +132,6 @@ int runLoop (int argc, char *argv[]) {
     sinkToImgPrimary->setImage(image2);
     sinkToImgSecond->start();
     sinkToImgPrimary->start();
-    sinkToEncode->start();
-    srcDecode->start();
     srcFromDevice->start();
     image1->start();
     image2->start();

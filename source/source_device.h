@@ -5,6 +5,7 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/app/app.h>
+#include <functional>
 
 class SourceDevice : public SourceBase {
 public:
@@ -17,9 +18,14 @@ public:
 
     void start() override;
     void pause() override;
+    void onConfig(std::function<void(uint32_t ,uint32_t)> cb);
 
 private:
     static GstFlowReturn on_sample(GstElement * elt, SourceDevice* data);
+
+    std::function<void(uint32_t ,uint32_t)> m_config_changed = NULL;
+    uint32_t m_width = 0;
+    uint32_t m_height = 0;
 
     static constexpr auto tag = "SourceDevice: ";
     static constexpr const char* cmd = "{} {} ! videoconvert ! videorate ! videoscale ! video/x-raw,format=RGB,framerate=20/1,width=2560,height=1600 ! appsink name=sink_out";
