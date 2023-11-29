@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
   source/source_device.cpp
   source/source_decode.h
   source/source_decode.cpp
+  source/source_audio.cpp
+  source/source_audio.h
   # sinks
   sink/sink_base.h
   sink/sink_base.cpp
@@ -31,6 +33,10 @@ set(PROJECT_SOURCES
   sink/sink_file.cpp
   sink/sink_encode.h
   sink/sink_encode.cpp
+  sink/sink_audio.cpp
+  sink/sink_audio.h
+  sink/sink_callback.cpp
+  sink/sink_callback.h
   # utils
   utils/decoder_config.h
   utils/encoder_config.h

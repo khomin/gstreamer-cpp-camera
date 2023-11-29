@@ -38,8 +38,8 @@ void SinkBase::startPipe() {
     if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_PLAYING);
         cleanBusEvents();
-        m_is_running = true;
     }
+    m_is_running = true;
 }
 
 void SinkBase::pausePipe() {
@@ -47,13 +47,14 @@ void SinkBase::pausePipe() {
         gst_element_set_state(m_pipe, GST_STATE_PAUSED);
         cleanBusEvents();
     }
+    m_is_running = false;
 }
 
 void SinkBase::stopPipe() {
     if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
-        m_is_running = false;
     }
+    m_is_running = false;
 }
 
 void SinkBase::cleanBusEvents() {

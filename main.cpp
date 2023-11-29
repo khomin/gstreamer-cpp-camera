@@ -28,6 +28,9 @@
 #include "sink/sink_encode.h"
 #include "source/source_decode.h"
 #include "utils/codec_type.h"
+#include "source/source_audio.h"
+#include "sink/sink_audio.h"
+#include "sink_callback.h"
 #include "utils/measure.h"
 
 ImageProviderAbstract* image1 = NULL;
@@ -35,7 +38,8 @@ ImageProviderAbstract* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-#define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_VIDEO_TO_ENCODE_CODEC
+#define USE_AUDIO_SRC_SINK
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
 //#define USE_CRASH_TEST_2
@@ -48,7 +52,7 @@ ImageProviderAbstract* image2 = NULL;
     GST_PLUGIN_STATIC_DECLARE(app);
     GST_PLUGIN_STATIC_DECLARE(appsink);
     GST_PLUGIN_STATIC_DECLARE(videoparsersbad);
-    GST_PLUGIN_STATIC_DECLARE(x264);
+    GST_PLUGIN_STATIC_DECLARE(x264);USE_AUDIO_SRC_SINK
     GST_PLUGIN_STATIC_DECLARE(isomp4);
     GST_PLUGIN_STATIC_DECLARE(applemedia);
     GST_PLUGIN_STATIC_DECLARE(videoconvertscale);
@@ -60,7 +64,7 @@ ImageProviderAbstract* image2 = NULL;
 #endif
 
 int runLoop (int argc, char *argv[]) {
-#if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC)
+#if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
@@ -135,6 +139,23 @@ int runLoop (int argc, char *argv[]) {
     srcFromDevice->start();
     image1->start();
     image2->start();
+
+    g_print("Let's run!\n");
+    g_main_loop_run(loop);
+#endif
+
+#ifdef USE_AUDIO_SRC_SINK
+    auto srcAudio = std::make_shared<SourceAudio>();
+    auto sinkAudio = std::make_shared<SinkAudio>();
+    auto sinkCallback = std::make_shared<SinkCallback>();
+    srcAudio->addSink(sinkCallback);
+
+    sinkCallback->setDataCb([=](uint8_t * data, uint32_t len) {
+        sinkAudio->putData(data, len);
+    });
+    srcAudio->start();
+    sinkAudio->start();
+    sinkCallback->start();
 
     g_print("Let's run!\n");
     g_main_loop_run(loop);
