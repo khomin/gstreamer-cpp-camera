@@ -3,8 +3,8 @@
 #include <iostream>
 #include <thread>
 
-SourceAudio::SourceAudio() {
-    m_pipe = gst_parse_launch("audiotestsrc ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! audioconvert ! audioresample ! appsink name=sink_out", NULL);
+SourceAudio::SourceAudio() {    
+    m_pipe = gst_parse_launch("autoaudiosrc ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! audioconvert ! audioresample ! appsink name=sink_out", NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
