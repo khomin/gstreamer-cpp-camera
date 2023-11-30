@@ -52,7 +52,7 @@ ImageProviderAbstract* image2 = NULL;
     GST_PLUGIN_STATIC_DECLARE(app);
     GST_PLUGIN_STATIC_DECLARE(appsink);
     GST_PLUGIN_STATIC_DECLARE(videoparsersbad);
-    GST_PLUGIN_STATIC_DECLARE(x264);USE_AUDIO_SRC_SINK
+    GST_PLUGIN_STATIC_DECLARE(x264);
     GST_PLUGIN_STATIC_DECLARE(isomp4);
     GST_PLUGIN_STATIC_DECLARE(applemedia);
     GST_PLUGIN_STATIC_DECLARE(videoconvertscale);
@@ -60,6 +60,11 @@ ImageProviderAbstract* image2 = NULL;
     GST_PLUGIN_STATIC_DECLARE(pango);
     GST_PLUGIN_STATIC_DECLARE(videotestsrc);
     GST_PLUGIN_STATIC_DECLARE(osxvideo);
+    GST_PLUGIN_STATIC_DECLARE(autodetect);
+    GST_PLUGIN_STATIC_DECLARE(audiotestsrc);
+    GST_PLUGIN_STATIC_DECLARE(audioconvert);
+    GST_PLUGIN_STATIC_DECLARE(audioresample);
+    GST_PLUGIN_STATIC_DECLARE(osxaudio);
     }
 #endif
 
@@ -82,6 +87,11 @@ int runLoop (int argc, char *argv[]) {
         GST_PLUGIN_STATIC_REGISTER(pango);
         GST_PLUGIN_STATIC_REGISTER(videotestsrc);
         GST_PLUGIN_STATIC_REGISTER(osxvideo);
+        GST_PLUGIN_STATIC_REGISTER(audiotestsrc);
+        GST_PLUGIN_STATIC_REGISTER(autodetect);
+        GST_PLUGIN_STATIC_REGISTER(audioconvert);
+        GST_PLUGIN_STATIC_REGISTER(audioresample);
+        GST_PLUGIN_STATIC_REGISTER(osxaudio);
     #endif
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);

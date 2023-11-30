@@ -125,6 +125,7 @@ elseif (APPLE)
     "-framework GLKit"
     "-framework OpenGL"
     "-framework CoreMedia"
+    "-framework CoreAudio"
     "-framework CoreVideo"
     "-framework IOSurface"
     "-framework QuartzCore"

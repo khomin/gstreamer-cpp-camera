@@ -37,11 +37,6 @@ void SinkAudio::putSample(GstSample* sample) {
     }
     gst_object_unref (source);
     Measure::instance()->onEncodePutSample();
-    // if you need caps info
-    //GstCaps *caps = gst_sample_get_caps(sample);
-    //const GstStructure *capStr = gst_caps_get_structure(caps, 0);
-    //auto capsStr2 = gst_structure_to_string(capStr);
-    //std::cout << tag << ": caps: " << capsStr2.c_str() << std::endl;
 }
 
 void SinkAudio::putData(uint8_t* data, uint32_t len) {
