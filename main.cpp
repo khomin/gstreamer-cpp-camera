@@ -38,8 +38,8 @@ ImageProviderAbstract* image2 = NULL;
 
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
-#define USE_AUDIO_SRC_SINK
+#define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_AUDIO_SRC_SINK
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
 //#define USE_CRASH_TEST_2
