@@ -8,9 +8,9 @@
 SinkImage::SinkImage(ImageType type) : m_type(type) {
     std::string cmdF;
     if(m_type == ImageType::Full) {
-        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width={},height={}", 1280, 720));
+        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width=\[{},{}\],height=\[{},{}\]", 1,baseWidth, 1,baseHeight));
     } else if(m_type == ImageType::Preview) {
-        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width={},height={}", 380, 240));
+        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width=\[{},{}\],height=\[{},{}\]", 1,baseWidth/5, 1,baseHeight/5));
     }
     m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
     if (m_pipe == NULL) {

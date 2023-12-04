@@ -24,6 +24,8 @@ private:
 protected:
     static constexpr auto tag = "SinkImage: ";
     static constexpr auto cmd = "appsrc name=source_to_out is-live=true ! videoconvert {} ! queue ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr auto baseWidth = 1920;
+    static constexpr auto baseHeight = 1080;
 };
 
 #endif

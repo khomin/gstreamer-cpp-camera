@@ -28,7 +28,7 @@ private:
     uint32_t m_height = 0;
 
     static constexpr auto tag = "SourceDevice: ";
-    static constexpr const char* cmd = "{} {} ! videoconvert ! videorate ! videoscale ! video/x-raw,format=RGB,framerate=20/1,width=\[1,1280\] ! appsink name=sink_out";
+    static constexpr const char* cmd = "{} {} ! videoconvert ! videorate ! videoscale ! video/x-raw,format=RGB,framerate=20/1,width=\[1,1920\] ! appsink name=sink_out";
     static constexpr const char* cmd_screen_macos = "avfvideosrc name=src capture-screen=true capture-screen-cursor=true";
     static constexpr const char* cmd_camera_macos = "avfvideosrc name=src";
     static constexpr const char* cmd_screen_linux = "ximagesrc name=src";

@@ -18,7 +18,7 @@ private:
 #elif _WIN32
     static constexpr auto cmd = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=1280,height=720,framerate=20/1 ! videoconvert ! queue ! d3d11videosink";
 #else
-    static constexpr auto cmd = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=1280,height=720,framerate=20/1 ! videoconvert ! queue ! xvimagesink";
+    static constexpr auto cmd = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=200,height=125,framerate=20/1 ! videoconvert ! queue ! xvimagesink";
 #endif
 };
 
