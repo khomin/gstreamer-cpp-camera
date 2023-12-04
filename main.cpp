@@ -95,8 +95,6 @@ int runLoop (int argc, char *argv[]) {
     #endif
     auto loop = g_main_loop_new(NULL, FALSE);
     auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    auto sinkToImgPrimary = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-    auto sinkToImgSecond = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
     #ifdef USE_QT
     auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
     #else
@@ -122,30 +120,35 @@ int runLoop (int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
-    srcFromDevice->addSink(sinkToImgSecond);
-    sinkToImgSecond->setImage(image1);
-    sinkToImgPrimary->setImage(image2);
-
     srcFromDevice->onConfig([=](uint32_t w, uint32_t h) {
         std::cout << "srcDeviceConfig " << "width: " << w << ", height: " << h << std::endl;
-        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 2560/2,1600 /2, 20, 900000 / 1000));
+
+        auto sinkToImgPrimary = std::make_shared<SinkImage>(w, h);
+        auto sinkToImgSecond = std::make_shared<SinkImage>(w/5, h/5);
+
+        srcFromDevice->addSink(sinkToImgSecond);
+        sinkToImgSecond->setImage(image1);
+        sinkToImgPrimary->setImage(image2);
+
+        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
         srcFromDevice->addSink(sinkToEncode);
-        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 2560/2,1600 /2, 20, 900000 / 1000));
+        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
         sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
             srcDecode->putDataToDecode(data, len);
         }));
         srcDecode->addSink(sinkToImgPrimary);
         sinkToEncode->start();
         srcDecode->start();
+
+        sinkToImgSecond->setImage(image1);
+        sinkToImgPrimary->setImage(image2);
+        sinkToImgSecond->start();
+        sinkToImgPrimary->start();
     });
 #ifndef USE_QT
     image1 = new ImageVideoSink();
     image2 = new ImageVideoSink();
 #endif
-    sinkToImgSecond->setImage(image1);
-    sinkToImgPrimary->setImage(image2);
-    sinkToImgSecond->start();
-    sinkToImgPrimary->start();
     srcFromDevice->start();
     image1->start();
     image2->start();

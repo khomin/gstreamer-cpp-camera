@@ -5,13 +5,8 @@
 #include <iostream>
 #include "fmt/core.h"
 
-SinkImage::SinkImage(ImageType type) : m_type(type) {
-    std::string cmdF;
-    if(m_type == ImageType::Full) {
-        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width=\[{},{}\],height=\[{},{}\]", 1,baseWidth, 1,baseHeight));
-    } else if(m_type == ImageType::Preview) {
-        cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width=\[{},{}\],height=\[{},{}\]", 1,baseWidth/5, 1,baseHeight/5));
-    }
+SinkImage::SinkImage(int width, int height)  {
+    auto cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width={},height={}", width, height));
     m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
@@ -20,13 +15,10 @@ SinkImage::SinkImage(ImageType type) : m_type(type) {
     std::cout << tag << ": created" << std::endl;
 }
 
-SinkImage::SinkImage() : SinkImage(ImageType::Preview) {}
-
 SinkImage::~SinkImage() {
     std::lock_guard<std::mutex> lock(m_lock);
     auto bus = gst_element_get_bus (m_pipe);
     g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkImage::on_sample), this);
-//    g_signal_handler_disconnect(reinterpret_cast<gpointer>(SinkImage::on_sample), m_signal_id);
     m_image = nullptr;
     gst_object_unref (bus);
     std::cout << tag << ": destroyed" << std::endl;
