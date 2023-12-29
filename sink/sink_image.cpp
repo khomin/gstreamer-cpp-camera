@@ -3,15 +3,17 @@
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
 #include <iostream>
-#include "fmt/core.h"
 
 SinkImage::SinkImage(int width, int height)  {
-    auto cmdF = fmt::format(cmd, fmt::format("! videoscale ! video/x-raw,format=RGBA,width={},height={}", width, height));
-    m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
+    auto buf_len = 1024; // attention possible overflow
+    auto cmd_str = new char[buf_len];
+    sprintf(cmd_str, "! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", width, height);
+    m_pipe = gst_parse_launch(cmd_str, NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
     }
+    delete[] cmd_str;
     std::cout << tag << ": created" << std::endl;
 }
 

@@ -1,19 +1,20 @@
 #include "sink_encode.h"
-#include "fmt/core.h"
 #include "utils/measure.h"
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
 #include <iostream>
 
 SinkEncode::SinkEncode(EncoderConfig config) {
+    auto buf_len = 1024; // attention possible overflow
+    auto cmd_str = new char[buf_len];
     m_config = config;
-    std::string cmdf = fmt::format(cmd,
+    sprintf(cmd_str,
             config.pixelFormat.c_str(),
             config.width, config.height,
             config.framerate,
             (config.codec + " " + config.codecOptions).c_str()
     );
-    m_pipe = gst_parse_launch(cmdf.c_str(), NULL);
+    m_pipe = gst_parse_launch(cmd_str, NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
@@ -34,6 +35,7 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         m_error = true;
     }
     gst_object_unref (source);
+    delete[] cmd_str;
     std::cout << tag << ": created" << std::endl;
 }
 

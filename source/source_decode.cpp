@@ -1,22 +1,24 @@
 #include "source_decode.h"
-#include "fmt/core.h"
 #include "utils/measure.h"
 #include <gst/pbutils/codec-utils.h>
 #include <iostream>
 
 SourceDecode::SourceDecode(DecoderConfig config) {
-    auto cmdF = fmt::format(cmd,
-                            config.codecInVideo.c_str(),
-                            config.pixelFormat.c_str(),
-                            config.width, config.height,
-                            config.framerate,
-                            config.bitrate,
-                            config.decoder.c_str());
-    m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
+    auto buf_len = 1024; // attention possible overflow
+    auto cmd_str = new char[buf_len];
+    sprintf(cmd_str,
+            config.codecInVideo.c_str(),
+            config.pixelFormat.c_str(),
+            config.width, config.height,
+            config.framerate,
+            config.bitrate,
+            config.decoder.c_str());
+    m_pipe = gst_parse_launch(cmd_str, NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
     }
+    delete[] cmd_str;
     std::cout << tag << ": created" << std::endl;
 }
 

@@ -1,5 +1,4 @@
 #include "source_audio.h"
-#include "fmt/core.h"
 #include <iostream>
 #include <thread>
 

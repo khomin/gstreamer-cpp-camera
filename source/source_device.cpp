@@ -1,10 +1,12 @@
 #include "source_device.h"
-#include "fmt/core.h"
 #include <iostream>
 #include <thread>
 
 SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
-    auto cmdF = fmt::format(
+    auto buf_len = 1024; // attention possible overflow
+    auto cmd_str = new char[buf_len];
+
+    sprintf(cmd_str,
             cmd,
 #if __APPLE__
             type == SourceDeviceType::Screen ? cmd_screen_macos : cmd_camera_macos,
@@ -15,7 +17,7 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
 #endif
             option == OptionType::TimeOverlay ? show_time_overlay : ""
     );
-    m_pipe = gst_parse_launch(cmdF.c_str(), NULL);
+    m_pipe = gst_parse_launch(cmd_str, NULL);
     if (m_pipe == NULL) {
         std::cerr << tag << "pipe failed" << std::endl;
         m_error = true;
@@ -27,6 +29,7 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceDevice::on_sample), this);
     gst_object_unref (sink_out);
+    delete[] cmd_str;
     std::cout << tag << ": created" << std::endl;
 }
 

@@ -3,7 +3,6 @@
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
 #include <iostream>
-#include "fmt/core.h"
 
 SinkAudio::SinkAudio() {
     m_pipe = gst_parse_launch("appsrc name=source_to_out ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! audioconvert ! audioresample ! autoaudiosink", NULL);
