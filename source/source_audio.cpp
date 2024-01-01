@@ -5,7 +5,7 @@
 SourceAudio::SourceAudio() {
     m_pipe = gst_parse_launch("autoaudiosrc ! audioconvert ! audioresample ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! appsink name=sink_out", NULL);
     if (m_pipe == NULL) {
-        std::cerr << tag << "pipe failed" << std::endl;
+        std::cerr << TAG << "pipe failed" << std::endl;
         m_error = true;
     }
     /* we use appsink in push mode, it sends us a signal when data is available
@@ -15,7 +15,7 @@ SourceAudio::SourceAudio() {
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceAudio::on_sample), this);
     gst_object_unref (sink_out);
-    std::cout << tag << ": created" << std::endl;
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SourceAudio::~SourceAudio() {
@@ -25,7 +25,7 @@ SourceAudio::~SourceAudio() {
     g_signal_handlers_disconnect_by_data(sink_out, this);
     gst_object_unref (sink_out);
     gst_object_unref (bus);
-    std::cout << tag << ": destroyed" << std::endl;
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SourceAudio::start() {
@@ -57,7 +57,7 @@ GstFlowReturn SourceAudio::on_sample(GstElement * elt, SourceAudio* data) {
                         //GstCaps *caps = gst_sample_get_caps(sample);
                         //const GstStructure *capStr = gst_caps_get_structure(caps, 0);
                         //std::string capsStr2 = gst_structure_to_string(capStr);
-                        //std::cout << tag << ": caps: " << capsStr2.c_str() << std::endl;
+                        //std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
                         it->putSample(sample);
                     }
                 }

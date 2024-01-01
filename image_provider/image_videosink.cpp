@@ -3,9 +3,9 @@
 #include <iostream>
 
 ImageVideoSink::ImageVideoSink() {
-    m_pipe = gst_parse_launch( cmd, NULL);
+    m_pipe = gst_parse_launch(CMD, NULL);
     if (m_pipe == NULL) {
-        std::cerr << tag << "pipe failed" << std::endl;
+        std::cerr << TAG << "pipe failed" << std::endl;
     }
 }
 

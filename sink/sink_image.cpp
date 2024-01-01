@@ -2,19 +2,21 @@
 #include "utils/measure.h"
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
+#include "config.h"
+#include <vector>
 #include <iostream>
 
 SinkImage::SinkImage(int width, int height)  {
-    auto buf_len = 1024; // attention possible overflow
-    auto cmd_str = new char[buf_len];
-    sprintf(cmd_str, "! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", width, height);
-    m_pipe = gst_parse_launch(cmd_str, NULL);
+    auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
+    auto cmdSubBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
+    sprintf((char*)cmdSubBuf.data(), "! videoscale ! video/x-raw,format=RGBA,width=%d,height=%d", width, height);
+    sprintf((char*)cmdBuf.data(), CMD, cmdSubBuf.data());
+    m_pipe = gst_parse_launch((char*)cmdBuf.data(), NULL);
     if (m_pipe == NULL) {
-        std::cerr << tag << "pipe failed" << std::endl;
+        std::cerr << TAG << "pipe failed" << std::endl;
         m_error = true;
     }
-    delete[] cmd_str;
-    std::cout << tag << ": created" << std::endl;
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SinkImage::~SinkImage() {
@@ -23,7 +25,7 @@ SinkImage::~SinkImage() {
     g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkImage::on_sample), this);
     m_image = nullptr;
     gst_object_unref (bus);
-    std::cout << tag << ": destroyed" << std::endl;
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SinkImage::start() {

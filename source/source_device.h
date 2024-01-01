@@ -27,15 +27,15 @@ private:
     uint32_t m_width = 0;
     uint32_t m_height = 0;
 
-    static constexpr auto tag = "SourceDevice: ";
-    static constexpr const char* cmd = "{} {} ! videoconvert ! videorate ! videoscale ! video/x-raw,format=RGB,framerate=20/1 ! appsink name=sink_out";
-    static constexpr const char* cmd_screen_macos = "avfvideosrc name=src capture-screen=true capture-screen-cursor=true";
-    static constexpr const char* cmd_camera_macos = "avfvideosrc name=src";
-    static constexpr const char* cmd_screen_linux = "ximagesrc name=src";
-    static constexpr const char* cmd_camera_linux = "v4l2src name=src";
-    static constexpr const char* cmd_screen_win = "dx9screencapsrc name=src";
-    static constexpr const char* cmd_camera_win = "ksvideosrc name=src";
-    static constexpr const char* show_time_overlay = "! timeoverlay draw-shadow=false draw-outline=false deltay=50 font-desc=\"Sans, 30\" color=0xFFFFFFFF";
+    static constexpr auto TAG = "SourceDevice: ";
+    static constexpr const char* CMD = "%s %s ! videoconvert ! videorate ! videoscale ! video/x-raw,format=RGB,framerate=20/1,width=1920,height=1200 ! appsink name=sink_out";
+    static constexpr const char* CMD_SCREEN_MACOS = "avfvideosrc name=src capture-screen=true capture-screen-cursor=true";
+    static constexpr const char* CMD_CAMERA_MACOS = "avfvideosrc name=src";
+    static constexpr const char* CMD_SCREEN_LINUX = "ximagesrc name=src";
+    static constexpr const char* CMD_CAMERA_LINUX = "v4l2src name=src";
+    static constexpr const char* CMD_SCREEN_WIN = "dx9screencapsrc name=src";
+    static constexpr const char* CMD_CAMERA_WIN = "ksvideosrc name=src";
+    static constexpr const char* CMD_TIME_OVERLAY = "! timeoverlay draw-shadow=false draw-outline=false deltay=50 font-desc=\"Sans, 30\" color=0xFFFFFFFF";
 };
 
 #endif // SOURCE_DEV_H

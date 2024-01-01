@@ -6,18 +6,18 @@
 
 SinkFile::SinkFile(std::string path) {
     m_file = std::ofstream(path.c_str(), std::ios::out | std::ios :: binary);
-    m_pipe = gst_parse_launch(cmd, NULL);
+    m_pipe = gst_parse_launch(CMD, NULL);
     if (m_pipe == NULL) {
-        std::cerr << tag << "pipe failed" << std::endl;
+        std::cerr << TAG << "pipe failed" << std::endl;
     }
-    std::cout << tag << ": created" << std::endl;
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SinkFile::~SinkFile() {
     std::lock_guard<std::mutex> lock(m_lock);
     stopPipe();
     m_file.close();
-    std::cout << tag << ": destroyed" << std::endl;
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SinkFile::start() {

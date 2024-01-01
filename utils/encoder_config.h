@@ -2,19 +2,20 @@
 #define ENC_CONFIG_H
 
 #include <string>
+#include <vector>
 #include "utils/codec_type.h"
+#include "config.h"
 
 struct EncoderConfig {
-    uint64_t width = 0;
-    uint64_t height = 0;
-    uint64_t framerate = 0;
+    int width = 0;
+    int height = 0;
+    int framerate = 0;
     std::string pixelFormat;
     std::string codec;
     std::string codecOptions;
 
-    static EncoderConfig make(CodecType type, uint64_t width, uint64_t height, uint64_t frameRate, uint64_t bitrate) {
-        auto buf_len = 1024; // attention possible overflow
-        auto cmd_str = new char[buf_len];
+    static EncoderConfig make(CodecType type, int width, int height, int frameRate, int bitrate) {
+        auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
         EncoderConfig config;
 
         switch (type) {
@@ -25,27 +26,26 @@ struct EncoderConfig {
                 config = EncoderConfig{width, height, frameRate, "", "", ""};
                 break;
             case CodecType::CodecAvc:
-                sprintf(cmd_str,
-                        "bitrate=%lu tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50", bitrate);
-                config = EncoderConfig{width, height, frameRate, "I420", "x264enc", cmd_str};
+                sprintf((char*)cmdBuf.data(),
+                        "bitrate=%d tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50", bitrate);
+                config = EncoderConfig{width, height, frameRate, "I420", "x264enc", (char*)cmdBuf.data()};
                 break;
             case CodecType::CodecHevc:
                 config = EncoderConfig{width, height, frameRate, "I420", "x265enc",
                                        "tune=zerolatency sliced-threads=true speed-preset=ultrafast key-int-max=50"};
                 break;
             case CodecType::CodecVp8:
-                sprintf(cmd_str,
-                        "end-usage=cbr cpu-used=10 threads=4 target-bitrate=%lu", bitrate * 1000);
-                config = EncoderConfig{width, height, frameRate, "I420", "vp8enc",cmd_str};
+                sprintf((char*)cmdBuf.data(),
+                        "end-usage=cbr cpu-used=10 threads=4 target-bitrate=%d", bitrate * 1000);
+                config = EncoderConfig{width, height, frameRate, "I420", "vp8enc",(char*)cmdBuf.data()};
                 break;
             case CodecType::CodecVp9:
-                sprintf(cmd_str,
-                        "end-usage=cbr cpu-used=10 threads=4 target-bitrate=%lu",
+                sprintf((char*)cmdBuf.data(),
+                        "end-usage=cbr cpu-used=10 threads=4 target-bitrate=%d",
                         bitrate * 1000);
-                config = EncoderConfig{width, height, frameRate, "I420", "vp9enc",cmd_str};
+                config = EncoderConfig{width, height, frameRate, "I420", "vp9enc",(char*)cmdBuf.data()};
                 break;
         }
-        delete[] cmd_str;
         return  config;
     }
 };

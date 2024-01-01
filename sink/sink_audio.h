@@ -13,7 +13,7 @@ public:
     void putData(uint8_t* data, uint32_t len) override;
 
 protected:
-    static constexpr auto tag = "SinkAudio: ";
+    static constexpr auto TAG = "SinkAudio: ";
 };
 
 #endif

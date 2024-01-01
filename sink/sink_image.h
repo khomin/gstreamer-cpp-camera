@@ -7,7 +7,7 @@
 class SinkImage : public SinkBase {
 public:
     explicit SinkImage(int width, int height);
-    SinkImage();
+    SinkImage() = delete;
     ~SinkImage() override;
 
     void start() override;
@@ -18,8 +18,8 @@ private:
     static GstFlowReturn on_sample(GstElement * elt, SinkImage* image);
     ImageProviderAbstract* m_image = NULL;
 protected:
-    static constexpr auto tag = "SinkImage: ";
-    static constexpr auto cmd = "appsrc name=source_to_out is-live=true ! videoconvert {} ! queue ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr auto TAG = "SinkImage: ";
+    static constexpr auto CMD = "appsrc name=source_to_out is-live=true ! videoconvert %s ! queue ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif

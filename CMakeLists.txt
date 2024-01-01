@@ -42,6 +42,7 @@ set(PROJECT_SOURCES
   utils/encoder_config.h
   utils/measure.h
   utils/codec_type.h
+        config.h
 )
 
 if (USE_QT)
@@ -61,8 +62,6 @@ else ()
     image_provider/image_videosink.h
   )
 endif ()
-
-add_subdirectory(utils/fmt)
 
 if (USE_QT)
   if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -174,14 +173,6 @@ elseif (WIN32)
     ${GSTREAMER_LIBS}
   )
 endif ()
-
-# common libraries (all platforms)
-set(LIBRARIES_INCLUDE ${LIBRARIES_INCLUDE}
-  utils/fmt/include
-)
-set(LIBRARIES ${LIBRARIES}
-  fmt
-)
 
 if (USE_QT)
   target_link_libraries(${PROJECT} PRIVATE

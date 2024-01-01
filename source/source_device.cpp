@@ -1,25 +1,24 @@
 #include "source_device.h"
+#include "config.h"
 #include <iostream>
 #include <thread>
 
 SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
-    auto buf_len = 1024; // attention possible overflow
-    auto cmd_str = new char[buf_len];
-
-    sprintf(cmd_str,
-            cmd,
+    auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
+    sprintf((char*)cmdBuf.data(),
+            CMD,
 #if __APPLE__
-            type == SourceDeviceType::Screen ? cmd_screen_macos : cmd_camera_macos,
+            type == SourceDeviceType::Screen ? CMD_SCREEN_MACOS : CMD_CAMERA_MACOS,
 #elif _WIN32
-            type == SourceDeviceType::Screen ? cmd_screen_win : cmd_camera_win,
+            type == SourceDeviceType::Screen ? CMD_SCREEN_WIN : CMD_CAMERA_WIN,
 #else
-            type == SourceDeviceType::Screen ? cmd_screen_linux : cmd_camera_linux,
+            type == SourceDeviceType::Screen ? CMD_SCREEN_LINUX : CMD_CAMERA_LINUX,
 #endif
-            option == OptionType::TimeOverlay ? show_time_overlay : ""
+            option == OptionType::TimeOverlay ? CMD_TIME_OVERLAY : ""
     );
-    m_pipe = gst_parse_launch(cmd_str, NULL);
+    m_pipe = gst_parse_launch((char*)cmdBuf.data(), NULL);
     if (m_pipe == NULL) {
-        std::cerr << tag << "pipe failed" << std::endl;
+        std::cerr << TAG << "pipe failed" << std::endl;
         m_error = true;
     }
     /* we use appsink in push mode, it sends us a signal when data is available
@@ -29,8 +28,7 @@ SourceDevice::SourceDevice(SourceDeviceType type, OptionType option) {
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceDevice::on_sample), this);
     gst_object_unref (sink_out);
-    delete[] cmd_str;
-    std::cout << tag << ": created" << std::endl;
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SourceDevice::~SourceDevice() {
@@ -40,7 +38,7 @@ SourceDevice::~SourceDevice() {
     g_signal_handlers_disconnect_by_data(sink_out, this);
     gst_object_unref (sink_out);
     gst_object_unref (bus);
-    std::cout << tag << ": destroyed" << std::endl;
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SourceDevice::start() {

@@ -5,18 +5,18 @@
 #include <iostream>
 
 SinkEncode::SinkEncode(EncoderConfig config) {
-    auto buf_len = 1024; // attention possible overflow
-    auto cmd_str = new char[buf_len];
     m_config = config;
-    sprintf(cmd_str,
+    auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
+    sprintf((char*)cmdBuf.data(),
+            CMD,
             config.pixelFormat.c_str(),
             config.width, config.height,
             config.framerate,
             (config.codec + " " + config.codecOptions).c_str()
     );
-    m_pipe = gst_parse_launch(cmd_str, NULL);
+    m_pipe = gst_parse_launch((char*)cmdBuf.data(), NULL);
     if (m_pipe == NULL) {
-        std::cerr << tag << "pipe failed" << std::endl;
+        std::cerr << TAG << "pipe failed" << std::endl;
         m_error = true;
     }
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
@@ -35,8 +35,7 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         m_error = true;
     }
     gst_object_unref (source);
-    delete[] cmd_str;
-    std::cout << tag << ": created" << std::endl;
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SinkEncode::~SinkEncode() {
@@ -45,7 +44,7 @@ SinkEncode::~SinkEncode() {
     g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkEncode::on_sample), this);
     m_on_encoded = nullptr;
     gst_object_unref (bus);
-    std::cout << tag << ": destroyed, id: " << m_signal_id << std::endl;
+    std::cout << TAG << ": destroyed, id: " << m_signal_id << std::endl;
 }
 
 void SinkEncode::start() {
@@ -54,7 +53,7 @@ void SinkEncode::start() {
         auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
         g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
         m_signal_id = g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkEncode::on_sample), this);
-        std::cout << tag << ": GOT signal id: " << m_signal_id << std::endl;
+        std::cout << TAG << ": GOT signal id: " << m_signal_id << std::endl;
         if(sink_out == NULL) {
             m_error = true;
         }

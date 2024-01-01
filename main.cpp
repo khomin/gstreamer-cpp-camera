@@ -123,27 +123,27 @@ int runLoop (int argc, char *argv[]) {
     srcFromDevice->onConfig([=](uint32_t w, uint32_t h) {
         std::cout << "srcDeviceConfig " << "width: " << w << ", height: " << h << std::endl;
 
-        auto sinkToImgPrimary = std::make_shared<SinkImage>(w, h);
-        auto sinkToImgSecond = std::make_shared<SinkImage>(w/5, h/5);
+//        auto sinkToImgPrimary = std::make_shared<SinkImage>(w, h);
+        auto sinkToImgSecond = std::make_shared<SinkImage>(1920,1200);//w/5, h/5);
 
         srcFromDevice->addSink(sinkToImgSecond);
         sinkToImgSecond->setImage(image1);
-        sinkToImgPrimary->setImage(image2);
+//        sinkToImgPrimary->setImage(image2);
 
-        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
-        srcFromDevice->addSink(sinkToEncode);
-        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
-        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
-            srcDecode->putDataToDecode(data, len);
-        }));
-        srcDecode->addSink(sinkToImgPrimary);
-        sinkToEncode->start();
-        srcDecode->start();
+//        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
+//        srcFromDevice->addSink(sinkToEncode);
+//        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
+//        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+//            srcDecode->putDataToDecode(data, len);
+//        }));
+//        srcDecode->addSink(sinkToImgPrimary);
+//        sinkToEncode->start();
+//        srcDecode->start();
 
         sinkToImgSecond->setImage(image1);
-        sinkToImgPrimary->setImage(image2);
+//        sinkToImgPrimary->setImage(image2);
         sinkToImgSecond->start();
-        sinkToImgPrimary->start();
+//        sinkToImgPrimary->start();
     });
 #ifndef USE_QT
     image1 = new ImageVideoSink();

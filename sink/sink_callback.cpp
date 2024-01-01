@@ -2,16 +2,16 @@
 #include <iostream>
 
 SinkCallback::SinkCallback() {
-    std::cout << tag << ": created" << std::endl;
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SinkCallback::~SinkCallback() {
-    std::cout << tag << ": destroyed" << std::endl;
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SinkCallback::start() {
     startPipe();
-    std::cout << tag << ": started" << std::endl;
+    std::cout << TAG << ": started" << std::endl;
 }
 
 #ifdef USE_TEST_PUT

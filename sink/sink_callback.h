@@ -16,7 +16,7 @@ public:
 private:
     std::function<void(uint8_t *, uint32_t)> m_data_cb;
 protected:
-    static constexpr auto tag = "SinkCallback: ";
+    static constexpr auto TAG = "SinkCallback: ";
 };
 
 #endif

@@ -7,14 +7,14 @@
 SinkAudio::SinkAudio() {
     m_pipe = gst_parse_launch("appsrc name=source_to_out ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! audioconvert ! audioresample ! autoaudiosink", NULL);
     if (m_pipe == NULL) {
-        std::cerr << tag << "pipe failed" << std::endl;
+        std::cerr << TAG << "pipe failed" << std::endl;
         m_error = true;
     }
-    std::cout << tag << ": created" << std::endl;
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SinkAudio::~SinkAudio() {
-    std::cout << tag << ": destroyed" << std::endl;
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SinkAudio::start() {
@@ -24,7 +24,7 @@ void SinkAudio::start() {
     if(source == NULL) m_error = true;
     gst_object_unref (source);
     startPipe();
-    std::cout << tag << ": started" << std::endl;
+    std::cout << TAG << ": started" << std::endl;
 }
 
 void SinkAudio::putSample(GstSample* sample) {

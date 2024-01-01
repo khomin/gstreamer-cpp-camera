@@ -17,7 +17,7 @@ public:
 private:
     static GstFlowReturn on_sample(GstElement * elt, SourceAudio* data);
 
-    static constexpr auto tag = "SourceAudio: ";
+    static constexpr auto TAG = "SourceAudio: ";
 };
 
 #endif // SOURCE_AUDIO_H

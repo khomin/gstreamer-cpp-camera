@@ -12,13 +12,13 @@ public:
     void start() override;
 private:
     GstElement * m_pipe  = nullptr;
-    static constexpr auto tag = "ImageVideoSink: ";
+    static constexpr auto TAG = "ImageVideoSink: ";
 #if __APPLE__
-    static constexpr auto cmd = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=1280,height=720,framerate=20/1 ! videoconvert ! queue ! osxvideosink";
+    static constexpr auto CMD = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=1280,height=720,framerate=20/1 ! videoconvert ! queue ! osxvideosink";
 #elif _WIN32
-    static constexpr auto cmd = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=1280,height=720,framerate=20/1 ! videoconvert ! queue ! d3d11videosink";
+    static constexpr auto CMD = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=1280,height=720,framerate=20/1 ! videoconvert ! queue ! d3d11videosink";
 #else
-    static constexpr auto cmd = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=200,height=125,framerate=20/1 ! videoconvert ! queue ! xvimagesink";
+    static constexpr auto CMD = "appsrc name=source_to_out ! video/x-raw,format=RGBA,width=200,height=125,framerate=20/1 ! videoconvert ! queue ! xvimagesink";
 #endif
 };
 
