@@ -51,7 +51,7 @@ void SourceDevice::pause() {
     gst_element_set_state (m_pipe, GST_STATE_PAUSED);
 }
 
-void SourceDevice::onConfig(std::function<void(uint32_t ,uint32_t)> cb) {
+void SourceDevice::onConfig(std::function<void(int,int)> cb) {
     m_config_changed = cb;
 }
 
