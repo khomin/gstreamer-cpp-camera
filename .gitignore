@@ -8,3 +8,5 @@ cmake-build-debug/**
 no_qt_example/cmake-build-debug/**
 no_qt_example/.idea/**
 
+lib_pack/**
+

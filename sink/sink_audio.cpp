@@ -1,14 +1,36 @@
 #include "sink_audio.h"
 #include "utils/measure.h"
+#include "config.h"
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
-#include <iostream>
+#include <vector>
 
 SinkAudio::SinkAudio() {
-    m_pipe = gst_parse_launch("appsrc name=source_to_out ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! audioconvert ! audioresample ! autoaudiosink", NULL);
-    if (m_pipe == NULL) {
+    auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
+    sprintf((char*)cmdBuf.data(),
+            CMD,
+#if defined(__APPLE__)
+            CMD_DESKTOPS
+#elif defined(_WIN32)
+            CMD_DESKTOPS
+#elif defined (__linux__)
+#ifdef __ANDROID__
+            CMD_ANDROID
+#else
+            CMD_DESKTOPS
+#endif
+#endif
+    );
+    GError *error = NULL;
+    m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
+    if (!m_pipe) {
         std::cerr << TAG << "pipe failed" << std::endl;
         m_error = true;
+    }
+    if (error) {
+        gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
+        g_clear_error (&error);
+        g_free (message);
     }
     std::cout << TAG << ": created" << std::endl;
 }

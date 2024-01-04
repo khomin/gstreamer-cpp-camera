@@ -42,7 +42,7 @@ set(PROJECT_SOURCES
   utils/encoder_config.h
   utils/measure.h
   utils/codec_type.h
-        config.h
+  config.h
 )
 
 if (USE_QT)
@@ -69,10 +69,6 @@ if (USE_QT)
       MANUAL_FINALIZATION
       ${PROJECT_SOURCES}
     )
-    # Define target properties for Android with Qt 6 as:
-    #    set_property(TARGET ${PROJECT} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-    #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-    # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
   else ()
     if (ANDROID)
       add_library(${PROJECT} SHARED
@@ -85,9 +81,15 @@ if (USE_QT)
     endif ()
   endif ()
 else ()
-  add_executable(${PROJECT}
-    ${PROJECT_SOURCES}
-  )
+  if (ANDROID)
+    add_library(${PROJECT} SHARED
+      ${PROJECT_SOURCES}
+      )
+  else ()
+    add_executable(${PROJECT}
+      ${PROJECT_SOURCES}
+      )
+  endif ()
 endif ()
 
 if (USE_QT)
@@ -132,22 +134,47 @@ elseif (APPLE)
     "-framework IOKit"
   )
 elseif (UNIX AND NOT APPLE)
-  find_package(PkgConfig REQUIRED)
-  pkg_search_module(GLIB REQUIRED glib-2.0)
-  pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
-  pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
-  pkg_check_modules(GST_VIDEO REQUIRED gstreamer-video-1.0)
-  set(LIBRARIES
-    ${GST_APP_LIBRARIES}
-    ${GST_VIDEO_LIBRARIES}
-    -lxcb -ldl -pthread
-  )
-  set(LIBRARIES_INCLUDE
-    /usr/lib/x86_64-linux-gnu/glib-2.0/include
-    /usr/include/glib-2.0
-    /usr/local/include/gstreamer-1.0
-    /usr/include/gstreamer-1.0/
-  )
+  if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+      set(ARCH_NAME "arm64")
+    elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+      set(ARCH_NAME "x86_64")
+    else()
+      error("unknown architecture ${CMAKE_SYSTEM_PROCESSOR}")
+    endif()
+    set(GSTREAMER_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib_pack/gstreamer/android/)
+    set(LIBRARIES_INCLUDE
+      ${GSTREAMER_ROOT_PATH}/${ARCH_NAME}/lib/glib-2.0/include/
+      ${GSTREAMER_ROOT_PATH}/${ARCH_NAME}/include/gstreamer-1.0/
+      ${GSTREAMER_ROOT_PATH}/${ARCH_NAME}/include/glib-2.0/glib/
+      ${GSTREAMER_ROOT_PATH}/${ARCH_NAME}/include/glib-2.0/
+      ${GSTREAMER_ROOT_PATH}/${ARCH_NAME}/include/
+      )
+    file(GLOB_RECURSE GSTREAMER_LIBS
+      ${GSTREAMER_ROOT_PATH}/${ARCH_NAME}/*.a
+    )
+    set(LIBRARIES ${LIBRARIES}
+      GLESv2 EGL -lOpenSLES
+      ${GSTREAMER_LIBS}
+    )
+  else()
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(GLIB REQUIRED glib-2.0)
+    pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
+    pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
+    pkg_check_modules(GST_VIDEO REQUIRED gstreamer-video-1.0)
+    set(LIBRARIES
+      ${GST_APP_LIBRARIES}
+      ${GST_VIDEO_LIBRARIES}
+      -lxcb -ldl -pthread
+    )
+    set(LIBRARIES_INCLUDE
+      /usr/lib/x86_64-linux-gnu/glib-2.0/include
+      /usr/include/glib-2.0
+      /usr/local/include/gstreamer-1.0
+      /usr/include/gstreamer-1.0/
+    )
+  endif()
 elseif (WIN32)
   if (NOT DEFINED GSTREAMER_PATH)
     set(GSTREAMER_PATH "E:/gstreamer/1.0/mingw_x86_64/")

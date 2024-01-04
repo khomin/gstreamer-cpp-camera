@@ -20,8 +20,11 @@
 #include "image_provider/image_provider.h"
 #include "image_provider/image_videosink.h"
 #else
+
 #include "image_provider/image_videosink.h"
+
 #endif
+
 #include "source/source_device.h"
 #include "sink/sink_image.h"
 #include "sink/sink_file.h"
@@ -32,74 +35,115 @@
 #include "sink/sink_audio.h"
 #include "sink_callback.h"
 #include "utils/measure.h"
+#include <jni.h>
 
-ImageProviderAbstract* image1 = NULL;
-ImageProviderAbstract* image2 = NULL;
+ImageProviderAbstract *image1 = NULL;
+ImageProviderAbstract *image2 = NULL;
 
+//
+// use one of these options one time
+//
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-#define USE_VIDEO_TO_ENCODE_CODEC
-//#define USE_AUDIO_SRC_SINK
+//#define USE_VIDEO_TO_ENCODE_CODEC
+#define USE_AUDIO_SRC_SINK
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
 //#define USE_CRASH_TEST_2
 
 #if __APPLE__
-    extern "C" {
-    GST_PLUGIN_STATIC_DECLARE(coreelements);
-    GST_PLUGIN_STATIC_DECLARE(libav);
-    GST_PLUGIN_STATIC_DECLARE(openh264);
-    GST_PLUGIN_STATIC_DECLARE(app);
-    GST_PLUGIN_STATIC_DECLARE(appsink);
-    GST_PLUGIN_STATIC_DECLARE(videoparsersbad);
-    GST_PLUGIN_STATIC_DECLARE(x264);
-    GST_PLUGIN_STATIC_DECLARE(isomp4);
-    GST_PLUGIN_STATIC_DECLARE(applemedia);
-    GST_PLUGIN_STATIC_DECLARE(videoconvertscale);
-    GST_PLUGIN_STATIC_DECLARE(videorate);
-    GST_PLUGIN_STATIC_DECLARE(pango);
-    GST_PLUGIN_STATIC_DECLARE(videotestsrc);
-    GST_PLUGIN_STATIC_DECLARE(osxvideo);
-    GST_PLUGIN_STATIC_DECLARE(autodetect);
-    GST_PLUGIN_STATIC_DECLARE(audiotestsrc);
-    GST_PLUGIN_STATIC_DECLARE(audioconvert);
-    GST_PLUGIN_STATIC_DECLARE(audioresample);
-    GST_PLUGIN_STATIC_DECLARE(osxaudio);
-    }
+extern "C" {
+GST_PLUGIN_STATIC_DECLARE(coreelements);
+GST_PLUGIN_STATIC_DECLARE(libav);
+GST_PLUGIN_STATIC_DECLARE(openh264);
+GST_PLUGIN_STATIC_DECLARE(app);
+GST_PLUGIN_STATIC_DECLARE(appsink);
+GST_PLUGIN_STATIC_DECLARE(videoparsersbad);
+GST_PLUGIN_STATIC_DECLARE(x264);
+GST_PLUGIN_STATIC_DECLARE(isomp4);
+GST_PLUGIN_STATIC_DECLARE(applemedia);
+GST_PLUGIN_STATIC_DECLARE(videoconvertscale);
+GST_PLUGIN_STATIC_DECLARE(videorate);
+GST_PLUGIN_STATIC_DECLARE(pango);
+GST_PLUGIN_STATIC_DECLARE(videotestsrc);
+GST_PLUGIN_STATIC_DECLARE(osxvideo);
+GST_PLUGIN_STATIC_DECLARE(autodetect);
+GST_PLUGIN_STATIC_DECLARE(audiotestsrc);
+GST_PLUGIN_STATIC_DECLARE(audioconvert);
+GST_PLUGIN_STATIC_DECLARE(audioresample);
+GST_PLUGIN_STATIC_DECLARE(osxaudio);
+}
+#elif __ANDROID__
+extern "C" {
+GST_PLUGIN_STATIC_DECLARE(coreelements);
+GST_PLUGIN_STATIC_DECLARE(app);
+GST_PLUGIN_STATIC_DECLARE(openh264);
+GST_PLUGIN_STATIC_DECLARE(audioconvert);
+GST_PLUGIN_STATIC_DECLARE(audioresample);
+GST_PLUGIN_STATIC_DECLARE(androidmedia);
+GST_PLUGIN_STATIC_DECLARE(videoparsersbad);
+//GST_PLUGIN_STATIC_DECLARE(x264);
+//GST_PLUGIN_STATIC_DECLARE(isomp4);
+//GST_PLUGIN_STATIC_DECLARE(videoconvert);
+//GST_PLUGIN_STATIC_DECLARE(videoscale);
+//GST_PLUGIN_STATIC_DECLARE(videorate);
+//GST_PLUGIN_STATIC_DECLARE(libav);
+//GST_PLUGIN_STATIC_DECLARE(ahcsrc);
+GST_PLUGIN_STATIC_DECLARE(opensles);
+}
 #endif
 
-int runLoop (int argc, char *argv[]) {
+int runLoop(int argc, char *argv[]) {
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
-    #if __APPLE__
-        GST_PLUGIN_STATIC_REGISTER(coreelements);
-        GST_PLUGIN_STATIC_REGISTER(libav);
-        GST_PLUGIN_STATIC_REGISTER(app);
-        GST_PLUGIN_STATIC_REGISTER(openh264);
-        GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
-        GST_PLUGIN_STATIC_REGISTER(x264);
-        GST_PLUGIN_STATIC_REGISTER(isomp4);
-        GST_PLUGIN_STATIC_REGISTER(applemedia);
-        GST_PLUGIN_STATIC_REGISTER(videoconvertscale);
-        GST_PLUGIN_STATIC_REGISTER(videorate);
-        GST_PLUGIN_STATIC_REGISTER(pango);
-        GST_PLUGIN_STATIC_REGISTER(videotestsrc);
-        GST_PLUGIN_STATIC_REGISTER(osxvideo);
-        GST_PLUGIN_STATIC_REGISTER(audiotestsrc);
-        GST_PLUGIN_STATIC_REGISTER(autodetect);
-        GST_PLUGIN_STATIC_REGISTER(audioconvert);
-        GST_PLUGIN_STATIC_REGISTER(audioresample);
-        GST_PLUGIN_STATIC_REGISTER(osxaudio);
-    #endif
+#if __APPLE__
+    GST_PLUGIN_STATIC_REGISTER(coreelements);
+    GST_PLUGIN_STATIC_REGISTER(libav);
+    GST_PLUGIN_STATIC_REGISTER(app);
+    GST_PLUGIN_STATIC_REGISTER(openh264);
+    GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
+    GST_PLUGIN_STATIC_REGISTER(x264);
+    GST_PLUGIN_STATIC_REGISTER(isomp4);
+    GST_PLUGIN_STATIC_REGISTER(applemedia);
+    GST_PLUGIN_STATIC_REGISTER(videoconvertscale);
+    GST_PLUGIN_STATIC_REGISTER(videorate);
+    GST_PLUGIN_STATIC_REGISTER(pango);
+    GST_PLUGIN_STATIC_REGISTER(videotestsrc);
+    GST_PLUGIN_STATIC_REGISTER(osxvideo);
+    GST_PLUGIN_STATIC_REGISTER(audiotestsrc);
+    GST_PLUGIN_STATIC_REGISTER(autodetect);
+    GST_PLUGIN_STATIC_REGISTER(audioconvert);
+    GST_PLUGIN_STATIC_REGISTER(audioresample);
+    GST_PLUGIN_STATIC_REGISTER(osxaudio);
+#elif __ANDROID__
+    GST_PLUGIN_STATIC_REGISTER(coreelements);
+    GST_PLUGIN_STATIC_REGISTER(app);
+    GST_PLUGIN_STATIC_REGISTER(openh264);
+    GST_PLUGIN_STATIC_REGISTER(audioconvert);
+    GST_PLUGIN_STATIC_REGISTER(audioresample);
+    GST_PLUGIN_STATIC_REGISTER(androidmedia);
+    //GST_PLUGIN_STATIC_REGISTER(libav);
+    GST_PLUGIN_STATIC_REGISTER(videoparsersbad);
+    //GST_PLUGIN_STATIC_REGISTER(x264);
+    //GST_PLUGIN_STATIC_REGISTER(isomp4);
+    //GST_PLUGIN_STATIC_REGISTER(videoconvert);
+    //GST_PLUGIN_STATIC_REGISTER(videoscale);
+    //GST_PLUGIN_STATIC_REGISTER(videorate);
+    //GST_PLUGIN_STATIC_REGISTER(openslessink);
+    GST_PLUGIN_STATIC_REGISTER(opensles);
+    //GST_PLUGIN_STATIC_REGISTER(ahcsrc);
+#endif
+
     auto loop = g_main_loop_new(NULL, FALSE);
-    auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen, SourceDevice::OptionType::TimeOverlay);
-    #ifdef USE_QT
+    auto srcFromDevice = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Screen,
+                                                        SourceDevice::OptionType::TimeOverlay);
+#ifdef USE_QT
     auto sinkToFile = std::make_shared<SinkFile>((QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
-    #else
+#else
     auto videoSink = std::make_shared<ImageVideoSink>();
-    #endif
+#endif
 #endif
 
 #ifdef USE_VIDEO_TO_IMAGE_PREVIEW
@@ -123,27 +167,27 @@ int runLoop (int argc, char *argv[]) {
     srcFromDevice->onConfig([=](uint32_t w, uint32_t h) {
         std::cout << "srcDeviceConfig " << "width: " << w << ", height: " << h << std::endl;
 
-//        auto sinkToImgPrimary = std::make_shared<SinkImage>(w, h);
+        auto sinkToImgPrimary = std::make_shared<SinkImage>(w, h);
         auto sinkToImgSecond = std::make_shared<SinkImage>(1920,1200);//w/5, h/5);
 
         srcFromDevice->addSink(sinkToImgSecond);
         sinkToImgSecond->setImage(image1);
-//        sinkToImgPrimary->setImage(image2);
+        sinkToImgPrimary->setImage(image2);
 
-//        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
-//        srcFromDevice->addSink(sinkToEncode);
-//        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
-//        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
-//            srcDecode->putDataToDecode(data, len);
-//        }));
-//        srcDecode->addSink(sinkToImgPrimary);
-//        sinkToEncode->start();
-//        srcDecode->start();
+        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
+        srcFromDevice->addSink(sinkToEncode);
+        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
+        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+            srcDecode->putDataToDecode(data, len);
+        }));
+        srcDecode->addSink(sinkToImgPrimary);
+        sinkToEncode->start();
+        srcDecode->start();
 
         sinkToImgSecond->setImage(image1);
-//        sinkToImgPrimary->setImage(image2);
+        sinkToImgPrimary->setImage(image2);
         sinkToImgSecond->start();
-//        sinkToImgPrimary->start();
+        sinkToImgPrimary->start();
     });
 #ifndef USE_QT
     image1 = new ImageVideoSink();
@@ -163,7 +207,7 @@ int runLoop (int argc, char *argv[]) {
     auto sinkCallback = std::make_shared<SinkCallback>();
     srcAudio->addSink(sinkCallback);
 
-    sinkCallback->setDataCb([=](uint8_t * data, uint32_t len) {
+    sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
         sinkAudio->putData(data, len);
     });
     srcAudio->start();
@@ -346,7 +390,7 @@ int runLoop (int argc, char *argv[]) {
     sinkToImgPrimary = NULL;
     sinkToImgSecond = NULL;
 #endif
-    g_print ("Going out\n");
+    g_print("Going out\n");
     return 0;
 }
 
@@ -386,3 +430,12 @@ int main(int argc, char *argv[]) {
     return 0;
 #endif
 }
+
+#ifdef __ANDROID__
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_example_mytestcpp_MainActivity_startExternal(JNIEnv *env, jobject thiz, jint argc) {
+    main(0, nullptr);
+    return 0;
+}
+#endif

@@ -1,17 +1,41 @@
 #include "source_audio.h"
+#include "config.h"
 #include <iostream>
-#include <thread>
 
 SourceAudio::SourceAudio() {
-    m_pipe = gst_parse_launch("autoaudiosrc ! audioconvert ! audioresample ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! appsink name=sink_out", NULL);
-    if (m_pipe == NULL) {
+    auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
+    sprintf((char*)cmdBuf.data(),
+            CMD,
+#if defined(__APPLE__)
+            CMD_DESKTOPS
+#elif defined(_WIN32)
+            CMD_DESKTOPS
+#elif defined (__linux__)
+    #ifdef __ANDROID__
+            CMD_ANDROID
+    #else
+            CMD_DESKTOPS
+    #endif
+#endif
+    );
+    GError *error = NULL;
+    m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
+    if (!m_pipe) {
         std::cerr << TAG << "pipe failed" << std::endl;
         m_error = true;
+    }
+    if (error) {
+        gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
+        g_clear_error (&error);
+        g_free (message);
     }
     /* we use appsink in push mode, it sends us a signal when data is available
     * and we pull out the data in the signal callback. We want the appsink to
     * push as fast as it can, hence the sync=false */
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
+    if(!sink_out) {
+        std::cout << TAG << ": sink is null" << std::endl;
+    }
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceAudio::on_sample), this);
     gst_object_unref (sink_out);
