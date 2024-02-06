@@ -6,9 +6,9 @@
 #include "utils/codec_type.h"
 
 struct DecoderConfig {
-    int  width = 0;
-    int  height = 0;
-    int  framerate = 0;
+    int width = 0;
+    int height = 0;
+    int framerate = 0;
     int bitrate = 0;
     std::string codecInVideo;
     std::string pixelFormat;

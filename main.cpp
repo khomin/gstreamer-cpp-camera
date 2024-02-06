@@ -19,6 +19,9 @@
 #include "image_provider/live_image.h"
 #include "image_provider/image_provider.h"
 #include "image_provider/image_videosink.h"
+#include <QFile>
+#include <QJsonObject>
+#include <QJsonDocument>
 #else
 
 #include "image_provider/image_videosink.h"
@@ -35,7 +38,9 @@
 #include "sink/sink_audio.h"
 #include "sink_callback.h"
 #include "utils/measure.h"
+#ifdef __ANDROID__
 #include <jni.h>
+#endif
 
 ImageProviderAbstract *image1 = NULL;
 ImageProviderAbstract *image2 = NULL;
@@ -45,8 +50,8 @@ ImageProviderAbstract *image2 = NULL;
 //
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
 //#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
-#define USE_AUDIO_SRC_SINK
+#define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_AUDIO_SRC_SINK
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
 //#define USE_CRASH_TEST_2
@@ -94,10 +99,11 @@ GST_PLUGIN_STATIC_DECLARE(opensles);
 #endif
 
 int runLoop(int argc, char *argv[]) {
-#if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+
+#if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
 #if __APPLE__
     GST_PLUGIN_STATIC_REGISTER(coreelements);
     GST_PLUGIN_STATIC_REGISTER(libav);
@@ -173,10 +179,10 @@ int runLoop(int argc, char *argv[]) {
         srcFromDevice->addSink(sinkToImgSecond);
         sinkToImgSecond->setImage(image1);
         sinkToImgPrimary->setImage(image2);
-
-        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
+        auto bitrate = 5000;
+        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w,h, 25, bitrate, 15));
         srcFromDevice->addSink(sinkToEncode);
-        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w,h, 20, 900000 / 1000));
+        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w,h, 25, bitrate));
         sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
             srcDecode->putDataToDecode(data, len);
         }));
@@ -357,21 +363,53 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
 #ifdef USE_DECODE_FROM_FILE
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, 2560 /4 ,1600 /4, 20, 400));
-    auto sinkToImgPrimary = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-    auto sinkToImgSecond = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
-    sinkToImgPrimary->setImage(image1);
-    sinkToImgSecond->setImage(image2);
-    srcDecode->addSink(sinkToImgSecond);
+    std::shared_ptr<SourceDecode> srcDecode;
+    auto loop = g_main_loop_new(NULL, FALSE);
 
     auto tr = std::thread([&] {
-        QFile inputFile("/Users/khominvladimir/Desktop/raw.json");
+//        QFile inputFile(        QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/raw.json");
+        QFile inputFile(        QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/raw_andrey_b.json");
         if (inputFile.open(QIODevice::ReadOnly)) {
             QTextStream in(&inputFile);
             while (!in.atEnd()) {
                 QString line = in.readLine();
-                auto raw = QByteArray::fromBase64(line.toUtf8());
-                srcDecode->putDataToDecode((uint8_t*)raw.data(), raw.length());
+                auto doc = QJsonDocument::fromJson(line.toUtf8());
+                auto jobj = doc.object();
+                auto bitrate = jobj["bitrate"].toInt();
+                auto counter = jobj["counter"].toInt();
+                auto chan = jobj["chan"].toInt();
+                auto timeStr = jobj["time"].toString();
+                auto time = timeStr.toLongLong();
+                auto flags = jobj["flags"].toInt();
+                auto data = jobj["data"].toString();
+                auto codec = jobj["codec"].toInt();
+                auto width = jobj["width"].toInt();
+                auto height = jobj["height"].toInt();
+                auto sampleRate = jobj["sample_rate"].toInt();
+                auto keyRate = jobj["key_rate"].toInt();
+                auto frame = QByteArray::fromBase64(data.toUtf8(), QByteArray::Base64UrlEncoding);
+
+                if(srcDecode == nullptr) {
+                    srcDecode = std::make_shared<SourceDecode>(
+                            DecoderConfig::make(CodecType::CodecAvc, width, height, sampleRate, bitrate));
+                    srcDecode->start();
+
+                    auto sinkToImgPrimary = std::make_shared<SinkImage>(width / 2, height / 2);
+                    sinkToImgPrimary->setImage(image1);
+
+                    srcDecode->addSink(sinkToImgPrimary);
+                    sinkToImgPrimary->start();
+                }
+
+                if(!frame.isEmpty()) {
+                    srcDecode->putDataToDecode((uint8_t*)frame.data(), frame.length(), time);
+                    std::cout << "frame put:" << counter << ": length: " << frame.length() << std::endl;
+//                    if(frame.length() == 21677 || frame.length() == 12311) {
+//                        std::cout << "frame put:" << counter << ": length: " << frame.length() << std::endl;
+//                    }
+                } else {
+                    std::cerr << "frame is empty" << std::endl;
+                }
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
             inputFile.close();
@@ -379,16 +417,8 @@ int runLoop(int argc, char *argv[]) {
     });
     tr.detach();
 
-    srcDecode->start();
-    sinkToImgPrimary->start();
-    sinkToImgSecond->start();
-
     g_print ("Let's run!\n");
     g_main_loop_run (loop);
-
-    srcDecode = NULL;
-    sinkToImgPrimary = NULL;
-    sinkToImgSecond = NULL;
 #endif
     g_print("Going out\n");
     return 0;

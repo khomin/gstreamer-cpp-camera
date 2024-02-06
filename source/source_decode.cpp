@@ -61,6 +61,8 @@ void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lk(m_lock);
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
     gst_buffer_fill(buffer, 0, data, len);
+    GST_BUFFER_PTS(buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DTS(buffer) = GST_CLOCK_TIME_NONE;
     auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
     auto ret = gst_app_src_push_buffer(GST_APP_SRC (source_to_out), buffer);
     if(ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
