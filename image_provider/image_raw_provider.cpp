@@ -1,26 +1,32 @@
 #include "image_raw_provider.h"
 #include <cstring>
+#include <iostream>
 
 ImageRawProvider::ImageRawProvider() {}
 
 ImageRawProvider::~ImageRawProvider() {
-    if(m_buf != nullptr) {
-        delete[] m_buf;
-    }
+    std::lock_guard<std::mutex> lk(_lock);
+    delete[] m_buf;
+    m_buf = nullptr;
 }
 
 void ImageRawProvider::setImage(int width, int height, uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lk(_lock);
-    if(m_buf_len < len) {
-        if(m_buf != nullptr) {
-            delete[] m_buf;
-        }
+    if(len == 0) {
+        std::cerr << "setImage: invalid len: " << len << std::endl;
+        return;
+    }
+    if(m_buf == nullptr) {
         m_buf = new uint8_t[len];
         m_buf_len = len;
     }
+    if(len > m_buf_len) {
+        std::cerr << "setImage: len > buf: " << len << std::endl;
+        return;
+    }
+    memcpy(m_buf, data, len);
     m_width = width;
     m_height = height;
-    memcpy(m_buf, data, len);
 }
 
 uint8_t * ImageRawProvider::getBuffer() {
