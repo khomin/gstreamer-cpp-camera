@@ -14,9 +14,16 @@ SinkEncode::SinkEncode(EncoderConfig config) {
             config.framerate,
             (config.codec + " " + config.codecOptions).c_str()
     );
-    m_pipe = gst_parse_launch((char*)cmdBuf.data(), NULL);
+    GError *error = NULL;
+    m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (m_pipe == NULL) {
         std::cerr << TAG << "pipe failed" << std::endl;
+        m_error = true;
+    }
+    if (error) {
+        gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
+        g_clear_error (&error);
+        g_free (message);
         m_error = true;
     }
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");

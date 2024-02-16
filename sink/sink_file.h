@@ -7,7 +7,7 @@
 
 class SinkFile : public SinkBase {
 public:
-    explicit SinkFile(std::string path);
+    explicit SinkFile(int width, int height, std::string format, std::string path);
     SinkFile() = delete;
     virtual ~SinkFile();
 
@@ -18,7 +18,6 @@ private:
     std::ofstream m_file;
 protected:
     static constexpr auto TAG = "SinkFile: ";
-    static constexpr auto CMD = "appsrc name=source_to_out ! videoconvert ! x264enc ! mp4mux ! appsink name=sink_out";
 };
 
 #endif

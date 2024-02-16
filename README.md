@@ -6,7 +6,7 @@
 **The chain will be:**<br>
 ```Camera -> Encoder -> Decoder -> Image```
 ```
-auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Webc, SourceDevice::OptionType::TimeOverlay);
+auto srcFromWebc = std::make_shared<SourceDevice>(SourceDevice::SourceDeviceType::Camera1, SourceDevice::OptionType::TimeOverlay);
 auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, 2560 /4,1600 /4, 20, 400));
 auto sinkToImg = std::make_shared<SinkImage>(SinkImage::ImageType::Full);
 

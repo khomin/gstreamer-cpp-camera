@@ -6,12 +6,13 @@
 
 class SinkImage : public SinkBase {
 public:
-    explicit SinkImage(int width, int height);
+    explicit SinkImage(std::string format, int width_in, int height_in, int width_out, int height_out);
     SinkImage() = delete;
     ~SinkImage() override;
 
     void start() override;
     void putSample(GstSample* sample) override;
+    void putData(uint8_t *data, uint32_t len) override;
     void setImage(ImageProviderAbstract* imageProvider);
 
 private:
@@ -19,7 +20,6 @@ private:
     ImageProviderAbstract* m_image = NULL;
 protected:
     static constexpr auto TAG = "SinkImage: ";
-    static constexpr auto CMD = "appsrc name=source_to_out is-live=true ! videoconvert %s ! queue ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif

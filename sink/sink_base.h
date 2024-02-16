@@ -15,12 +15,13 @@ public:
     virtual bool isRunning();
     uint64_t getId();
     bool getError();
+    static void on_error (GstBus * bus, GstMessage * message, SinkBase * p);
+    GstElement * m_pipe  = nullptr;
 protected:
     void startPipe();
     void pausePipe();
     void stopPipe();
 
-    GstElement * m_pipe  = nullptr;
     uint64_t m_id = 0;
     uint64_t m_signal_id = 0;
     bool m_error = false;

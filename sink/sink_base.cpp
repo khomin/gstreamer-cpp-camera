@@ -73,3 +73,18 @@ void SinkBase::cleanBusEvents() {
     }
     gst_object_unref(bus);
 }
+
+void SinkBase::on_error (GstBus * bus, GstMessage * message, SinkBase * p) {
+    gchar *message_string;
+    GError *err;
+    gchar *debug_info;
+
+    gst_message_parse_error (message, &err, &debug_info);
+    message_string = g_strdup_printf ("Error received from element %s: %s",
+                                      GST_OBJECT_NAME (message->src), err->message);
+    // emit message here
+    g_clear_error (&err);
+    g_free (debug_info);
+    g_free (message_string);
+    gst_element_set_state (p->m_pipe, GST_STATE_NULL);
+}

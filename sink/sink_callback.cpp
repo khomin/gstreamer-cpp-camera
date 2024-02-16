@@ -37,6 +37,10 @@ void SinkCallback::putSample(GstSample* sample) {
             GstMapInfo mapInfo;
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
             if(m_data_cb != NULL) {
+                GstCaps *caps = gst_sample_get_caps(sample);
+                GstStructure *capStr = gst_caps_get_structure(caps, 0);
+                std::string capsStr2 = gst_structure_to_string(capStr);
+//                std::cout << TAG << ": sink-callback caps: " << capsStr2.c_str() << std::endl;
                 m_data_cb((uint8_t*)mapInfo.data, mapInfo.size);
             }
             gst_buffer_unmap(buffer, &mapInfo);
