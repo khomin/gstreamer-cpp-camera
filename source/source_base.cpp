@@ -34,8 +34,14 @@ void SourceBase::removeSink(std::shared_ptr<SinkBase> sink) {
     }
 }
 
+void SourceBase::removeSinkAll() {
+    std::lock_guard lk(m_lock);
+    m_sinks.clear();
+
+}
+
+
 std::vector<std::shared_ptr<SinkBase>> SourceBase::getSinks() {
-//    std::lock_guard lk(m_lock);
     return m_sinks;
 }
 

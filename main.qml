@@ -5,7 +5,7 @@ import ImageAdapter 1.0
 
 Window {
     id: window
-    width: 1000;
+    width: 1200;
     height: 720 / 2;
     visible: true
     title: qsTr("Hello World")

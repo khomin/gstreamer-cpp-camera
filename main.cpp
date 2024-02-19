@@ -1,9 +1,11 @@
 #ifdef USE_QT
+
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QStandardPaths>
 #include <QDateTime>
+
 #endif
 
 #include <gst/gst.h>
@@ -16,12 +18,14 @@
 #include <thread>
 
 #ifdef USE_QT
+
 #include "image_provider/live_image.h"
 #include "image_provider/image_provider.h"
 #include "image_provider/image_videosink.h"
 #include <QFile>
 #include <QJsonObject>
 #include <QJsonDocument>
+
 #else
 
 #include "image_provider/image_videosink.h"
@@ -38,6 +42,7 @@
 #include "sink/sink_audio.h"
 #include "sink_callback.h"
 #include "utils/measure.h"
+
 #ifdef __ANDROID__
 #include <jni.h>
 #endif
@@ -49,8 +54,8 @@ ImageProviderAbstract *image2 = NULL;
 // use one of these options one time
 //
 //#define USE_VIDEO_TO_IMAGE_PREVIEW
-#define USE_VIDEO_TO_ENCODE_FILE
-//#define USE_VIDEO_TO_ENCODE_CODEC
+//#define USE_VIDEO_TO_ENCODE_FILE
+#define USE_VIDEO_TO_ENCODE_CODEC
 //#define USE_AUDIO_SRC_SINK
 //#define USE_DECODE_FROM_FILE
 //#define USE_CRASH_TEST
@@ -98,10 +103,35 @@ GST_PLUGIN_STATIC_DECLARE(opensles);
 }
 #endif
 
+std::vector<std::pair<std::shared_ptr<uint8_t>,uint32_t>> delayList;
+int count = 0;
+
+void putWithDelay(std::shared_ptr<SinkImage> sink, uint8_t* data, uint32_t len) {
+    if(count++ < 50) {
+        auto p = std::shared_ptr<uint8_t>(new uint8_t[len]);
+        memcpy(p.get(), data, len);
+        auto frame = std::pair(p, len);
+        delayList.push_back(frame);
+    } else {
+        while(!delayList.empty()) {
+            auto frame = delayList.back();
+            sink->putData(frame.first.get(), frame.second);
+            delayList.pop_back();
+            std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        }
+        sink->putData(data, len);
+    }
+}
+
 int runLoop(int argc, char *argv[]) {
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+
+        auto w = 1920;
+        auto h = 1200;
+//    auto w = 2304;
+//    auto h = 1728;
 
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
 #if __APPLE__
@@ -143,10 +173,13 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
     auto loop = g_main_loop_new(NULL, FALSE);
-    auto srcFromDevice = std::make_shared<SourceDevice>(1920,1200, SourceDevice::SourceDeviceType::Screen,
-                                                        SourceDevice::OptionType::TimeOverlay);
+    auto srcFromDevice = std::make_shared<SourceDevice>(w, h, SourceDevice::SourceDeviceType::Screen,
+                                                        SourceDevice::OptionType::TimeOverlay
+    );
 #ifdef USE_QT
-    auto sinkToFile = std::make_shared<SinkFile>(1920,1200,"RGB", (QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/test_app.mp4").toLocal8Bit().data());
+    auto sinkToFile = std::make_shared<SinkFile>(w, h, "RGB",
+                                                 (QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) +
+                                                  "/test_app.mp4").toLocal8Bit().data());
 #else
     auto videoSink = std::make_shared<ImageVideoSink>();
 #endif
@@ -170,53 +203,99 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
+//    auto sinkToImgPrimary = std::make_shared<SinkImage>("RGB",w, h, w/2, h/2);
+//    auto sinkToImgSecond = std::make_shared<SinkImage>("RGB",w, h, w/5, h/5);
+//    auto sinkCallback = std::make_shared<SinkCallback>();
+//    sinkToImgPrimary->setImage(image2);
+//    sinkToImgSecond->setImage(image1);
+//    sinkToImgSecond->start();
+//    sinkToImgPrimary->start();
+
+    // 1
+//    srcFromDevice->addSink(sinkToImgPrimary);
+//    srcFromDevice->addSink(sinkToImgSecond);
+
+    // 2
+//    srcFromDevice->addSink(sinkCallback);
+//    sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
+//        sinkToImgSecond->putData(data, len);
+//        sinkToImgPrimary->putData(data, len);
+//    });
+//    sinkCallback->start();
+
+//    // 3
+//    static std::shared_ptr<SinkImage> sinkToImgPrimary;
+//    static std::shared_ptr<SinkImage> sinkToImgSecond;
+////    sinkToImgPrimary->setImage(image2);
+////    sinkToImgSecond->setImage(image1);
+//
+//    srcFromDevice->onConfig([=](uint32_t width, uint32_t height) {
+//        sinkToImgPrimary = std::make_shared<SinkImage>("RGB", width, height, width / 3, height / 3);
+////        sinkToImgPrimary->setImage(m_img1.get());
+//        sinkToImgPrimary->setImage(image2);
+//        srcFromDevice->addSink(sinkToImgPrimary);
+//
+//        sinkToImgSecond = std::make_shared<SinkImage>("RGB", width, height, width / 3, height / 3);
+//        sinkToImgSecond->setImage(image1);
+//        srcFromDevice->addSink(sinkToImgSecond);
+////        if(!recordToFile.empty()) {
+////            sinkToFile = std::make_shared<SinkFile>(width, height, "RGB", recordToFile);
+////            srcFromDevice->addSink(sinkToFile);
+////            sinkToFile->start();
+////        }
+//        std::thread([]() {
+//            sinkToImgSecond->start();
+//            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//            sinkToImgPrimary->start();
+//        }).detach();
+//
+////        sinkToEncode->start();
+//    });
+//    srcFromDevice->start();
+
+
+    // 4
+    static std::shared_ptr<SinkImage> sinkToImgPrimary;
+//    static std::shared_ptr<SinkImage> sinkToImgSecond;
+
+    sinkToImgPrimary = std::make_shared<SinkImage>("RGB", w, h, w/2, h/2);
+//    sinkToImgSecond = std::make_shared<SinkImage>("RGB", w, h, w/2, h/2);
+    sinkToImgPrimary->setImage(image2);
+//    sinkToImgSecond->setImage(image1);
+
+//    srcFromDevice->addSink(sinkToImgPrimary);
+//    srcFromDevice->addSink(sinkToImgSecond);
     auto sinkCallback = std::make_shared<SinkCallback>();
     srcFromDevice->addSink(sinkCallback);
-    sinkCallback->start();
-
-    static bool inited = false;
-    static std::shared_ptr<SinkImage> sinkToImgPrimary, sinkToImgSecond;
-    static std::shared_ptr<SinkEncode> sinkToEncode;
 
     sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
-        if(!inited) {
-            inited = true;
-            auto w = 1920; auto h = 1200;
-            sinkToImgPrimary = std::make_shared<SinkImage>(w, h, w, h);
-            sinkToImgSecond = std::make_shared<SinkImage>(w, h, w, h);
-            sinkToImgPrimary->setImage(image2);
-            sinkToImgSecond->setImage(image1);
-
-//            auto bitrate = 5000;
-//            sinkToEncode = std::make_shared<SinkEncode>(
-//                    EncoderConfig::make(CodecType::CodecAvc, w, h, 25, bitrate, 15));
-//            auto srcDecode = std::make_shared<SourceDecode>(
-//                    DecoderConfig::make(CodecType::CodecAvc, w, h, 25, bitrate));
-//            sinkToEncode->setOnEncoded(
-//                    SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
-//                        srcDecode->putDataToDecode(data, len);
-//                    }));
-////            srcDecode->addSink(sinkToImgPrimary);
-//            sinkToEncode->start();
-//            srcDecode->start();;
-            sinkToImgSecond->start();
-            sinkToImgPrimary->start();
-        } else {
-//            srcFromDevice->addSink(sinkToEncode);
-//            srcFromDevice->addSink(sinkToImgSecond);
-            sinkToImgSecond->putData(data, len);
-            sinkToImgPrimary->putData(data, len);
-//            sinkToEncode->putData(data, len);
-        }
+        putWithDelay(sinkToImgPrimary, data, len);
     });
+//    sinkToImgSecond->start();
+    sinkToImgPrimary->start();
+    sinkCallback->start();
+
+//    std::thread([w, h, srcFromDevice]() {
+//        while(true) {
+//            auto dst_argb_size = w * h * 4;
+//            auto dst_argb = std::shared_ptr<uint8_t>(new uint8_t[dst_argb_size]);
+//            memset((uint8_t *) dst_argb.get(), 150, dst_argb_size);
+//            srcFromDevice->putVideoFrame((uint8_t *) dst_argb.get(), dst_argb_size, w, h);
+//            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+//        }
+//    }).detach();
+
+//    std::thread([w, h, srcFromDevice]() {
+//        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        srcFromDevice->start();
+//    }).detach();
+
 #ifndef USE_QT
     image1 = new ImageVideoSink();
     image2 = new ImageVideoSink();
 #endif
-    srcFromDevice->start();
     image1->start();
     image2->start();
-
     g_print("Let's run!\n");
     g_main_loop_run(loop);
 #endif
@@ -455,8 +534,8 @@ int main(int argc, char *argv[]) {
     image2 = new ImageProvider();
 
     qmlRegisterType<LiveImage>("ImageAdapter", 1, 0, "LiveImage");
-    engine.rootContext()->setContextProperty("provider1", (ImageProvider*) image1);
-    engine.rootContext()->setContextProperty("provider2", (ImageProvider*) image2);
+    engine.rootContext()->setContextProperty("provider1", (ImageProvider *) image1);
+    engine.rootContext()->setContextProperty("provider2", (ImageProvider *) image2);
 #endif
     auto tr = std::thread([&] {
         runLoop(0, NULL);

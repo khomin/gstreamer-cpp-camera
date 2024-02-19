@@ -7,8 +7,6 @@
 #include <iostream>
 
 SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_out, int height_out) {
-    GstBus *bus;
-    GSource *bus_source;
     auto appsrc = gst_element_factory_make("appsrc", "source_to_out");
     auto capsFilterIn = gst_element_factory_make("capsfilter", NULL);
     auto videoconvert = gst_element_factory_make("videoconvert", NULL);
@@ -42,19 +40,23 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
     gst_element_link_many(appsrc, capsFilterIn, videoconvert, videoscale, capsFilterOut, appsink, NULL);
 
     /* instruct the bus to emit signals for each received message, and connect to the interesting signals */
-    bus = gst_element_get_bus(m_pipe);
-    bus_source = gst_bus_create_watch(bus);
+    auto bus = gst_element_get_bus(m_pipe);
+    auto bus_source = gst_bus_create_watch(bus);
     g_source_set_callback(bus_source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
     g_source_unref(bus_source);
     g_signal_connect (G_OBJECT(bus), "message::error", G_CALLBACK(SinkBase::on_error), this);
 
     auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
-    g_object_set(source, "format", GST_FORMAT_TIME, NULL);
-
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
+
+    g_object_set(source,
+                 "format", GST_FORMAT_TIME,
+                 "do-timestamp", TRUE,
+                 "block", TRUE,
+                 "is-live", TRUE,
+                 NULL);
     g_object_set(sink_out,
                  "emit-signals", TRUE,
-                 "sync", TRUE,
                  "max-buffers", 1,
                  "drop", true,
                  NULL);
@@ -64,11 +66,9 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
     gst_object_unref(bus);
     gst_object_unref(source);
     gst_object_unref(sink_out);
-    std::cout << TAG << ": created" << std::endl;
-    /* free resources */
     gst_caps_unref(caps_in);
     gst_caps_unref(caps_out);
-    gst_object_unref(bus);
+    std::cout << TAG << ": created" << std::endl;
 }
 
 SinkImage::~SinkImage() {
@@ -86,7 +86,7 @@ void SinkImage::start() {
 }
 
 void SinkImage::putSample(GstSample *sample) {
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_sample(GST_APP_SRC (source_to_out), sample);
     if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {

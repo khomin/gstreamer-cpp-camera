@@ -42,6 +42,7 @@ set(PROJECT_SOURCES
   utils/encoder_config.h
   utils/measure.h
   utils/codec_type.h
+  utils/ivideo_device_platform.h
   config.h
 )
 
@@ -60,6 +61,8 @@ else ()
   set(PROJECT_SOURCES ${PROJECT_SOURCES}
     image_provider/image_videosink.cpp
     image_provider/image_videosink.h
+    utils/ivideo_device_platform.cpp
+    utils/ivideo_device_platform.h
   )
 endif ()
 

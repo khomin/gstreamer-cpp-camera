@@ -17,56 +17,49 @@ SourceDevice::SourceDevice(int width, int height, SourceDeviceType type, OptionT
     GstBus *bus;
     GSource *bus_source;
     GstElement *src;
-    auto capsFilterIn = gst_element_factory_make("capsfilter", NULL);
-    auto videoconvert = gst_element_factory_make("videoconvert", NULL);
-    auto videoscale = gst_element_factory_make("videoscale", NULL);
-    auto capsFilterOut = gst_element_factory_make("capsfilter", NULL);
+    m_dev_type = type;
+    auto queue = gst_element_factory_make("queue", nullptr);
+    auto capsFilterIn = gst_element_factory_make("capsfilter", nullptr);
+    auto videoconvert = gst_element_factory_make("videoconvert", nullptr);
+    auto videoscale = gst_element_factory_make("videoscale", nullptr);
+    auto capsFilterOut = gst_element_factory_make("capsfilter", nullptr);
     auto appsink = gst_element_factory_make("appsink", "sink_out");
-
-//    auto overlay = gst_element_factory_make("clockoverlay", "overlay");
-//    auto overlay = gst_element_factory_make("textoverlay", "overlay");
-//    auto overlay = gst_element_factory_make("timeoverlay", "overlay");
+    auto overlay = gst_element_factory_make("timeoverlay", "overlay");
 #if __APPLE__
     type == SourceDeviceType::Screen
 #elif _WIN32
     type == SourceDeviceType::Screen ? CMD_SCREEN_WIN : CMD_CAMERA_WIN,
 #elif __ANDROID__
+    if (type == SourceDeviceType::Screen || type == SourceDeviceType::Camera1 || type == SourceDeviceType::Camera2 ) {
         src = gst_element_factory_make("appsrc", "source_to_out");
-//        src = gst_element_factory_make("videotestsrc", "source_to_out");
-        g_object_set(capsFilterIn, "caps",
-                     gst_caps_new_simple("video/x-raw",
-                                         "width", G_TYPE_INT, width,
-                                         "height", G_TYPE_INT, height,
-                                         "framerate", GST_TYPE_FRACTION, 20, 1,
-                                         "format", G_TYPE_STRING, "RGBA",
-                                         NULL),
-                     NULL);
-
+    } else if (type == SourceDeviceType::Test) {
+        src = gst_element_factory_make("videotestsrc", "source_to_out");
+    }
+    g_object_set(capsFilterIn, "caps",
+                 gst_caps_new_simple("video/x-raw",
+                                     "width", G_TYPE_INT, width,
+                                     "height", G_TYPE_INT, height,
+                                     "framerate", GST_TYPE_FRACTION, 20, 1,
+                                     "format", G_TYPE_STRING, "RGBA",
+                                     NULL),
+                 NULL);
 #else
     // LINUX
     if (type == SourceDeviceType::Screen) {
-//        src = gst_element_factory_make("ximagesrc", "source_to_out");
-        src = gst_element_factory_make("videotestsrc", "source_to_out");
-    } else {
+        src = gst_element_factory_make("ximagesrc", "source_to_out");
+    } else if (type == SourceDeviceType::Camera1 || type == SourceDeviceType::Camera2) {
         src = gst_element_factory_make("v4l2src", "source_to_out");
+    } else if (type == SourceDeviceType::Test) {
+        src = gst_element_factory_make("videotestsrc", "source_to_out");
     }
 #endif
-//    if (option == OptionType::TimeOverlay) {
-//        g_object_set(overlay,
-//                     "deltay", G_TYPE_INT, 50,
-//                     NULL);
-//    g_object_set (overlay,
-////                  "time-format", "%e-%h-%G %H-%M-%S-%s",
-////                  "text", "GStreamer rocks!",
-//                  "font-desc", NULL, "halignment", /* position */ 4,
-//                  "deltay",50,
-//                  "valignment", /* position */ 3,
-//                  NULL);
-////        draw-shadow=false
-////        draw-outline=false
-////        deltay=50
-////        font-desc=\"Sans, 30\",color=0xFFFFFFFF"
-////    }
+    if (option == OptionType::TimeOverlay) {
+        g_object_set(overlay,
+                     "font-desc", "Sans, 30", "halignment", /* position */ 1,
+                     "deltay", 50,
+                     "valignment", /* position */ 3,
+                     NULL);
+    }
     g_object_set(capsFilterOut, "caps",
                  gst_caps_new_simple("video/x-raw",
                                      "width", G_TYPE_INT, width,
@@ -74,48 +67,51 @@ SourceDevice::SourceDevice(int width, int height, SourceDeviceType type, OptionT
                                      "framerate", GST_TYPE_FRACTION, 20, 1,
                                      "format", G_TYPE_STRING, "RGB",
                                      NULL), NULL);
-    m_pipe = gst_pipeline_new("pipeline");
-    gst_bin_add_many(GST_BIN (m_pipe),
-                     src,
-                     capsFilterIn,
-//                     overlay,
-                     videoconvert,
-                     videoscale,
-                     capsFilterOut,
-                     appsink,
-                     NULL);
-    gst_element_link_many(src, capsFilterIn, //overlay,
-                          videoconvert, videoscale, capsFilterOut, appsink,
-                          NULL);
 
+
+    g_object_set(queue,
+                 "leaky", 2,
+                 "max-size-buffers", 5,
+                 NULL);
+
+    m_pipe = gst_pipeline_new("pipeline");
+
+    if (option == OptionType::TimeOverlay) {
+        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut, appsink,
+                         NULL);
+        gst_element_link_many(src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut, appsink, NULL);
+    } else {
+        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn, videoconvert, videoscale, capsFilterOut, queue, appsink, NULL);
+        gst_element_link_many(src, capsFilterIn, videoconvert, videoscale, capsFilterOut, queue, appsink, NULL);
+    }
     /* instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus(m_pipe);
     bus_source = gst_bus_create_watch(bus);
     g_source_set_callback(bus_source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
     g_source_unref(bus_source);
     g_signal_connect (G_OBJECT(bus), "message::error", G_CALLBACK(SinkBase::on_error), this);
-    //
+
+    auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
+//#ifdef __ANDROID__
+    if (type != SourceDeviceType::Test) {
+        g_object_set(
+                source,
+                "format", GST_FORMAT_TIME,
+                "do-timestamp", TRUE,
+//                "block", TRUE,
+//                "is-live", TRUE,
+                NULL
+        );
+    }
+//#endif
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_object_set(sink_out,
                  "emit-signals", TRUE,
-//                 "sync", TRUE,
-                 "max-buffers", 5,
-//                 "drop", true,
+                 "max-buffers", 1,
+                 "drop", true,
                  NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceDevice::on_sample), this);
 
-    auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
-#ifdef __ANDROID__
-    g_object_set(
-            source,
-            "is-live", TRUE,
-            "stream-type", GstAppStreamType::GST_APP_STREAM_TYPE_STREAM,
-            "format", GST_FORMAT_TIME,
-//            "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM,
-            "do-timestamp", TRUE,
-            NULL
-    );
-#endif
     /* free resources */
     gst_object_unref(bus);
     gst_object_unref(sink_out);
@@ -124,6 +120,9 @@ SourceDevice::SourceDevice(int width, int height, SourceDeviceType type, OptionT
 
 SourceDevice::~SourceDevice() {
     std::lock_guard<std::mutex> lk(m_lock);
+    if(m_device_platform_interface != nullptr) {
+        m_device_platform_interface->onStopSource();
+    }
     auto bus = gst_element_get_bus(m_pipe);
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_signal_handlers_disconnect_by_data(sink_out, this);
@@ -133,11 +132,23 @@ SourceDevice::~SourceDevice() {
 }
 
 void SourceDevice::start() {
+    std::lock_guard<std::mutex> lk(m_lock);
     startPipe();
+    if(m_device_platform_interface != nullptr) {
+//        GstState state, pending;
+        auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
+//        int timeout = 0;
+//        while(state != GST_STATE_PLAYING && timeout++ < 20) {
+//            gst_element_get_state(source_to_out, &state, &pending, GST_MSECOND * 10);
+//        }
+//        gst_object_unref(source_to_out);
+        m_device_platform_interface->onStartSource(
+                m_dev_type == SourceDeviceType::Camera1 ? "camera1" : "camera2");
+    }
 }
 
 void SourceDevice::pause() {
-    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
+    pausePipe();
 }
 
 void SourceDevice::onConfig(std::function<void(int, int)> cb) {
@@ -145,11 +156,10 @@ void SourceDevice::onConfig(std::function<void(int, int)> cb) {
 }
 
 void SourceDevice::putVideoFrame(uint8_t *data, uint32_t len, int width, int height) {
-    // when use camera
     std::lock_guard<std::mutex> lk(m_lock);
+    auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
     gst_buffer_fill(buffer, 0, data, len);
-    auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_buffer(GST_APP_SRC (source_to_out), buffer);
     if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
         std::cout << "push_sample error: " << ret << std::endl;
@@ -157,7 +167,9 @@ void SourceDevice::putVideoFrame(uint8_t *data, uint32_t len, int width, int hei
     gst_object_unref(source_to_out);
 }
 
-static uint64_t cnt = 0;
+void SourceDevice::setDevicePlatformInterface(IVideoDevicePlatform *v) {
+    m_device_platform_interface = v;
+}
 
 GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
     GstSample *sample;
@@ -178,13 +190,8 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
                 }
             }
         }
-
         buffer = gst_sample_get_buffer(sample);
         if (buffer != nullptr) {
-//            GstMapInfo mapInfo;
-//            gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
-//            std::string capsStr2 = gst_structure_to_string(capStr);
-//            std::cout << TAG << ": device caps: " << capsStr2.c_str() << std::endl;
             if (data != nullptr) {
                 auto sinks = data->getSinks();
                 for (auto it: sinks) {
@@ -193,7 +200,6 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
                     }
                 }
             }
-//            gst_buffer_unmap(buffer, &mapInfo);
         }
         gst_sample_unref(sample);
     }

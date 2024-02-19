@@ -13,6 +13,7 @@ public:
     virtual ~SourceBase();
     void addSink(std::shared_ptr<SinkBase> sink);
     void removeSink(std::shared_ptr<SinkBase> sink);
+    void removeSinkAll();
     std::vector<std::shared_ptr<SinkBase>> getSinks();
     virtual void start() {}
     virtual void pause() {}
@@ -26,10 +27,10 @@ protected:
     GstElement* m_pipe = NULL;
     std::mutex m_lock;
     bool m_error = false;
+    bool m_is_running = false;
 private:
     void cleanBusEvents();
     std::vector<std::shared_ptr<SinkBase>> m_sinks;
-    bool m_is_running = false;
 };
 
 #endif // SOURCEBASE_H
