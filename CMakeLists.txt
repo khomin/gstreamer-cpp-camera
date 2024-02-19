@@ -43,6 +43,7 @@ set(PROJECT_SOURCES
   utils/measure.h
   utils/codec_type.h
   utils/ivideo_device_platform.h
+  utils/source_size.h
   config.h
 )
 

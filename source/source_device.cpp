@@ -18,6 +18,8 @@ SourceDevice::SourceDevice(int width, int height, SourceDeviceType type, OptionT
     GSource *bus_source;
     GstElement *src;
     m_dev_type = type;
+    this->width = width;
+    this->height = height;
     auto queue = gst_element_factory_make("queue", nullptr);
     auto capsFilterIn = gst_element_factory_make("capsfilter", nullptr);
     auto videoconvert = gst_element_factory_make("videoconvert", nullptr);
@@ -30,7 +32,8 @@ SourceDevice::SourceDevice(int width, int height, SourceDeviceType type, OptionT
 #elif _WIN32
     type == SourceDeviceType::Screen ? CMD_SCREEN_WIN : CMD_CAMERA_WIN,
 #elif __ANDROID__
-    if (type == SourceDeviceType::Screen || type == SourceDeviceType::Camera1 || type == SourceDeviceType::Camera2 ) {
+    if (type == SourceDeviceType::Screen || type == SourceDeviceType::Camera1 ||
+        type == SourceDeviceType::Camera2) {
         src = gst_element_factory_make("appsrc", "source_to_out");
     } else if (type == SourceDeviceType::Test) {
         src = gst_element_factory_make("videotestsrc", "source_to_out");
@@ -77,12 +80,16 @@ SourceDevice::SourceDevice(int width, int height, SourceDeviceType type, OptionT
     m_pipe = gst_pipeline_new("pipeline");
 
     if (option == OptionType::TimeOverlay) {
-        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut, appsink,
+        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn, overlay, videoconvert, videoscale,
+                         capsFilterOut, appsink,
                          NULL);
-        gst_element_link_many(src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut, appsink, NULL);
+        gst_element_link_many(src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut,
+                              appsink, NULL);
     } else {
-        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn, videoconvert, videoscale, capsFilterOut, queue, appsink, NULL);
-        gst_element_link_many(src, capsFilterIn, videoconvert, videoscale, capsFilterOut, queue, appsink, NULL);
+        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn, videoconvert, videoscale,
+                         capsFilterOut, queue, appsink, NULL);
+        gst_element_link_many(src, capsFilterIn, videoconvert, videoscale, capsFilterOut, queue,
+                              appsink, NULL);
     }
     /* instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus(m_pipe);
@@ -120,7 +127,7 @@ SourceDevice::SourceDevice(int width, int height, SourceDeviceType type, OptionT
 
 SourceDevice::~SourceDevice() {
     std::lock_guard<std::mutex> lk(m_lock);
-    if(m_device_platform_interface != nullptr) {
+    if (m_device_platform_interface != nullptr) {
         m_device_platform_interface->onStopSource();
     }
     auto bus = gst_element_get_bus(m_pipe);
@@ -134,16 +141,9 @@ SourceDevice::~SourceDevice() {
 void SourceDevice::start() {
     std::lock_guard<std::mutex> lk(m_lock);
     startPipe();
-    if(m_device_platform_interface != nullptr) {
-//        GstState state, pending;
-        auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
-//        int timeout = 0;
-//        while(state != GST_STATE_PLAYING && timeout++ < 20) {
-//            gst_element_get_state(source_to_out, &state, &pending, GST_MSECOND * 10);
-//        }
-//        gst_object_unref(source_to_out);
+    if (m_device_platform_interface != nullptr) {
         m_device_platform_interface->onStartSource(
-                m_dev_type == SourceDeviceType::Camera1 ? "camera1" : "camera2");
+                m_dev_type == SourceDeviceType::Camera1 ? "camera1" : "camera2", width, height);
     }
 }
 
@@ -151,7 +151,7 @@ void SourceDevice::pause() {
     pausePipe();
 }
 
-void SourceDevice::onConfig(std::function<void(int, int)> cb) {
+void SourceDevice::onConfigChanged(std::function<void(int, int)> cb) {
     m_config_changed = cb;
 }
 

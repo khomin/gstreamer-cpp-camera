@@ -229,7 +229,7 @@ int runLoop(int argc, char *argv[]) {
 ////    sinkToImgPrimary->setImage(image2);
 ////    sinkToImgSecond->setImage(image1);
 //
-//    srcFromDevice->onConfig([=](uint32_t width, uint32_t height) {
+//    srcFromDevice->onConfigChanged([=](uint32_t width, uint32_t height) {
 //        sinkToImgPrimary = std::make_shared<SinkImage>("RGB", width, height, width / 3, height / 3);
 ////        sinkToImgPrimary->setImage(m_img1.get());
 //        sinkToImgPrimary->setImage(image2);

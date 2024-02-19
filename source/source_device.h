@@ -19,7 +19,7 @@ public:
 
     void start() override;
     void pause() override;
-    void onConfig(std::function<void(int ,int)> cb);
+    void onConfigChanged(std::function<void(int , int)> cb);
 
     void putVideoFrame(uint8_t *data, uint32_t len, int width, int height);
 
@@ -32,6 +32,7 @@ private:
     std::function<void(int ,int)> m_config_changed = nullptr;
     bool m_first_frame = true;
     SourceDeviceType m_dev_type {};
+    int width{}; int height{};
 
     static constexpr auto TAG = "SourceDevice: ";
 };
