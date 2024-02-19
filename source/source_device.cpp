@@ -143,7 +143,7 @@ void SourceDevice::start() {
     startPipe();
     if (m_device_platform_interface != nullptr) {
         m_device_platform_interface->onStartSource(
-                m_dev_type == SourceDeviceType::Camera1 ? "camera1" : "camera2", width, height);
+                m_dev_type == SourceDeviceType::Camera1 ? "1" : "2", width, height);
     }
 }
 
@@ -204,4 +204,8 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
         gst_sample_unref(sample);
     }
     return GstFlowReturn::GST_FLOW_OK;
+}
+
+std::pair<int, int> SourceDevice::getSize() {
+    return std::pair(width,height);
 }

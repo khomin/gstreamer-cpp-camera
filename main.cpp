@@ -127,11 +127,9 @@ int runLoop(int argc, char *argv[]) {
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
-
-        auto w = 1920;
-        auto h = 1200;
-//    auto w = 2304;
-//    auto h = 1728;
+    
+    auto w = 1920;
+    auto h = 1200;
 
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
 #if __APPLE__

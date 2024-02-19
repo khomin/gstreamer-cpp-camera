@@ -25,6 +25,8 @@ public:
 
     void setDevicePlatformInterface(IVideoDevicePlatform* v);
 
+    std::pair<int,int> getSize();
+
 private:
     static GstFlowReturn on_sample(GstElement * elt, SourceDevice* data);
 

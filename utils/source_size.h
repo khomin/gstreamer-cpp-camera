@@ -24,9 +24,14 @@ public:
         std::vector<Size> res;
 #ifdef __ANDROID__
         auto instance = AndroidVideoDevicePlatform::instance();
-        auto size = instance->getCameraSize();
+        auto size = instance->getCameraSize("1");
         auto size_ = Size();
-        size_.description = "camera";
+        size_.description = "1";
+        size_.width = size.first;
+        size_.height = size.second;
+        res.emplace_back(size_);
+        size = instance->getCameraSize("2");
+        size_.description = "2";
         size_.width = size.first;
         size_.height = size.second;
         res.emplace_back(size_);
