@@ -209,3 +209,7 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
 std::pair<int, int> SourceDevice::getSize() {
     return std::pair(width,height);
 }
+
+SourceDevice::SourceDeviceType SourceDevice::getType() {
+    return m_dev_type;
+}

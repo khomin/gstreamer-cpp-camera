@@ -6,7 +6,7 @@
 
 class SinkImage : public SinkBase {
 public:
-    explicit SinkImage(std::string format, int width_in, int height_in, int width_out, int height_out);
+    explicit SinkImage(std::string format, int width_in, int height_in, int width_out, int height_out, int framerate);
     SinkImage() = delete;
     ~SinkImage() override;
 

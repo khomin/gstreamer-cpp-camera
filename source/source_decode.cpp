@@ -87,7 +87,7 @@ GstFlowReturn SourceDecode::on_sample(GstElement * elt, SourceDecode* data) {
             GstCaps *caps = gst_sample_get_caps(sample);
             GstStructure *capStr = gst_caps_get_structure(caps, 0);
             std::string capsStr2 = gst_structure_to_string(capStr);
-//            std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
+            std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
 
             Measure::instance()->onDecodeSampleReady();
             auto sinks = data->getSinks();

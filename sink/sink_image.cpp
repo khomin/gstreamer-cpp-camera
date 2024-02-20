@@ -6,7 +6,7 @@
 #include <vector>
 #include <iostream>
 
-SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_out, int height_out) {
+SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_out, int height_out, int framerate) {
     auto appsrc = gst_element_factory_make("appsrc", "source_to_out");
     auto capsFilterIn = gst_element_factory_make("capsfilter", NULL);
     auto videoconvert = gst_element_factory_make("videoconvert", NULL);
@@ -17,12 +17,13 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
     auto caps_in = gst_caps_new_simple("video/x-raw",
                                        "width", G_TYPE_INT, width_in,
                                        "height", G_TYPE_INT, height_in,
-                                       "framerate", GST_TYPE_FRACTION, 20, 1,
+                                       "framerate", GST_TYPE_FRACTION, framerate, 1,
                                        "format", G_TYPE_STRING, format.c_str(), NULL);
     auto caps_out = gst_caps_new_simple("video/x-raw",
                                         "width", G_TYPE_INT, width_out,
                                         "height", G_TYPE_INT, height_out,
-                                        "framerate", GST_TYPE_FRACTION, 20, 1,
+                                        "framerate", GST_TYPE_FRACTION, framerate, 1,
+                                        "framerate", GST_TYPE_FRACTION, framerate, 1,
                                         "format", G_TYPE_STRING, "RGBA",
                                         NULL);
     g_object_set(capsFilterIn, "caps", caps_in, NULL);
@@ -94,6 +95,8 @@ void SinkImage::putSample(GstSample *sample) {
     }
     gst_object_unref(source_to_out);
 }
+
+//"video/x-raw, width=(int)1600, height=(int)1200, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)25/1, format=(string)RGB, colorimetry=(string)1:1:5:1;"
 
 void SinkImage::putData(uint8_t *data, uint32_t len) {
     std::lock_guard<std::mutex> lk(m_lock);

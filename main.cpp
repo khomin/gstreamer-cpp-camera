@@ -201,17 +201,17 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
-//    auto sinkToImgPrimary = std::make_shared<SinkImage>("RGB",w, h, w/2, h/2);
-//    auto sinkToImgSecond = std::make_shared<SinkImage>("RGB",w, h, w/5, h/5);
-//    auto sinkCallback = std::make_shared<SinkCallback>();
-//    sinkToImgPrimary->setImage(image2);
-//    sinkToImgSecond->setImage(image1);
-//    sinkToImgSecond->start();
-//    sinkToImgPrimary->start();
+    auto sinkToImgPrimary = std::make_shared<SinkImage>("RGB",w, h, w/2, h/2, 25);
+    auto sinkToImgSecond = std::make_shared<SinkImage>("RGB",w, h, w/5, h/5, 25);
+    auto sinkCallback = std::make_shared<SinkCallback>();
+    sinkToImgPrimary->setImage(image2);
+    sinkToImgSecond->setImage(image1);
+    sinkToImgSecond->start();
+    sinkToImgPrimary->start();
 
-    // 1
-//    srcFromDevice->addSink(sinkToImgPrimary);
-//    srcFromDevice->addSink(sinkToImgSecond);
+     //1
+    srcFromDevice->addSink(sinkToImgPrimary);
+    srcFromDevice->addSink(sinkToImgSecond);
 
     // 2
 //    srcFromDevice->addSink(sinkCallback);
@@ -251,42 +251,42 @@ int runLoop(int argc, char *argv[]) {
 //    });
 //    srcFromDevice->start();
 
-
-    // 4
-    static std::shared_ptr<SinkImage> sinkToImgPrimary;
-//    static std::shared_ptr<SinkImage> sinkToImgSecond;
-
-    sinkToImgPrimary = std::make_shared<SinkImage>("RGB", w, h, w/2, h/2);
-//    sinkToImgSecond = std::make_shared<SinkImage>("RGB", w, h, w/2, h/2);
-    sinkToImgPrimary->setImage(image2);
-//    sinkToImgSecond->setImage(image1);
-
-//    srcFromDevice->addSink(sinkToImgPrimary);
-//    srcFromDevice->addSink(sinkToImgSecond);
-    auto sinkCallback = std::make_shared<SinkCallback>();
-    srcFromDevice->addSink(sinkCallback);
-
-    sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
-        putWithDelay(sinkToImgPrimary, data, len);
-    });
-//    sinkToImgSecond->start();
-    sinkToImgPrimary->start();
-    sinkCallback->start();
-
-//    std::thread([w, h, srcFromDevice]() {
-//        while(true) {
-//            auto dst_argb_size = w * h * 4;
-//            auto dst_argb = std::shared_ptr<uint8_t>(new uint8_t[dst_argb_size]);
-//            memset((uint8_t *) dst_argb.get(), 150, dst_argb_size);
-//            srcFromDevice->putVideoFrame((uint8_t *) dst_argb.get(), dst_argb_size, w, h);
-//            std::this_thread::sleep_for(std::chrono::milliseconds(5));
-//        }
-//    }).detach();
-
-//    std::thread([w, h, srcFromDevice]() {
-//        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        srcFromDevice->start();
-//    }).detach();
+//
+//    // 4
+//    static std::shared_ptr<SinkImage> sinkToImgPrimary;
+////    static std::shared_ptr<SinkImage> sinkToImgSecond;
+//
+//    sinkToImgPrimary = std::make_shared<SinkImage>("RGB", w, h, w/2, h/2);
+////    sinkToImgSecond = std::make_shared<SinkImage>("RGB", w, h, w/2, h/2);
+//    sinkToImgPrimary->setImage(image2);
+////    sinkToImgSecond->setImage(image1);
+//
+////    srcFromDevice->addSink(sinkToImgPrimary);
+////    srcFromDevice->addSink(sinkToImgSecond);
+//    auto sinkCallback = std::make_shared<SinkCallback>();
+//    srcFromDevice->addSink(sinkCallback);
+//
+//    sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
+//        putWithDelay(sinkToImgPrimary, data, len);
+//    });
+////    sinkToImgSecond->start();
+//    sinkToImgPrimary->start();
+//    sinkCallback->start();
+//
+////    std::thread([w, h, srcFromDevice]() {
+////        while(true) {
+////            auto dst_argb_size = w * h * 4;
+////            auto dst_argb = std::shared_ptr<uint8_t>(new uint8_t[dst_argb_size]);
+////            memset((uint8_t *) dst_argb.get(), 150, dst_argb_size);
+////            srcFromDevice->putVideoFrame((uint8_t *) dst_argb.get(), dst_argb_size, w, h);
+////            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+////        }
+////    }).detach();
+//
+////    std::thread([w, h, srcFromDevice]() {
+////        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+//        srcFromDevice->start();
+////    }).detach();
 
 #ifndef USE_QT
     image1 = new ImageVideoSink();
