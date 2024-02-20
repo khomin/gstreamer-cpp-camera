@@ -143,7 +143,7 @@ void SourceDevice::start() {
     startPipe();
     if (m_device_platform_interface != nullptr) {
         m_device_platform_interface->onStartSource(
-                m_dev_type == SourceDeviceType::Camera1 ? "1" : "2", width, height);
+                m_dev_type == SourceDeviceType::Camera1 ? "0" : "1", width, height);
     }
 }
 
