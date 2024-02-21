@@ -1,4 +1,4 @@
-#include "source_device.h"
+#include "source_app.h"
 #include "config.h"
 #include <iostream>
 #include <thread>
@@ -13,13 +13,10 @@ static constexpr const char *CMD_SCREEN_WIN = "dx9screencapsrc name=src";
 static constexpr const char *CMD_CAMERA_WIN = "ksvideosrc name=src";
 //static constexpr const char* CMD_CAMERA_ANDROID = "appsrc name=source_to_out ! video/x-raw, width=(int)2304, height=(int)1728, framerate=(fraction)20/1, format=(string)RGBA";
 
-SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceType type, OptionType option) {
+SourceApp::SourceApp(std::string format, int width, int height, int framerate) {
     GstBus *bus;
     GSource *bus_source;
     GstElement *src;
-    m_dev_type = type;
-    this->width = width;
-    this->height = height;
     auto queue1 = gst_element_factory_make("queue", nullptr);
     auto queue2 = gst_element_factory_make("queue", nullptr);
     auto capsFilterIn = gst_element_factory_make("capsfilter", nullptr);
@@ -28,80 +25,44 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
     auto capsFilterOut = gst_element_factory_make("capsfilter", nullptr);
     auto appsink = gst_element_factory_make("appsink", "sink_out");
     auto overlay = gst_element_factory_make("timeoverlay", "overlay");
-#if __APPLE__
-    type == SourceDeviceType::Screen
-#elif _WIN32
-    type == SourceDeviceType::Screen ? CMD_SCREEN_WIN : CMD_CAMERA_WIN,
-#elif __ANDROID__
-//    if (type == SourceDeviceType::Screen || type == SourceDeviceType::Camera1 ||
-//        type == SourceDeviceType::Camera2) {
-//        src = gst_element_factory_make("appsrc", "source_to_out");
-//    } else if (type == SourceDeviceType::Test) {
-        src = gst_element_factory_make("videotestsrc", "source_to_out");
-//    }
+
+    src = gst_element_factory_make("appsrc", "source_to_out");
     g_object_set(capsFilterIn, "caps",
                  gst_caps_new_simple("video/x-raw",
                                      "width", G_TYPE_INT, width,
                                      "height", G_TYPE_INT, height,
                                      "framerate", GST_TYPE_FRACTION, framerate, 1,
-                                     "format", G_TYPE_STRING, "RGBA",
+                                     "format", G_TYPE_STRING, format.c_str(),
                                      NULL),
                  NULL);
-#else
-    // LINUX
-    if (type == SourceDeviceType::Screen) {
-        src = gst_element_factory_make("ximagesrc", "source_to_out");
-    } else if (type == SourceDeviceType::Camera1 || type == SourceDeviceType::Camera2) {
-        src = gst_element_factory_make("v4l2src", "source_to_out");
-    } else if (type == SourceDeviceType::Test) {
-        src = gst_element_factory_make("videotestsrc", "source_to_out");
-    }
-#endif
-    if (option == OptionType::TimeOverlay) {
-        g_object_set(overlay,
-                     "font-desc", "Sans, 30", "halignment", /* position */ 1,
-                     "deltay", 50,
-                     "valignment", /* position */ 3,
-                     NULL);
-    }
     g_object_set(capsFilterOut, "caps",
                  gst_caps_new_simple("video/x-raw",
                                      "width", G_TYPE_INT, width,
                                      "height", G_TYPE_INT, height,
                                      "framerate", GST_TYPE_FRACTION, framerate, 1,
-                                     "format", G_TYPE_STRING, "RGB",
+                                     "format", G_TYPE_STRING, format.c_str(),
                                      NULL), NULL);
-
-
     g_object_set(queue1,
                  "leaky", 2,
-                 "max-size-buffers", 5,
+//                 "max-size-buffers", 5,
                  NULL);
     g_object_set(queue2,
                  "leaky", 2,
-                 "max-size-buffers", 5,
+//                 "max-size-buffers", 5,
                  NULL);
-
     m_pipe = gst_pipeline_new("pipeline");
 
-    if (option == OptionType::TimeOverlay) {
-        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn, overlay, videoconvert, videoscale,
-                         capsFilterOut, appsink,
-                         NULL);
-        gst_element_link_many(src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut,
-                              appsink, NULL);
-    } else {
-        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn,
-//                         queue1,
-                         videoconvert, videoscale, capsFilterOut,
-//                         queue2,
-                         appsink, NULL);
-        gst_element_link_many(src, capsFilterIn,
-//                              queue1,
-                              videoconvert, videoscale, capsFilterOut,
-//                              queue2,
-                              appsink, NULL);
-    }
+    gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn,
+                     queue1,
+                     videoconvert, videoscale, capsFilterOut,
+                     queue2,
+                     appsink, NULL);
+    gst_element_link_many(src, capsFilterIn,
+                          queue1,
+                          videoconvert, videoscale, capsFilterOut,
+                          queue2,
+                          appsink, NULL);
+
     /* instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus(m_pipe);
     bus_source = gst_bus_create_watch(bus);
@@ -110,26 +71,23 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
     g_signal_connect (G_OBJECT(bus), "message::error", G_CALLBACK(SinkBase::on_error), this);
 
     auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
-//#ifdef __ANDROID__
-    if (type != SourceDeviceType::Test) {
-        g_object_set(
-                source,
-                "format", GST_FORMAT_TIME,
-                "do-timestamp", TRUE,
-//                "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
-////                "block", TRUE,
-                "is-live", TRUE,
-                NULL
-        );
-    }
-//#endif
+    g_object_set(
+            source,
+            "format", GST_FORMAT_TIME,
+            "do-timestamp", TRUE,
+//            "block", TRUE,
+//            "is-live", TRUE,
+            "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
+//            "max-latency", 50,
+            NULL
+    );
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_object_set(sink_out,
                  "emit-signals", TRUE,
                  "max-buffers", 1,
                  "drop", true,
                  NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceDevice::on_sample), this);
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceApp::on_sample), this);
 
     /* free resources */
     gst_object_unref(bus);
@@ -137,12 +95,8 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
     gst_object_unref(source);
 }
 
-SourceDevice::~SourceDevice() {
+SourceApp::~SourceApp() {
     std::lock_guard<std::mutex> lk(m_lock);
-    startPipe();
-//    if (m_device_platform_interface != nullptr) {
-//        m_device_platform_interface->onStopSource();
-//    }
     auto bus = gst_element_get_bus(m_pipe);
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_signal_handlers_disconnect_by_data(sink_out, this);
@@ -151,24 +105,16 @@ SourceDevice::~SourceDevice() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void SourceDevice::start() {
+void SourceApp::start() {
     std::lock_guard<std::mutex> lk(m_lock);
     startPipe();
-//    if (m_device_platform_interface != nullptr) {
-//        m_device_platform_interface->onStartSource(
-//                m_dev_type == SourceDeviceType::Camera1 ? "0" : "1", width, height);
-//    }
 }
 
-void SourceDevice::pause() {
+void SourceApp::pause() {
     pausePipe();
 }
 
-void SourceDevice::onConfigChanged(std::function<void(int, int)> cb) {
-    m_config_changed = cb;
-}
-
-void SourceDevice::putVideoFrame(uint8_t *data, uint32_t len, int width, int height) {
+void SourceApp::putData(uint8_t *data, uint32_t len) {
     std::lock_guard<std::mutex> lk(m_lock);
     auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
@@ -180,11 +126,7 @@ void SourceDevice::putVideoFrame(uint8_t *data, uint32_t len, int width, int hei
     gst_object_unref(source_to_out);
 }
 
-void SourceDevice::setDevicePlatformInterface(IVideoDevicePlatform *v) {
-    m_device_platform_interface = v;
-}
-
-GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
+GstFlowReturn SourceApp::on_sample(GstElement *elt, SourceApp *data) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample(GST_APP_SINK (elt));
@@ -195,14 +137,6 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
         gst_structure_get_int(capStr, "width", &imW);
         gst_structure_get_int(capStr, "height", &imH);
 
-        if (data != nullptr) {
-            if (data->m_first_frame) {
-                data->m_first_frame = false;
-                if (data->m_config_changed != nullptr) {
-                    data->m_config_changed(imW, imH);
-                }
-            }
-        }
         buffer = gst_sample_get_buffer(sample);
         if (buffer != nullptr) {
             if (data != nullptr) {
@@ -217,12 +151,4 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
         gst_sample_unref(sample);
     }
     return GstFlowReturn::GST_FLOW_OK;
-}
-
-std::pair<int, int> SourceDevice::getSize() {
-    return std::pair(width, height);
-}
-
-SourceDevice::SourceDeviceType SourceDevice::getType() {
-    return m_dev_type;
 }

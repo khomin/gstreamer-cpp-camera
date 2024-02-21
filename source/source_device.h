@@ -13,7 +13,7 @@ public:
     enum class SourceDeviceType { Camera1, Camera2, Screen, Test };
     enum class OptionType { None, TimeOverlay };
 
-    explicit SourceDevice(int width, int height, SourceDeviceType type, OptionType option = OptionType::None);
+    explicit SourceDevice(int width, int height, int framerate, SourceDeviceType type, OptionType option = OptionType::None);
     SourceDevice() = delete;
     virtual ~SourceDevice();
 

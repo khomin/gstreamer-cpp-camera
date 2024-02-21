@@ -24,14 +24,14 @@ public:
         std::vector<Size> res;
 #ifdef __ANDROID__
         auto instance = AndroidVideoDevicePlatform::instance();
-        auto size = instance->getCameraSize("1");
+        auto size = instance->getCameraSize("0");
         auto size_ = Size();
-        size_.description = "1";
+        size_.description = "0";
         size_.width = size.first;
         size_.height = size.second;
         res.emplace_back(size_);
-        size = instance->getCameraSize("2");
-        size_.description = "2";
+        size = instance->getCameraSize("1");
+        size_.description = "1";
         size_.width = size.first;
         size_.height = size.second;
         res.emplace_back(size_);
@@ -51,7 +51,7 @@ public:
             auto name = gst_device_get_display_name((GstDevice*)it);
             size.description = name;
             res.emplace_back(size);
-            g_free(name)
+            g_free(name);
         }
 #endif
         return res;

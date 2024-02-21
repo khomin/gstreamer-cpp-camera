@@ -5,6 +5,7 @@
 #include <iostream>
 
 SinkEncode::SinkEncode(EncoderConfig config) {
+    GError *error = NULL;
     m_config = config;
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
@@ -14,7 +15,6 @@ SinkEncode::SinkEncode(EncoderConfig config) {
             config.framerate,
             (config.codec + " " + config.codecOptions).c_str()
     );
-    GError *error = NULL;
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (m_pipe == NULL) {
         std::cerr << TAG << "pipe failed" << std::endl;
@@ -32,9 +32,9 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         "is-live", TRUE,
         "stream-type", 0,
         "format", GST_FORMAT_TIME,
-#ifdef GST_APP_LEAKY_TYPE_UPSTREAM
-        "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // can be helpful but is only since 1.20
-#endif
+//#ifdef GST_APP_LEAKY_TYPE_UPSTREAM
+        "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
+//#endif
         "do-timestamp", TRUE,
         NULL
       );
@@ -67,6 +67,18 @@ void SinkEncode::start() {
         gst_object_unref (sink_out);
         startPipe();
     }
+}
+
+void SinkEncode::putData(uint8_t* data, uint32_t len) {
+    std::lock_guard<std::mutex> lk(m_lock);
+    GstBuffer *buffer = gst_buffer_new_and_alloc(len);
+    gst_buffer_fill(buffer, 0, data, len);
+    auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
+    auto ret = gst_app_src_push_buffer(GST_APP_SRC (source_to_out), buffer);
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
+        std::cout << "push_sample error: " << ret << std::endl;
+    }
+    gst_object_unref(source_to_out);
 }
 
 void SinkEncode::putSample(GstSample* sample) {

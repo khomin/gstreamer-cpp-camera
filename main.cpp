@@ -37,6 +37,7 @@
 #include "sink/sink_file.h"
 #include "sink/sink_encode.h"
 #include "source/source_decode.h"
+#include "source/source_app.h"
 #include "utils/codec_type.h"
 #include "source/source_audio.h"
 #include "sink/sink_audio.h"
@@ -103,17 +104,17 @@ GST_PLUGIN_STATIC_DECLARE(opensles);
 }
 #endif
 
-std::vector<std::pair<std::shared_ptr<uint8_t>,uint32_t>> delayList;
+std::vector<std::pair<std::shared_ptr<uint8_t>, uint32_t>> delayList;
 int count = 0;
 
-void putWithDelay(std::shared_ptr<SinkImage> sink, uint8_t* data, uint32_t len) {
-    if(count++ < 50) {
+void putWithDelay(std::shared_ptr<SinkImage> sink, uint8_t *data, uint32_t len) {
+    if (count++ < 50) {
         auto p = std::shared_ptr<uint8_t>(new uint8_t[len]);
         memcpy(p.get(), data, len);
         auto frame = std::pair(p, len);
         delayList.push_back(frame);
     } else {
-        while(!delayList.empty()) {
+        while (!delayList.empty()) {
             auto frame = delayList.back();
             sink->putData(frame.first.get(), frame.second);
             delayList.pop_back();
@@ -127,7 +128,7 @@ int runLoop(int argc, char *argv[]) {
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
-    
+
     auto w = 1920;
     auto h = 1200;
 
@@ -171,7 +172,7 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
     auto loop = g_main_loop_new(NULL, FALSE);
-    auto srcFromDevice = std::make_shared<SourceDevice>(w, h, SourceDevice::SourceDeviceType::Screen,
+    auto srcFromDevice = std::make_shared<SourceDevice>(w, h, 25, SourceDevice::SourceDeviceType::Screen,
                                                         SourceDevice::OptionType::TimeOverlay
     );
 #ifdef USE_QT
@@ -201,17 +202,51 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
-    auto sinkToImgPrimary = std::make_shared<SinkImage>("RGB",w, h, w/2, h/2, 25);
-    auto sinkToImgSecond = std::make_shared<SinkImage>("RGB",w, h, w/5, h/5, 25);
-    auto sinkCallback = std::make_shared<SinkCallback>();
-    sinkToImgPrimary->setImage(image2);
+    auto sinkToImgPrimary = std::make_shared<SinkImage>("RGB", w, h, w, h, 25);
+    auto sinkToImgSecond = std::make_shared<SinkImage>("RGB", w,h, w/2,h/2,25);
     sinkToImgSecond->setImage(image1);
+    sinkToImgPrimary->setImage(image2);
+
+    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w, h, 25, 9000, 50));
+    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w, h, 25, 9000));
+
+    sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+        srcDecode->putData(data, len);
+    }));
+//    srcFromDevice->addSink(sinkToImgSecond);
+//    srcFromDevice->addSink(sinkToEncode);
+    srcDecode->addSink(sinkToImgPrimary);
+    auto sinkCallback = std::make_shared<SinkCallback>();
+    auto sourceApp = std::make_shared<SourceApp>("RGB",w, h, 25);
+
+//    sinkToImgSecond->putData(data, len);
+//    sinkToImgPrimary->putData(data, len);
+//    sinkToEncode->putData(data, len);
+
+    sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
+        std::cout << "BTEST: putData IN-1" << std::endl;
+        auto p = std::shared_ptr<uint8_t>(new uint8_t[len]);
+        memcpy(p.get(), data, len);
+        std::thread([p, sourceApp, len]() {
+            std::cout << "BTEST: putData IN-2" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            sourceApp->putData(p.get(), len);
+            std::cout << "BTEST: putData END " << std::endl;
+        }).detach();
+    });
+    srcFromDevice->addSink(sinkCallback);
+    sourceApp->addSink(sinkToImgSecond);
+    sourceApp->addSink(sinkToEncode);
+    std::thread([=]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        sourceApp->start();
+    }).detach();
+    sinkCallback->start();
     sinkToImgSecond->start();
     sinkToImgPrimary->start();
-
-     //1
-    srcFromDevice->addSink(sinkToImgPrimary);
-    srcFromDevice->addSink(sinkToImgSecond);
+    sinkToEncode->start();
+    srcDecode->start();
+    srcFromDevice->start();
 
     // 2
 //    srcFromDevice->addSink(sinkCallback);

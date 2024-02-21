@@ -14,7 +14,7 @@ srcFromScreen->addSink(sinkToEncode);
 srcDecode->addSink(sinkToImg);
 
 sinkToEncode->setOnEncoded([&](uint8_t* data, uint32_t len, uint32_t pts, uint32_t dts) {
-  srcDecode->putDataToDecode(data, len);
+  srcDecode->putData(data, len);
 });
 sinkToImg->setImage(image);
 sinkToImg->start();

@@ -28,7 +28,7 @@ struct EncoderConfig {
                 break;
             case CodecType::CodecAvc:
                 sprintf((char *) cmdBuf.data(),
-                        "bitrate=%d tune=zerolatency key-int-max=%d speed-preset=veryfast byte-stream=true",
+                        "bitrate=%d tune=zerolatency key-int-max=%d speed-preset=ultrafast threads=20 byte-stream=true",
                         bitrate, keyInt
                 );
                 config = EncoderConfig{width, height, frameRate, keyInt, "I420", "x264enc", (char*)cmdBuf.data()};

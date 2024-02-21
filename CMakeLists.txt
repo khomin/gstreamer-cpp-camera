@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
   source/source_base.h
   source/source_device.h
   source/source_device.cpp
+  source/source_app.cpp
+  source/source_app.h
   source/source_decode.h
   source/source_decode.cpp
   source/source_audio.cpp

@@ -5,6 +5,7 @@
 #include <iostream>
 
 SourceDecode::SourceDecode(DecoderConfig config) {
+    GError *error = NULL;
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
             CMD,
@@ -14,9 +15,15 @@ SourceDecode::SourceDecode(DecoderConfig config) {
             config.framerate,
             config.bitrate,
             config.decoder.c_str());
-    m_pipe = gst_parse_launch((char*)cmdBuf.data(), NULL);
+    m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (m_pipe == NULL) {
         std::cerr << TAG << "pipe failed" << std::endl;
+        m_error = true;
+    }
+    if (error) {
+        gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
+        g_clear_error (&error);
+        g_free (message);
         m_error = true;
     }
     std::cout << TAG << ": created" << std::endl;
@@ -30,7 +37,7 @@ SourceDecode::~SourceDecode() {
 
 void SourceDecode::start() {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
+    auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     if (source == NULL) {
         std::cout << "value is NULL" << std::endl;
     }
@@ -57,19 +64,16 @@ void SourceDecode::start() {
 
 void SourceDecode::pause() {}
 
-void SourceDecode::putDataToDecode(uint8_t* data, uint32_t len) {
+void SourceDecode::putData(uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lk(m_lock);
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
     gst_buffer_fill(buffer, 0, data, len);
-    GST_BUFFER_PTS(buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DTS(buffer) = GST_CLOCK_TIME_NONE;
-    auto source_to_out = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_decode");
+    auto source_to_out = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     auto ret = gst_app_src_push_buffer(GST_APP_SRC (source_to_out), buffer);
-    if(ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
-        std::cout << "push_sample error: " << ret  << std::endl;
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
+        std::cout << "push_sample error: " << ret << std::endl;
     }
-    gst_object_unref (source_to_out);
-
+    gst_object_unref(source_to_out);
     Measure::instance()->onDecodePutSample();
 }
 
@@ -84,10 +88,10 @@ GstFlowReturn SourceDecode::on_sample(GstElement * elt, SourceDecode* data) {
             GstMapInfo mapInfo;
             gst_buffer_map(buffer, &mapInfo, GST_MAP_READ);
 
-            GstCaps *caps = gst_sample_get_caps(sample);
-            GstStructure *capStr = gst_caps_get_structure(caps, 0);
-            std::string capsStr2 = gst_structure_to_string(capStr);
-            std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
+//            GstCaps *caps = gst_sample_get_caps(sample);
+//            GstStructure *capStr = gst_caps_get_structure(caps, 0);
+//            std::string capsStr2 = gst_structure_to_string(capStr);
+//            std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
 
             Measure::instance()->onDecodeSampleReady();
             auto sinks = data->getSinks();

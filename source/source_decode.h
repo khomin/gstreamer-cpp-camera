@@ -15,14 +15,13 @@ public:
 
     void start() override;
     void pause() override;
-
-    void putDataToDecode(uint8_t* data, uint32_t len);
+    void putData(uint8_t* data, uint32_t len);
 
 private:
     static GstFlowReturn on_sample(GstElement * elt, SourceDecode* data);
 
     static constexpr auto TAG = "SourceDecode: ";
-    static constexpr const char* CMD = "appsrc name=source_to_decode ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! videoconvert ! video/x-raw,format=RGB ! queue leaky=2,max-size-buffers=10 ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr const char* CMD = "appsrc name=source_to_out ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! queue ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif // SOURCE_DECODE_H
