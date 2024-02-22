@@ -3,6 +3,8 @@
 #include <iostream>
 #include <thread>
 
+std::vector<std::shared_ptr<SinkBase>> sinks;
+
 SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceType type, OptionType option) {
     GstBus *bus;
     GSource *bus_source;
@@ -105,14 +107,14 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
         gst_element_link_many(src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut,
                               appsink, NULL);
     } else {
-        gst_bin_add_many(GST_BIN (m_pipe), src, //capsFilterIn,
+        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn,
 //                         queue1,
                          videorate,
                          videoconvert, videoscale,
                          capsFilterOut,
 //                         queue2,
                          appsink, NULL);
-        if (gst_element_link_many(src, //capsFilterIn,
+        if (gst_element_link_many(src, capsFilterIn,
 //                              queue1,
                                   videorate,
                                     videoconvert, videoscale,
@@ -129,19 +131,8 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
     g_source_unref(bus_source);
     g_signal_connect (G_OBJECT(bus), "message::error", G_CALLBACK(SinkBase::on_error), this);
 
-    auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
-    auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
-    g_object_set(sink_out,
-                 "emit-signals", TRUE,
-                 "max-buffers", 1,
-                 "drop", true,
-                 NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceDevice::on_sample), this);
-
     /* free resources */
     gst_object_unref(bus);
-    gst_object_unref(sink_out);
-    gst_object_unref(source);
 }
 
 SourceDevice::~SourceDevice() {
@@ -151,6 +142,7 @@ SourceDevice::~SourceDevice() {
         m_device_platform_interface->onStopSource();
     }
 #endif
+    sinks.clear();
     auto bus = gst_element_get_bus(m_pipe);
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_signal_handlers_disconnect_by_data(sink_out, this);
@@ -161,6 +153,14 @@ SourceDevice::~SourceDevice() {
 
 void SourceDevice::start() {
     std::lock_guard<std::mutex> lk(m_lock);
+    sinks = getSinks();
+    auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
+    g_object_set(sink_out,
+                 "emit-signals", TRUE,
+                 "max-buffers", 1,
+                 "drop", true,
+                 NULL);
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceDevice::on_sample), nullptr);
     startPipe();
 #ifdef USE_NATIVE_INTERFACE
     if (m_device_platform_interface != nullptr) {
@@ -168,6 +168,7 @@ void SourceDevice::start() {
                 m_dev_type == SourceDeviceType::Camera1 ? "0" : "1", width, height);
     }
 #endif
+    gst_object_unref(sink_out);
 }
 
 void SourceDevice::pause() {
@@ -190,7 +191,7 @@ void SourceDevice::setDevicePlatformInterface(IVideoDevicePlatform *v) {
     m_device_platform_interface = v;
 }
 
-GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
+GstFlowReturn SourceDevice::on_sample(GstElement *elt, void *data) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample(GST_APP_SINK (elt));
@@ -203,14 +204,14 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, SourceDevice *data) {
 
         buffer = gst_sample_get_buffer(sample);
         if (buffer != nullptr) {
-            if (data != nullptr) {
-                auto sinks = data->getSinks();
-                for (auto it: sinks) {
+//            if (data != nullptr) {
+//                auto sinks = data->getSinks();
+                for (const auto& it: sinks) {
                     if (it != nullptr && it->isRunning()) {
                         it->putSample(sample);
                     }
                 }
-            }
+//            }
         }
         gst_sample_unref(sample);
     }

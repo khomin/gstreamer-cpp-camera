@@ -27,7 +27,7 @@ public:
     SourceDeviceType getType();
 
 private:
-    static GstFlowReturn on_sample(GstElement * elt, SourceDevice* data);
+    static GstFlowReturn on_sample(GstElement * elt, void* data);
 
     IVideoDevicePlatform* m_device_platform_interface = nullptr;
     SourceDeviceType m_dev_type {};

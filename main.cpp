@@ -129,10 +129,10 @@ int runLoop(int argc, char *argv[]) {
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
 
-//    auto w = 1920;
-//    auto h = 1200;
-    auto w = 640;
-    auto h = 360;
+////    auto w = 1920;
+////    auto h = 1200;
+//    auto w = 640;
+//    auto h = 360;
 
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
 #if __APPLE__
@@ -174,13 +174,11 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
     auto loop = g_main_loop_new(NULL, FALSE);
-    auto srcFromDevice = std::make_shared<SourceDevice>(w, h, 25, SourceDevice::SourceDeviceType::Camera1,
-                                                        SourceDevice::OptionType::None
-    );
+//    auto srcFromDevice = std::make_shared<SourceDevice>(w, h, 25, SourceDevice::SourceDeviceType::Camera1, SourceDevice::OptionType::None);
 #ifdef USE_QT
-    auto sinkToFile = std::make_shared<SinkFile>(w, h, "RGB",
-                                                 (QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) +
-                                                  "/test_app.mp4").toLocal8Bit().data());
+//    auto sinkToFile = std::make_shared<SinkFile>(w, h, "RGB",
+//                                                 (QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) +
+//                                                  "/test_app.mp4").toLocal8Bit().data());
 #else
     auto videoSink = std::make_shared<ImageVideoSink>();
 #endif
@@ -204,51 +202,44 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
 #ifdef USE_VIDEO_TO_ENCODE_CODEC
-    auto sinkToImgPrimary = std::make_shared<SinkImage>("RGB", w, h, w, h, 25);
-    auto sinkToImgSecond = std::make_shared<SinkImage>("RGB", w,h, w/2,h/2,25);
-    sinkToImgSecond->setImage(image1);
-    sinkToImgPrimary->setImage(image2);
+    bool stateTwo = false;
+    for(auto i=0; i<100; i++) {
+        int w = 0;
+        int h = 0;
+        auto type = SourceDevice::SourceDeviceType::Camera1;
+        if(stateTwo) {
+            stateTwo = false;
+            type = SourceDevice::SourceDeviceType::Screen;
+            w = 1920;
+            h = 1200;
+        } else {
+            stateTwo = true;
+            type = SourceDevice::SourceDeviceType::Camera1;
+            w = 640;
+            h = 360;
+        }
+        auto srcFromDevice = std::make_shared<SourceDevice>(w, h, 25, type, SourceDevice::OptionType::None);
+        auto sinkToImgPrimary = std::make_shared<SinkImage>("RGB", w, h, w, h, 25);
+        auto sinkToImgSecond = std::make_shared<SinkImage>("RGB", w,h, w/2,h/2,25);
+        sinkToImgSecond->setImage(image1);
+        sinkToImgPrimary->setImage(image2);
 
-    auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w, h, 25, 9000, 50));
-    auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w, h, 25, 9000));
+        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, w, h, 25, 9000, 50));
+        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, w, h, 25, 9000));
 
-    sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
-        srcDecode->putData(data, len);
-    }));
-//    srcFromDevice->addSink(sinkToImgSecond);
-//    srcFromDevice->addSink(sinkToEncode);
-    srcDecode->addSink(sinkToImgPrimary);
-    auto sinkCallback = std::make_shared<SinkCallback>();
-    auto sourceApp = std::make_shared<SourceApp>("RGB",w, h, 25);
-
-//    sinkToImgSecond->putData(data, len);
-//    sinkToImgPrimary->putData(data, len);
-//    sinkToEncode->putData(data, len);
-
-    sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
-        std::cout << "BTEST: putData IN-1" << std::endl;
-        auto p = std::shared_ptr<uint8_t>(new uint8_t[len]);
-        memcpy(p.get(), data, len);
-        std::thread([p, sourceApp, len]() {
-            std::cout << "BTEST: putData IN-2" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
-            sourceApp->putData(p.get(), len);
-            std::cout << "BTEST: putData END " << std::endl;
-        }).detach();
-    });
-    srcFromDevice->addSink(sinkCallback);
-    sourceApp->addSink(sinkToImgSecond);
-    sourceApp->addSink(sinkToEncode);
-    std::thread([=]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        sourceApp->start();
-    }).detach();
-    sinkCallback->start();
-    sinkToImgSecond->start();
-    sinkToImgPrimary->start();
-    sinkToEncode->start();
-    srcDecode->start();
-    srcFromDevice->start();
+        sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
+            srcDecode->putData(data, len);
+        }));
+        srcFromDevice->addSink(sinkToImgSecond);
+        srcFromDevice->addSink(sinkToEncode);
+        srcDecode->addSink(sinkToImgPrimary);
+        sinkToImgSecond->start();
+        sinkToImgPrimary->start();
+        sinkToEncode->start();
+        srcDecode->start();
+        srcFromDevice->start();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    }
 
     // 2
 //    srcFromDevice->addSink(sinkCallback);
