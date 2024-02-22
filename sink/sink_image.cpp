@@ -12,7 +12,7 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
     auto videoconvert = gst_element_factory_make("videoconvert", NULL);
     auto videoscale = gst_element_factory_make("videoscale", NULL);
     auto capsFilterOut = gst_element_factory_make("capsfilter", NULL);
-    auto queue = gst_element_factory_make("queue", nullptr);
+//    auto queue = gst_element_factory_make("queue", nullptr);
     auto appsink = gst_element_factory_make("appsink", "sink_out");
 
     auto caps_in = gst_caps_new_simple("video/x-raw",
@@ -29,10 +29,10 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                                         NULL);
     g_object_set(capsFilterIn, "caps", caps_in, NULL);
     g_object_set(capsFilterOut, "caps", caps_out, NULL);
-    g_object_set(queue,
-                 "leaky", 2,
-                 "max-size-buffers", 5,
-                 NULL);
+//    g_object_set(queue,
+//                 "leaky", 2,
+//                 "max-size-buffers", 5,
+//                 NULL);
 
     m_pipe = gst_pipeline_new("pipeline");
     gst_bin_add_many(GST_BIN (m_pipe),
@@ -43,7 +43,7 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                      capsFilterOut,
                      appsink,
                      NULL);
-    gst_element_link_many(appsrc, capsFilterIn, videoconvert, videoscale, appsink, NULL);
+    gst_element_link_many(appsrc, capsFilterIn, videoconvert, videoscale, capsFilterOut, appsink, NULL);
 
     /* instruct the bus to emit signals for each received message, and connect to the interesting signals */
     auto bus = gst_element_get_bus(m_pipe);
@@ -59,7 +59,7 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                  "format", GST_FORMAT_TIME,
                  "do-timestamp", TRUE,
 //                 "block", TRUE,
-//                 "is-live", TRUE,
+                 "is-live", TRUE,
                  "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
                  NULL);
     g_object_set(sink_out,

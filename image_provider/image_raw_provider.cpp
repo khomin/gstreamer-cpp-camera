@@ -7,7 +7,6 @@ ImageRawProvider::ImageRawProvider() {}
 ImageRawProvider::~ImageRawProvider() {
     std::lock_guard<std::mutex> lk(_lock);
     delete[] m_buf;
-    m_buf = nullptr;
 }
 
 void ImageRawProvider::setImage(int width, int height, uint8_t* data, uint32_t len) {
