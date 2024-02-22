@@ -15,6 +15,7 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
     auto capsFilterIn = gst_element_factory_make("capsfilter", nullptr);
     auto videoconvert = gst_element_factory_make("videoconvert", nullptr);
     auto videoscale = gst_element_factory_make("videoscale", nullptr);
+    auto videorate = gst_element_factory_make("videorate", nullptr);
     auto capsFilterOut = gst_element_factory_make("capsfilter", nullptr);
     auto appsink = gst_element_factory_make("appsink", "sink_out");
     auto overlay = gst_element_factory_make("timeoverlay", "overlay");
@@ -104,16 +105,22 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
         gst_element_link_many(src, capsFilterIn, overlay, videoconvert, videoscale, capsFilterOut,
                               appsink, NULL);
     } else {
-        gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn,
+        gst_bin_add_many(GST_BIN (m_pipe), src, //capsFilterIn,
 //                         queue1,
-                         videoconvert, videoscale, capsFilterOut,
+                         videorate,
+                         videoconvert, videoscale,
+                         capsFilterOut,
 //                         queue2,
                          appsink, NULL);
-        gst_element_link_many(src, capsFilterIn,
+        if (gst_element_link_many(src, //capsFilterIn,
 //                              queue1,
-                              videoconvert, videoscale, capsFilterOut,
+                                  videorate,
+                                    videoconvert, videoscale,
+                                  capsFilterOut,
 //                              queue2,
-                              appsink, NULL);
+                                  appsink, NULL) != TRUE) {
+            g_printerr("Elements could not be linked.\n");
+        }
     }
     /* instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus(m_pipe);

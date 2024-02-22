@@ -129,8 +129,10 @@ int runLoop(int argc, char *argv[]) {
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
 
-    auto w = 1920;
-    auto h = 1200;
+//    auto w = 1920;
+//    auto h = 1200;
+    auto w = 640;
+    auto h = 360;
 
 #if defined(USE_VIDEO_TO_IMAGE_PREVIEW) || defined(USE_VIDEO_TO_ENCODE_FILE) || defined(USE_VIDEO_TO_ENCODE_CODEC) || defined(USE_AUDIO_SRC_SINK)
 #if __APPLE__
@@ -172,8 +174,8 @@ int runLoop(int argc, char *argv[]) {
 #endif
 
     auto loop = g_main_loop_new(NULL, FALSE);
-    auto srcFromDevice = std::make_shared<SourceDevice>(w, h, 25, SourceDevice::SourceDeviceType::Screen,
-                                                        SourceDevice::OptionType::TimeOverlay
+    auto srcFromDevice = std::make_shared<SourceDevice>(w, h, 25, SourceDevice::SourceDeviceType::Camera1,
+                                                        SourceDevice::OptionType::None
     );
 #ifdef USE_QT
     auto sinkToFile = std::make_shared<SinkFile>(w, h, "RGB",
