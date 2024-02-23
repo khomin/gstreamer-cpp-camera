@@ -12,7 +12,6 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
     auto videoconvert = gst_element_factory_make("videoconvert", NULL);
     auto videoscale = gst_element_factory_make("videoscale", NULL);
     auto capsFilterOut = gst_element_factory_make("capsfilter", NULL);
-//    auto queue = gst_element_factory_make("queue", nullptr);
     auto appsink = gst_element_factory_make("appsink", "sink_out");
 
     auto caps_in = gst_caps_new_simple("video/x-raw",
@@ -29,10 +28,6 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                                         NULL);
     g_object_set(capsFilterIn, "caps", caps_in, NULL);
     g_object_set(capsFilterOut, "caps", caps_out, NULL);
-//    g_object_set(queue,
-//                 "leaky", 2,
-//                 "max-size-buffers", 5,
-//                 NULL);
 
     m_pipe = gst_pipeline_new("pipeline");
     gst_bin_add_many(GST_BIN (m_pipe),
@@ -58,7 +53,6 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
     g_object_set(source,
                  "format", GST_FORMAT_TIME,
                  "do-timestamp", TRUE,
-//                 "block", TRUE,
                  "is-live", TRUE,
                  "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
                  NULL);
@@ -67,8 +61,7 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                  "max-buffers", 1,
                  "drop", true,
                  NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK(SinkImage::on_sample), this);
-
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK(SinkImage::on_sample), &m_image);
     /* free resources */
     gst_object_unref(bus);
     gst_object_unref(source);
@@ -81,7 +74,6 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
 SinkImage::~SinkImage() {
     std::lock_guard<std::mutex> lock(m_lock);
     auto bus = gst_element_get_bus(m_pipe);
-    g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkImage::on_sample), this);
     m_image = nullptr;
     gst_object_unref(bus);
     std::cout << TAG << ": destroyed" << std::endl;
@@ -114,12 +106,12 @@ void SinkImage::putData(uint8_t *data, uint32_t len) {
     gst_object_unref(source_to_out);
 }
 
-void SinkImage::setImage(ImageProviderAbstract *image) {
+void SinkImage::setImage(std::shared_ptr<ImageProviderAbstract> image) {
     std::lock_guard<std::mutex> lock(m_lock);
     m_image = image;
 }
 
-GstFlowReturn SinkImage::on_sample(GstElement *elt, SinkImage *data) {
+GstFlowReturn SinkImage::on_sample(GstElement *elt, std::shared_ptr<ImageProviderAbstract> image) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample(GST_APP_SINK (elt));
@@ -137,13 +129,9 @@ GstFlowReturn SinkImage::on_sample(GstElement *elt, SinkImage *data) {
 
             Measure::instance()->onImageSampleReady();
 
-            if (data != NULL && data->m_image != NULL) {
-                data->m_image->setImage(imW, imH, (uint8_t *) mapInfo.data, mapInfo.size);
+            if (image != nullptr) {
+                image->setImage(imW, imH, (uint8_t *) mapInfo.data, mapInfo.size);
             }
-//            GstStructure *capStr = gst_caps_get_structure(caps, 0);
-//            std::string capsStr2 = gst_structure_to_string(capStr);
-//            std::cout << TAG << ": img caps: " << capsStr2.c_str() << std::endl;
-
             gst_buffer_unmap(buffer, &mapInfo);
         }
         gst_sample_unref(sample);

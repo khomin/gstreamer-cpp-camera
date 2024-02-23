@@ -13,12 +13,12 @@ public:
     void start() override;
     void putSample(GstSample* sample) override;
     void putData(uint8_t *data, uint32_t len) override;
-    void setImage(ImageProviderAbstract* imageProvider);
+    void setImage(std::shared_ptr<ImageProviderAbstract> imageProvider);
 
 private:
-    static GstFlowReturn on_sample(GstElement * elt, SinkImage* image);
-    ImageProviderAbstract* m_image = NULL;
+    static GstFlowReturn on_sample(GstElement * elt, std::shared_ptr<ImageProviderAbstract> image);
 protected:
+    std::shared_ptr<ImageProviderAbstract> m_image;
     static constexpr auto TAG = "SinkImage: ";
 };
 

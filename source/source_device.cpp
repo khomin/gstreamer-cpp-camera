@@ -12,8 +12,6 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
     m_dev_type = type;
     this->width = width;
     this->height = height;
-    auto queue1 = gst_element_factory_make("queue", nullptr);
-    auto queue2 = gst_element_factory_make("queue", nullptr);
     auto capsFilterIn = gst_element_factory_make("capsfilter", nullptr);
     auto videoconvert = gst_element_factory_make("videoconvert", nullptr);
     auto videoscale = gst_element_factory_make("videoscale", nullptr);
@@ -88,16 +86,6 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
                                      "format", G_TYPE_STRING, "RGB",
                                      NULL), NULL);
 
-
-    g_object_set(queue1,
-                 "leaky", 2,
-                 "max-size-buffers", 5,
-                 NULL);
-    g_object_set(queue2,
-                 "leaky", 2,
-                 "max-size-buffers", 5,
-                 NULL);
-
     m_pipe = gst_pipeline_new("pipeline");
 
     if (option == OptionType::TimeOverlay) {
@@ -108,18 +96,14 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
                               appsink, NULL);
     } else {
         gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn,
-//                         queue1,
                          videorate,
                          videoconvert, videoscale,
                          capsFilterOut,
-//                         queue2,
                          appsink, NULL);
         if (gst_element_link_many(src, capsFilterIn,
-//                              queue1,
                                   videorate,
                                     videoconvert, videoscale,
                                   capsFilterOut,
-//                              queue2,
                                   appsink, NULL) != TRUE) {
             g_printerr("Elements could not be linked.\n");
         }
@@ -138,9 +122,9 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
 SourceDevice::~SourceDevice() {
     std::lock_guard<std::mutex> lk(m_lock);
 #ifdef USE_NATIVE_INTERFACE
-    if (m_device_platform_interface != nullptr) {
-        m_device_platform_interface->onStopSource();
-    }
+//    if (m_device_platform_interface != nullptr) {
+//        m_device_platform_interface->onStopSource();
+//    }
 #endif
     sinks.clear();
     auto bus = gst_element_get_bus(m_pipe);
@@ -163,10 +147,10 @@ void SourceDevice::start() {
     g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceDevice::on_sample), nullptr);
     startPipe();
 #ifdef USE_NATIVE_INTERFACE
-    if (m_device_platform_interface != nullptr) {
-        m_device_platform_interface->onStartSource(
-                m_dev_type == SourceDeviceType::Camera1 ? "0" : "1", width, height);
-    }
+//    if (m_device_platform_interface != nullptr) {
+//        m_device_platform_interface->onStartSource(
+//                m_dev_type == SourceDeviceType::Camera1 ? "0" : "1", width, height);
+//    }
 #endif
     gst_object_unref(sink_out);
 }
