@@ -51,6 +51,8 @@ struct EncoderConfig {
                         bitrate);
                 config = EncoderConfig{width, height, frameRate, keyInt, "I420", "vp9enc",(char*)cmdBuf.data()};
                 break;
+            case CodecType::Unknown:
+                break;
         }
         return  config;
     }

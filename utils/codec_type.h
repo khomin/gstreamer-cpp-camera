@@ -3,7 +3,7 @@
 
 enum class CodecType { Codec3gp, Codecmp4, CodecAvc, CodecHevc, CodecVp8, CodecVp9, Unknown };
 
-static CodecType CodecTypeFromString(std::string type) {
+[[maybe_unused]] static CodecType CodecTypeFromString(std::string type) {
     auto type_ = CodecType::Unknown;
     if (type == "codec3gp") {
         type_ = CodecType::Codec3gp;

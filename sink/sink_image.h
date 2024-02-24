@@ -3,6 +3,7 @@
 
 #include "sink_base.h"
 #include "image_provider/image_provider_abstract.h"
+#include <memory>
 
 class SinkImage : public SinkBase {
 public:

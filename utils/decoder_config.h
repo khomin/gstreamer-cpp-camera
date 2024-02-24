@@ -28,6 +28,8 @@ struct DecoderConfig {
             return DecoderConfig{width, height, frameRate, bitrate, "x-vp8","I420","vp8dec"};
         case CodecType::CodecVp9:
             return DecoderConfig{width, height, frameRate, bitrate, "x-vp9","I420","vp9dec"};
+            default:
+                break;
         }
         return DecoderConfig{0, 0, 0, 0, ""};
     }

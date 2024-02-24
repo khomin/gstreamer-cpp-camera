@@ -10,7 +10,7 @@
 
 class SourceDevice : public SourceBase {
 public:
-    enum class SourceDeviceType { Camera1, Camera2, Screen, Test };
+    enum class SourceDeviceType { Idle, Camera1, Camera2, Screen, Test };
     enum class OptionType { None, TimeOverlay };
 
     explicit SourceDevice(int width, int height, int framerate, SourceDeviceType type, OptionType option = OptionType::None);
