@@ -21,15 +21,12 @@ public:
     void pause() override;
 
     void putVideoFrame(uint8_t *data, uint32_t len, int width, int height);
-    void setDevicePlatformInterface(IVideoDevicePlatform* v);
 
     std::pair<int,int> getSize();
     SourceDeviceType getType();
 
 private:
     static GstFlowReturn on_sample(GstElement * elt, void* data);
-
-    IVideoDevicePlatform* m_device_platform_interface = nullptr;
     SourceDeviceType m_dev_type {};
     int width{}; int height{};
 

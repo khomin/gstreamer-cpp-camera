@@ -48,8 +48,8 @@
 #include <jni.h>
 #endif
 
-ImageProviderAbstract *image1 = NULL;
-ImageProviderAbstract *image2 = NULL;
+std::shared_ptr<ImageProviderAbstract> image1 = nullptr;
+std::shared_ptr<ImageProviderAbstract> image2 = nullptr;
 
 //
 // use one of these options one time
@@ -238,7 +238,7 @@ int runLoop(int argc, char *argv[]) {
         sinkToEncode->start();
         srcDecode->start();
         srcFromDevice->start();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     }
 
     // 2
@@ -556,12 +556,12 @@ int main(int argc, char *argv[]) {
         }
     }, Qt::QueuedConnection);
 
-    image1 = new ImageProvider();
-    image2 = new ImageProvider();
+    image1 = std::make_shared<ImageProvider>();
+    image2 = std::make_shared<ImageProvider>();
 
     qmlRegisterType<LiveImage>("ImageAdapter", 1, 0, "LiveImage");
-    engine.rootContext()->setContextProperty("provider1", (ImageProvider *) image1);
-    engine.rootContext()->setContextProperty("provider2", (ImageProvider *) image2);
+    engine.rootContext()->setContextProperty("provider1", (ImageProvider *) image1.get());
+    engine.rootContext()->setContextProperty("provider2", (ImageProvider *) image2.get());
 #endif
     auto tr = std::thread([&] {
         runLoop(0, NULL);

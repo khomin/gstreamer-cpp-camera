@@ -121,11 +121,6 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
 
 SourceDevice::~SourceDevice() {
     std::lock_guard<std::mutex> lk(m_lock);
-#ifdef USE_NATIVE_INTERFACE
-//    if (m_device_platform_interface != nullptr) {
-//        m_device_platform_interface->onStopSource();
-//    }
-#endif
     sinks.clear();
     auto bus = gst_element_get_bus(m_pipe);
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
@@ -146,12 +141,6 @@ void SourceDevice::start() {
                  NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceDevice::on_sample), nullptr);
     startPipe();
-#ifdef USE_NATIVE_INTERFACE
-//    if (m_device_platform_interface != nullptr) {
-//        m_device_platform_interface->onStartSource(
-//                m_dev_type == SourceDeviceType::Camera1 ? "0" : "1", width, height);
-//    }
-#endif
     gst_object_unref(sink_out);
 }
 
@@ -169,10 +158,6 @@ void SourceDevice::putVideoFrame(uint8_t *data, uint32_t len, int width, int hei
         std::cout << "push_sample error: " << ret << std::endl;
     }
     gst_object_unref(source_to_out);
-}
-
-void SourceDevice::setDevicePlatformInterface(IVideoDevicePlatform *v) {
-    m_device_platform_interface = v;
 }
 
 GstFlowReturn SourceDevice::on_sample(GstElement *elt, void *data) {
