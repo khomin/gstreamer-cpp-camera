@@ -4,6 +4,7 @@
 #include <thread>
 
 std::vector<std::shared_ptr<SinkBase>> sinks;
+std::mutex sinks_lock;
 
 SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceType type, OptionType option) {
     GstBus *bus;
@@ -123,7 +124,9 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
 
 SourceDevice::~SourceDevice() {
     std::lock_guard<std::mutex> lk(m_lock);
+    sinks_lock.lock();
     sinks.clear();
+    sinks_lock.unlock();
     auto bus = gst_element_get_bus(m_pipe);
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_signal_handlers_disconnect_by_data(sink_out, this);
@@ -134,7 +137,9 @@ SourceDevice::~SourceDevice() {
 
 void SourceDevice::start() {
     std::lock_guard<std::mutex> lk(m_lock);
+    sinks_lock.lock();
     sinks = getSinks();
+    sinks_lock.unlock();
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_object_set(sink_out,
                  "emit-signals", TRUE,
@@ -175,14 +180,13 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, void *data) {
 
         buffer = gst_sample_get_buffer(sample);
         if (buffer != nullptr) {
-//            if (data != nullptr) {
-//                auto sinks = data->getSinks();
-                for (const auto& it: sinks) {
-                    if (it != nullptr && it->isRunning()) {
-                        it->putSample(sample);
-                    }
+            sinks_lock.lock();
+            for (const auto& it: sinks) {
+                if (it != nullptr && it->isRunning()) {
+                    it->putSample(sample);
                 }
-//            }
+            }
+            sinks_lock.unlock();
         }
         gst_sample_unref(sample);
     }
