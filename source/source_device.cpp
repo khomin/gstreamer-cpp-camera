@@ -57,7 +57,9 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
                 src,
                 "format", GST_FORMAT_TIME,
                 "do-timestamp", TRUE,
-                "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
+                #ifdef GST_APP_LEAKY_TYPE_UPSTREAM
+                 "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
+#endif
                 "is-live", TRUE,
                 NULL
         );

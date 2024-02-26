@@ -82,7 +82,9 @@ SinkFile::SinkFile(int width, int height, std::string format, std::string path) 
     auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     g_object_set(source,
                  "format", GST_FORMAT_TIME,
-                 "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM,
+#ifdef GST_APP_LEAKY_TYPE_UPSTREAM
+            "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
+#endif
                  NULL);
 
     g_object_set(x264enc,

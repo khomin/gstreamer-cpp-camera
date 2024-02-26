@@ -54,7 +54,9 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                  "format", GST_FORMAT_TIME,
                  "do-timestamp", TRUE,
                  "is-live", TRUE,
+#ifdef GST_APP_LEAKY_TYPE_UPSTREAM
                  "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
+#endif
                  NULL);
     g_object_set(sink_out,
                  "emit-signals", TRUE,
