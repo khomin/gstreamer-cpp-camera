@@ -42,14 +42,8 @@ SourceApp::SourceApp(std::string format, int width, int height, int framerate) {
                                      "framerate", GST_TYPE_FRACTION, framerate, 1,
                                      "format", G_TYPE_STRING, format.c_str(),
                                      NULL), NULL);
-    g_object_set(queue1,
-                 "leaky", 2,
-//                 "max-size-buffers", 5,
-                 NULL);
-    g_object_set(queue2,
-                 "leaky", 2,
-//                 "max-size-buffers", 5,
-                 NULL);
+    g_object_set(queue1,"leaky",2, "max-size-buffers",1, NULL);
+    g_object_set(queue2,"leaky",2, "max-size-buffers",1, NULL);
     m_pipe = gst_pipeline_new("pipeline");
 
     gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn,
@@ -75,12 +69,6 @@ SourceApp::SourceApp(std::string format, int width, int height, int framerate) {
             source,
             "format", GST_FORMAT_TIME,
             "do-timestamp", TRUE,
-//            "block", TRUE,
-//            "is-live", TRUE,
-#ifdef GST_APP_LEAKY_TYPE_UPSTREAM
-            "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
-#endif
-//            "max-latency", 50,
             NULL
     );
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");

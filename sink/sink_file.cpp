@@ -15,7 +15,7 @@ SinkFile::SinkFile(int width, int height, std::string format, std::string path) 
     auto videoconvert2 = gst_element_factory_make("videoconvert", NULL);
     auto x264enc = gst_element_factory_make("x264enc", "x264enc");
 //    auto mp4mux = gst_element_factory_make("mp4mux", "mp4mux");
-    auto queue = gst_element_factory_make("queue", nullptr);
+//    auto queue = gst_element_factory_make("queue", nullptr);
 //    auto caps_filter_out = gst_element_factory_make("capsfilter", NULL);
     auto appsink = gst_element_factory_make("appsink", "sink_out");
 //    auto appsink = gst_element_factory_make("fakesink", "sink_out");

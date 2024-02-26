@@ -32,9 +32,6 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         "is-live", TRUE,
         "stream-type", 0,
         "format", GST_FORMAT_TIME,
-#ifdef GST_APP_LEAKY_TYPE_UPSTREAM
-            "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
-#endif
         "do-timestamp", TRUE,
         NULL
       );

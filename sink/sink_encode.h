@@ -24,7 +24,7 @@ private:
     static GstFlowReturn on_sample(GstElement * elt, SinkEncode* cb);
 protected:
     static constexpr auto TAG = "SinkEncode: ";
-    static constexpr const auto CMD = "appsrc name=source_to_out ! videoconvert ! videoscale ! videorate ! video/x-raw,format=%s,width=%d,height=%d,framerate=%d/1 ! %s ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr const auto CMD = "appsrc name=source_to_out ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videoscale ! videorate ! video/x-raw,format=%s,width=%d,height=%d,framerate=%d/1 ! %s ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif

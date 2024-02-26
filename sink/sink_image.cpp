@@ -9,6 +9,7 @@
 SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_out, int height_out, int framerate) {
     auto appsrc = gst_element_factory_make("appsrc", "source_to_out");
     auto capsFilterIn = gst_element_factory_make("capsfilter", NULL);
+    auto queue = gst_element_factory_make("queue", NULL);
     auto videoconvert = gst_element_factory_make("videoconvert", NULL);
     auto videoscale = gst_element_factory_make("videoscale", NULL);
     auto capsFilterOut = gst_element_factory_make("capsfilter", NULL);
@@ -28,17 +29,19 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                                         NULL);
     g_object_set(capsFilterIn, "caps", caps_in, NULL);
     g_object_set(capsFilterOut, "caps", caps_out, NULL);
+    g_object_set(queue,"leaky",2, "max-size-buffers",1, NULL);
 
     m_pipe = gst_pipeline_new("pipeline");
     gst_bin_add_many(GST_BIN (m_pipe),
                      appsrc,
                      capsFilterIn,
+                     queue,
                      videoconvert,
                      videoscale,
                      capsFilterOut,
                      appsink,
                      NULL);
-    gst_element_link_many(appsrc, capsFilterIn, videoconvert, videoscale, capsFilterOut, appsink, NULL);
+    gst_element_link_many(appsrc, capsFilterIn, queue, videoconvert, videoscale, capsFilterOut, appsink, NULL);
 
     /* instruct the bus to emit signals for each received message, and connect to the interesting signals */
     auto bus = gst_element_get_bus(m_pipe);
@@ -54,9 +57,6 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                  "format", GST_FORMAT_TIME,
                  "do-timestamp", TRUE,
                  "is-live", TRUE,
-#ifdef GST_APP_LEAKY_TYPE_UPSTREAM
-                 "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
-#endif
                  NULL);
     g_object_set(sink_out,
                  "emit-signals", TRUE,

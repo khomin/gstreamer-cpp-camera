@@ -21,7 +21,7 @@ private:
     static GstFlowReturn on_sample(GstElement * elt, SourceDecode* data);
 
     static constexpr auto TAG = "SourceDecode: ";
-    static constexpr const char* CMD = "appsrc name=source_to_out ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! queue ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink_out max-buffers=1 drop=true";
+    static constexpr const char* CMD = "appsrc name=source_to_out ! queue leaky=downstream max-size-buffers=1 ! video/%s,format=%s,width=%d,height=%d,stream-format=byte-stream,framerate=%d/1,alignment=au,bitrate=%d ! %s ! queue ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink_out max-buffers=1 drop=true";
 };
 
 #endif // SOURCE_DECODE_H

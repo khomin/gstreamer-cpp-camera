@@ -6,7 +6,8 @@
 std::vector<std::shared_ptr<SinkBase>> sinks;
 std::mutex sinks_lock;
 
-SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceType type, OptionType option) {
+SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceType type,
+                           OptionType option) {
     GstBus *bus;
     GSource *bus_source;
     GstElement *src;
@@ -14,6 +15,7 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
     this->width = width;
     this->height = height;
     auto capsFilterIn = gst_element_factory_make("capsfilter", nullptr);
+    auto queue = gst_element_factory_make("queue", NULL);
     auto videoconvert = gst_element_factory_make("videoconvert", nullptr);
     auto videoscale = gst_element_factory_make("videoscale", nullptr);
     auto videorate = gst_element_factory_make("videorate", nullptr);
@@ -58,9 +60,6 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
                 src,
                 "format", GST_FORMAT_TIME,
                 "do-timestamp", TRUE,
-                #ifdef GST_APP_LEAKY_TYPE_UPSTREAM
-                 "leaky-type", GST_APP_LEAKY_TYPE_UPSTREAM, // since 1.20
-#endif
                 "is-live", TRUE,
                 NULL
         );
@@ -88,6 +87,7 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
                                      "framerate", GST_TYPE_FRACTION, framerate, 1,
                                      "format", G_TYPE_STRING, "RGB",
                                      NULL), NULL);
+    g_object_set(queue,"leaky",2, "max-size-buffers",1, NULL);
 
     m_pipe = gst_pipeline_new("pipeline");
 
@@ -99,13 +99,13 @@ SourceDevice::SourceDevice(int width, int height, int framerate, SourceDeviceTyp
                               appsink, NULL);
     } else {
         gst_bin_add_many(GST_BIN (m_pipe), src, capsFilterIn,
-                         videorate,
+                         queue, videorate,
                          videoconvert, videoscale,
                          capsFilterOut,
                          appsink, NULL);
         if (gst_element_link_many(src, capsFilterIn,
-                                  videorate,
-                                    videoconvert, videoscale,
+                                  queue, videorate,
+                                  videoconvert, videoscale,
                                   capsFilterOut,
                                   appsink, NULL) != TRUE) {
             g_printerr("Elements could not be linked.\n");
@@ -181,7 +181,7 @@ GstFlowReturn SourceDevice::on_sample(GstElement *elt, void *data) {
         buffer = gst_sample_get_buffer(sample);
         if (buffer != nullptr) {
             sinks_lock.lock();
-            for (const auto& it: sinks) {
+            for (const auto &it: sinks) {
                 if (it != nullptr && it->isRunning()) {
                     it->putSample(sample);
                 }
