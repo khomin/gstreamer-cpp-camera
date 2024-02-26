@@ -8,6 +8,8 @@
 
 #ifdef __ANDROID__
 #include "jni/jni_api.h"
+#elif _WIN32
+#include <windows.h>
 #endif
 
 class SourceSizeInfo {
@@ -35,48 +37,54 @@ public:
         res.emplace_back(size_);
 #else
         GstDeviceMonitor *monitor = gst_device_monitor_new();
+        auto monCaps = gst_caps_new_empty_simple("video/x-raw");
+        gst_device_monitor_add_filter(monitor, "Video/Source", monCaps);
+        gst_caps_unref(monCaps);
         if (!gst_device_monitor_start(monitor)) {
             std::cerr << "monitor couldn't start" << std::endl;
             return res;
         }
+
         GList *devices = gst_device_monitor_get_devices(monitor);
         GList *devIter;
         for (devIter = g_list_first(devices); devIter != nullptr; devIter = g_list_next(devIter)) {
             auto device = (GstDevice *) devIter->data;
-            if (device == NULL)
-                continue;
+            if (device == nullptr) continue;
+            auto name = gst_device_get_display_name(device);
             auto caps = gst_device_get_caps((GstDevice *) device);
             if (caps != nullptr) {
-                GstStructure *capStr = gst_caps_get_structure(caps, 0);
+                GstStructure *cap_struct = gst_caps_get_structure(caps, 0);
+                std::string caps_string = gst_structure_to_string(cap_struct);
+                std::cout << "device caps: " << caps_string.c_str() << std::endl;
                 auto size = Size();
-                gst_structure_get_int(capStr, "width", &size.width);
-                gst_structure_get_int(capStr, "height", &size.height);
-                std::string capsString = gst_structure_to_string(capStr);
-                std::cout << "device caps: " << capsString.c_str() << std::endl;
-                gst_caps_unref(caps);
-                if (size.width != 0 && size.height) {
-                    auto name = gst_device_get_display_name(device);
-                    auto prop = gst_device_get_properties(device);
-                    std::string path = gst_structure_get_string(prop, "object.path");
+                gst_structure_get_int(cap_struct, "width", &size.width);
+                gst_structure_get_int(cap_struct, "height", &size.height);
+                auto prop = gst_device_get_properties(device);
 #if __APPLE__
-
+    // TODO
 #elif _WIN32
-
-#elif defined (__ANDROID__)
-
+                size.description = "1"; // camera only
 #elif defined (__linux__)
-                    if (path == "v4l2:/dev/video0") {
-                        size.description = "0";
-                    } else {
-                        size.description = "1";
-                    }
-#endif
-                    g_free(name);
-                    gst_structure_free(prop);
-                    res.emplace_back(size);
+                if(prop != nullptr) {
+                    std::string path = gst_structure_get_string(prop, "object.path");
+                    size.description = path;
                 }
+#endif
+                res.emplace_back(size);
+                if(prop != nullptr) gst_structure_free(prop);
+                gst_caps_unref(caps);
             }
+            g_free(name);
         }
+
+        // add screen resolution for windows (gstreamer didn't provide it)
+#ifdef _WIN32
+        auto size = Size();
+        size.description = "0";
+        size.width = GetSystemMetrics(SM_CXSCREEN);
+        size.height = GetSystemMetrics(SM_CYSCREEN);
+        res.emplace_back(size);
+#endif
         g_list_free(devices);
         gst_device_monitor_stop(monitor);
 #endif
