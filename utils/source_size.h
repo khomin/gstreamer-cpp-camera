@@ -67,7 +67,11 @@ public:
 #elif defined (__linux__)
                 if(prop != nullptr) {
                     std::string path = gst_structure_get_string(prop, "object.path");
-                    size.description = path;
+                    if (path == "v4l2:/dev/video0") {
+                        size.description = "0";
+                    } else {
+                        size.description = "1";
+                    }
                 }
 #endif
                 res.emplace_back(size);
