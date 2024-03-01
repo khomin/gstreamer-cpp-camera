@@ -6,7 +6,7 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/app.h>
 #include <functional>
-#include <utils/ivideo_device_platform.h>
+#include "CppNative/notification/native_interface.h"
 
 class SourceDevice : public SourceBase {
 public:
