@@ -23,7 +23,7 @@ public:
     static std::vector<Size> getSize() {
         std::vector<Size> res;
 #ifdef __ANDROID__
-        auto instance = AndroidVideoDevicePlatform::instance();
+        auto instance = AndroidDevicePlatform::instance();
         auto size = instance->getCameraSize("0");
         auto size_ = Size();
         size_.description = "0";

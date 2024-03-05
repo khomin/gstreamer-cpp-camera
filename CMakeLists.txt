@@ -44,7 +44,6 @@ set(PROJECT_SOURCES
   utils/encoder_config.h
   utils/measure.h
   utils/codec_type.h
-  ../../notification/native_interface.h
   utils/source_size.h
   config.h
 )
