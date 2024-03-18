@@ -14,7 +14,7 @@ public:
 
 protected:
 
-    static constexpr const char* CMD = "appsrc name=source_to_out ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! audioconvert ! audioresample ! %s";
+    static constexpr const char* CMD = "appsrc name=source_to_out ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! audioconvert ! volume volume=1.3 ! audioresample ! %s";
     static constexpr const char* CMD_DESKTOPS = "autoaudiosink";
     static constexpr const char* CMD_ANDROID = "openslessink";
 
