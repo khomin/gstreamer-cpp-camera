@@ -44,7 +44,7 @@ set(PROJECT_SOURCES
   utils/encoder_config.h
   utils/measure.h
   utils/codec_type.h
-  utils/source_size.h
+        utils/source_camera_size.h
   config.h
 )
 

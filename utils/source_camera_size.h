@@ -12,7 +12,7 @@
 #include <windows.h>
 #endif
 
-class SourceSizeInfo {
+class SourceCameraInfo {
 public:
     typedef struct Size {
         int width{};
@@ -20,7 +20,7 @@ public:
         std::string description;
     } Size;
 
-    static std::vector<Size> getSize() {
+    static std::vector<Size> getCameras() {
         std::vector<Size> res;
 #ifdef __ANDROID__
         auto instance = AndroidDevicePlatform::instance();
@@ -44,7 +44,6 @@ public:
             std::cerr << "monitor couldn't start" << std::endl;
             return res;
         }
-
         GList *devices = gst_device_monitor_get_devices(monitor);
         GList *devIter;
         for (devIter = g_list_first(devices); devIter != nullptr; devIter = g_list_next(devIter)) {
@@ -61,15 +60,13 @@ public:
                 gst_structure_get_int(cap_struct, "height", &size.height);
                 auto prop = gst_device_get_properties(device);
 #if __APPLE__
-    // TODO
+                size.description = "1";
 #elif _WIN32
-                size.description = "1"; // camera only
+                size.description = "1";
 #elif defined (__linux__)
                 if(prop != nullptr) {
                     std::string path = gst_structure_get_string(prop, "object.path");
-                    if (path == "v4l2:/dev/video0") {
-                        size.description = "0";
-                    } else {
+                    if (path != "v4l2:/dev/video0") {
                         size.description = "1";
                     }
                 }
@@ -80,15 +77,6 @@ public:
             }
             g_free(name);
         }
-
-        // add screen resolution for windows (gstreamer didn't provide it)
-#ifdef _WIN32
-        auto size = Size();
-        size.description = "0";
-        size.width = GetSystemMetrics(SM_CXSCREEN);
-        size.height = GetSystemMetrics(SM_CYSCREEN);
-        res.emplace_back(size);
-#endif
         g_list_free(devices);
         gst_device_monitor_stop(monitor);
 #endif
