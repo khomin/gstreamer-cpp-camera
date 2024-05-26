@@ -52,7 +52,6 @@ bool SourceBase::getError() {
 void SourceBase::startPipe() {
     if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_PLAYING);
-        cleanBusEvents();
         m_is_running = true;
     }
 }
@@ -60,7 +59,6 @@ void SourceBase::startPipe() {
 void SourceBase::pausePipe() {
     if(m_pipe != nullptr) {
         gst_element_set_state(m_pipe, GST_STATE_PAUSED);
-        cleanBusEvents();
     }
 }
 

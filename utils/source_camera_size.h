@@ -7,7 +7,7 @@
 #include <iostream>
 
 #ifdef __ANDROID__
-#include "jni/jni_api.h"
+#include "api/jni/jni_api.h"
 #elif _WIN32
 #include <windows.h>
 #endif
