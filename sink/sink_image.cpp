@@ -2,7 +2,6 @@
 #include "utils/measure.h"
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
-#include "config.h"
 #include <vector>
 #include <iostream>
 

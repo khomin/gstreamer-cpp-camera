@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include <QFile>
 #include <QJsonObject>
+#include <QThread>
 #include <QJsonDocument>
 
 Launch::Launch() {
@@ -17,6 +18,7 @@ Launch::Launch() {
 int Launch::runLoop(int argc, char *argv[], std::function<void()> v) {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
+    control = std::make_shared<Control>();
     const QUrl url(QStringLiteral("qrc:/main.qml"));
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app, [url](QObject *obj, const QUrl &objUrl) {
@@ -28,6 +30,7 @@ int Launch::runLoop(int argc, char *argv[], std::function<void()> v) {
     qmlRegisterType<LiveImage>("ImageAdapter", 1, 0, "LiveImage");
     engine.rootContext()->setContextProperty("provider1", (ImageProvider *) imageLeft.get());
     engine.rootContext()->setContextProperty("provider2", (ImageProvider *) imageRight.get());
+    engine.rootContext()->setContextProperty("control", (Control *) control.get());
 
     gst_init(NULL, NULL);
     gst_debug_set_active(TRUE);
@@ -35,12 +38,13 @@ int Launch::runLoop(int argc, char *argv[], std::function<void()> v) {
 
     loop = g_main_loop_new(NULL, FALSE);
 
-    auto tr = std::thread([&] {
+    auto tr = QThread::create([&] {
         v();
         QCoreApplication::exit(-1);
     });
-    tr.detach();
     engine.load(url);
+    tr->start();
     auto ret = app.exec();
+    tr->deleteLater();
     return ret;
 }

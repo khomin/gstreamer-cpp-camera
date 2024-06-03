@@ -5,22 +5,29 @@ import ImageAdapter 1.0
 
 Window {
     id: window
-    width: 1200;
-    height: 720 / 2;
+    width: 1000;
+    height: 800;
     visible: true
     title: qsTr("Hello World")
     color: "black"
 
-    Row{
-        LiveImage {
-            width: window.width / 2
-            height: window.height
-            image: provider1.image
+    Column {
+        Text {
+            text: control.bitrate
+            color: "orange"
+            padding: 14
         }
-        LiveImage {
-            width: window.width / 2
-            height: window.height
-            image: provider2.image
+        Row {
+            LiveImage {
+                width: window.width / 2
+                height: window.height
+                image: provider1.image
+            }
+            LiveImage {
+                width: window.width / 2
+                height: window.height
+                image: provider2.image
+            }
         }
     }
 }

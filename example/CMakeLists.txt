@@ -4,6 +4,7 @@ set(PROJECT_SOURCES
     ./main.cpp
     ../launch.cpp
     ../launch.h
+    ../control.h
     ../qml.qrc
     # image
     ../../image_provider/image_provider.cpp

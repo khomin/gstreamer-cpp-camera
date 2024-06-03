@@ -16,20 +16,23 @@ int main(int argc, char *argv[]) {
             // source resolution
             width, height,
             // framerate
-            25,
+            30,
             // source type
-            SourceDevice::SourceDeviceType::Camera1,
+            SourceDevice::SourceDeviceType::Screen,
             // no options
             SourceDevice::OptionType::None
         );
-        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, width, height, 25, 9000, 50));
-        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, width, height, 25, 9000));
+        auto sinkToEncode = std::make_shared<SinkEncode>(EncoderConfig::make(CodecType::CodecAvc, width, height, 30, 9000, 50));
+        auto srcDecode = std::make_shared<SourceDecode>(DecoderConfig::make(CodecType::CodecAvc, width, height, 30, 9000));
 
-        auto sinkToImgLeft = std::make_shared<SinkImage>("RGB", width, height, width/5, height/5, 25);
-        auto sinkToImgRight = std::make_shared<SinkImage>("RGB", width, height, width/5, height/5, 25);
+        auto sinkToImgLeft = std::make_shared<SinkImage>("RGB", width, height, width/3, height/3, 30);
+        auto sinkToImgRight = std::make_shared<SinkImage>("RGB", width, height, width/3, height/3, 30);
+
+        auto control = launch->control;
 
         sinkToEncode->setOnEncoded(SinkEncode::OnEncoded([=](uint8_t *data, uint32_t len, uint64_t pts, uint64_t dts) {
             srcDecode->putData(data, len);
+            control->addByteCount(len);
         }));
 
         srcDevice->addSink(sinkToImgLeft);

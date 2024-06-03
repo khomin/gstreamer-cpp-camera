@@ -5,6 +5,7 @@
 #include "image_provider/live_image.h"
 #include "image_provider/image_provider.h"
 #include "image_provider/image_videosink.h"
+#include "control.h"
 
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
@@ -24,6 +25,7 @@ public:
     
     std::shared_ptr<ImageProvider> imageLeft;
     std::shared_ptr<ImageProvider> imageRight;
+    std::shared_ptr<Control> control;
     GMainLoop* loop;
 };
 
