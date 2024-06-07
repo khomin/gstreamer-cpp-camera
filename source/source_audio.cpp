@@ -29,16 +29,6 @@ SourceAudio::SourceAudio() {
         g_clear_error (&error);
         g_free (message);
     }
-
-//    auto ahcsrc = gst_element_factory_make ("ahcsrc", "ahcsrc");
-//    auto vsink = gst_element_factory_make ("glimagesink", "vsink");
-//    auto filter = gst_element_factory_make ("capsfilter", NULL);
-//    auto pipeline = gst_pipeline_new ("camera-pipeline");
-
-//    std::cout << (ahcsrc != nullptr ? "OK" : "NULL") << std::endl;
-
-
-
     /* we use appsink in push mode, it sends us a signal when data is available
     * and we pull out the data in the signal callback. We want the appsink to
     * push as fast as it can, hence the sync=false */
