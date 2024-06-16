@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
-#include "sink_base.h"
+#include "sink/sink_base.h"
 
 class SourceBase
 {

@@ -21,6 +21,7 @@ GST_PLUGIN_STATIC_DECLARE(audiotestsrc);
 GST_PLUGIN_STATIC_DECLARE(audioconvert);
 GST_PLUGIN_STATIC_DECLARE(audioresample);
 GST_PLUGIN_STATIC_DECLARE(osxaudio);
+GST_PLUGIN_STATIC_DECLARE(wavparse);
 #elif _WIN32
 // windows none
 #elif defined (__ANDROID__) && defined(USE_STATIC_GST)
@@ -189,6 +190,7 @@ void gst_static_plugin_register() {
     GST_PLUGIN_STATIC_REGISTER(audioconvert);
     GST_PLUGIN_STATIC_REGISTER(audioresample);
     GST_PLUGIN_STATIC_REGISTER(osxaudio);
+    GST_PLUGIN_STATIC_REGISTER(wavparse);
 #elif _WIN32
 // windows none
 #elif defined (__ANDROID__) && defined(USE_STATIC_GST)

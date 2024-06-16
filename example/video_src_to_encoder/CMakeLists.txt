@@ -28,7 +28,7 @@ if (APPLE)
     # macos need info.plist
     set_target_properties(${PROJECT} PROPERTIES
         MACOSX_BUNDLE TRUE
-        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/../Info.plist
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
     )
     set_target_properties(${PROJECT} PROPERTIES
         MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

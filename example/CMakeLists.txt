@@ -42,6 +42,8 @@ set(PROJECT_SOURCES
     ../../utils/measure.h
     ../../utils/codec_type.h
     ../../utils/source_camera_size.h
+    ../../utils/gst_static_plugins.cpp
+    ../../utils/gst_static_plugins.h
     # source-sink
     ../../source_to_sink/play_wav.cpp
     ../../source_to_sink/play_wav.h
@@ -70,6 +72,26 @@ if (APPLE)
       /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
       /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
       CACHE INTERNAL ""
+    )
+    set(LIBRARIES
+        ${GSTREAMER_LIBS}
+        -liconv
+        "-framework Cocoa"
+        "-framework Foundation"
+        "-framework AVFoundation"
+        "-framework AudioToolbox"
+        "-framework VideoToolbox"
+        "-framework GLKit"
+        "-framework OpenGL"
+        "-framework OpenCL"
+        "-framework CoreAudio"
+        "-framework CoreMedia"
+        "-framework CoreVideo"
+        "-framework IOSurface"
+        "-framework QuartzCore"
+        "-framework Metal"
+        "-framework IOKit"
+        CACHE INTERNAL ""
     )
 elseif (UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)

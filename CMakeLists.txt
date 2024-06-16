@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
+if (APPLE)
+    add_definitions(-DUSE_STATIC_GST)
+endif()
+
 set(PROJECT GSTREAMER_CPP_CAMERA_EXAMPLES)
 project(${PROJECT} VERSION 0.1 LANGUAGES CXX)
 

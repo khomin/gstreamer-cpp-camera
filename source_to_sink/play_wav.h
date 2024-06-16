@@ -1,7 +1,7 @@
 #ifndef SOURCE_WAV_H
 #define SOURCE_WAV_H
 
-#include "source_base.h"
+#include "source/source_base.h"
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/app/app.h>

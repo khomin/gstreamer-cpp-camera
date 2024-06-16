@@ -1,4 +1,5 @@
 #include "launch.h"
+#include "utils/gst_static_plugins.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -21,6 +22,7 @@ int Launch::runLoop(int argc, char *argv[], std::function<void()> v) {
     control = std::make_shared<Control>();
     const QUrl url(QStringLiteral("qrc:/main.qml"));
 
+
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app, [url](QObject *obj, const QUrl &objUrl) {
             if (!obj && url == objUrl) {
                 QCoreApplication::exit(-1);
@@ -33,6 +35,7 @@ int Launch::runLoop(int argc, char *argv[], std::function<void()> v) {
     engine.rootContext()->setContextProperty("control", (Control *) control.get());
 
     gst_init(NULL, NULL);
+    gst_static_plugin_register();
     gst_debug_set_active(TRUE);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
 
