@@ -31,6 +31,11 @@ PlayWav::PlayWav(std::string path, bool loop) {
 PlayWav::~PlayWav() {
     std::lock_guard<std::mutex> lk(m_lock);
     auto bus = gst_element_get_bus (m_pipe);
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+    }
     gst_bus_remove_watch(bus);
     gst_object_unref (bus);
     std::cout << TAG << ": destroyed" << std::endl;
@@ -40,15 +45,15 @@ void PlayWav::start() {
     if(m_pipe != NULL) {
         auto bus = gst_pipeline_get_bus (GST_PIPELINE(m_pipe));
         gst_bus_add_watch (bus, PlayWav::on_bus_cb, this);
-        stopPipe();
-        startPipe();
+        gst_element_set_state(m_pipe, GST_STATE_PLAYING);
         gst_object_unref (bus);
     }
 }
 
 void PlayWav::pause() {
-    pausePipe();
+    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
 }
+
 
 gboolean PlayWav::on_bus_cb (GstBus * bus, GstMessage * message, gpointer data) {
     g_print ("Got %s message\n", GST_MESSAGE_TYPE_NAME (message));
@@ -65,8 +70,8 @@ gboolean PlayWav::on_bus_cb (GstBus * bus, GstMessage * message, gpointer data) 
     case GST_MESSAGE_EOS: {
         auto play = (PlayWav*)data;
         if(play->m_loop) {
-            play->stopPipe();
-            play->startPipe();
+            gst_element_set_state(play->m_pipe, GST_STATE_NULL);
+            gst_element_set_state(play->m_pipe, GST_STATE_PLAYING);
         }
     }
         break;

@@ -7,10 +7,18 @@ ImageVideoSink::ImageVideoSink() {
     if (m_pipe == NULL) {
         std::cerr << TAG << "pipe failed" << std::endl;
     }
+    std::cout << TAG << ": created" << std::endl;
 }
 
 ImageVideoSink::~ImageVideoSink() {
-
+    std::lock_guard<std::mutex> lk(_lock);
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+        g_print("Pipeline stopped and destroyed\n");
+    }
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void ImageVideoSink::start() {

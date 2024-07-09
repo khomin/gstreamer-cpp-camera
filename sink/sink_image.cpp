@@ -46,8 +46,6 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
     auto bus = gst_element_get_bus(m_pipe);
     auto bus_source = gst_bus_create_watch(bus);
     g_source_set_callback(bus_source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
-    g_source_unref(bus_source);
-    g_signal_connect (G_OBJECT(bus), "message::error", G_CALLBACK(SinkBase::on_error), this);
 
     auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
@@ -64,6 +62,7 @@ SinkImage::SinkImage(std::string format, int width_in, int height_in, int width_
                  NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK(SinkImage::on_sample), &m_image);
     /* free resources */
+    g_source_unref(bus_source);
     gst_object_unref(bus);
     gst_object_unref(source);
     gst_object_unref(sink_out);
@@ -76,13 +75,23 @@ SinkImage::~SinkImage() {
     std::lock_guard<std::mutex> lock(m_lock);
     auto bus = gst_element_get_bus(m_pipe);
     m_image = nullptr;
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+    }
     gst_object_unref(bus);
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SinkImage::start() {
     std::lock_guard<std::mutex> lock(m_lock);
-    startPipe();
+    gst_element_set_state(m_pipe, GST_STATE_PLAYING);
+}
+
+void SinkImage::pause() {
+    std::lock_guard<std::mutex> lock(m_lock);
+    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
 }
 
 void SinkImage::putSample(GstSample *sample) {

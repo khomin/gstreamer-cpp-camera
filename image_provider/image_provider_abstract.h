@@ -7,6 +7,7 @@ class ImageProviderAbstract {
 public:
     ImageProviderAbstract() = default;
     virtual ~ImageProviderAbstract() = default;
+
     virtual void setImage(int width, int height, uint8_t* data, uint32_t len) = 0;
     virtual void start() = 0;
 protected:

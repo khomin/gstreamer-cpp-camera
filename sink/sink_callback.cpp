@@ -6,23 +6,29 @@ SinkCallback::SinkCallback() {
 }
 
 SinkCallback::~SinkCallback() {
+    std::lock_guard<std::mutex> lock(m_lock);
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+    }
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SinkCallback::start() {
-    startPipe();
+    gst_element_set_state(m_pipe, GST_STATE_PLAYING);
     std::cout << TAG << ": started" << std::endl;
 }
 
-#ifdef USE_TEST_PUT
-void SinkCallback::setDataCb(std::function<void(GstSample *)> cb) {
-    m_data_cb = cb;
+void SinkCallback::pause() {
+    std::lock_guard<std::mutex> lock(m_lock);
+    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
 }
-#else
+
+
 void SinkCallback::setDataCb(std::function<void(uint8_t *, uint32_t)> cb) {
     m_data_cb = cb;
 }
-#endif
 
 void SinkCallback::putSample(GstSample* sample) {
     std::lock_guard<std::mutex> lock(m_lock);

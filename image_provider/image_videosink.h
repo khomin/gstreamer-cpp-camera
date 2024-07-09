@@ -8,8 +8,10 @@ class ImageVideoSink : public ImageProviderAbstract {
 public:
     ImageVideoSink();
     ~ImageVideoSink() override;
-    void setImage(int width, int height, uint8_t* data, uint32_t len) override;
+
     void start() override;
+
+    void setImage(int width, int height, uint8_t* data, uint32_t len) override;
 private:
     GstElement * m_pipe  = nullptr;
     static constexpr auto TAG = "ImageVideoSink: ";

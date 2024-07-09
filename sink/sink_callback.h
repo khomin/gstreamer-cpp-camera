@@ -9,7 +9,10 @@ class SinkCallback : public SinkBase {
 public:
     SinkCallback();
     ~SinkCallback() override;
+
     void start() override;
+    void pause() override;
+
     void putSample(GstSample* sample) override;
     void setDataCb(std::function<void(uint8_t *, uint32_t)> cb);
 

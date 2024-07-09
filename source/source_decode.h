@@ -15,6 +15,7 @@ public:
 
     void start() override;
     void pause() override;
+
     void putData(uint8_t* data, uint32_t len);
 
 private:

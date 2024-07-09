@@ -69,9 +69,10 @@ if (APPLE)
       CACHE INTERNAL ""
     )
     file(GLOB_RECURSE GSTREAMER_LIBS
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/*.a
       /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
       /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
-      CACHE INTERNAL ""
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gio/modules/*.a
     )
     set(LIBRARIES
         ${GSTREAMER_LIBS}

@@ -41,5 +41,11 @@
 
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
+
+        <key>NSMicrophoneUsageDescription</key>
+        <string>To make calls and audio messages are possible</string>
+
+        <key>com.apple.security.device.audio-input</key>
+        <string>Multimedia</string>
 </dict>
 </plist>

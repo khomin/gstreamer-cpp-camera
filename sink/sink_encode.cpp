@@ -18,13 +18,11 @@ SinkEncode::SinkEncode(EncoderConfig config) {
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (m_pipe == NULL) {
         std::cerr << TAG << "pipe failed" << std::endl;
-        m_error = true;
     }
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
         g_clear_error (&error);
         g_free (message);
-        m_error = true;
     }
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     g_object_set(
@@ -34,10 +32,7 @@ SinkEncode::SinkEncode(EncoderConfig config) {
         "format", GST_FORMAT_TIME,
         "do-timestamp", TRUE,
         NULL
-      );
-    if(source == NULL) {
-        m_error = true;
-    }
+    );
     gst_object_unref (source);
     std::cout << TAG << ": created" << std::endl;
 }
@@ -47,8 +42,13 @@ SinkEncode::~SinkEncode() {
     auto bus = gst_element_get_bus (m_pipe);
     g_signal_handlers_disconnect_by_func(bus, reinterpret_cast<gpointer>(SinkEncode::on_sample), this);
     m_on_encoded = nullptr;
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+    }
     gst_object_unref (bus);
-    std::cout << TAG << ": destroyed, id: " << m_signal_id << std::endl;
+    std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SinkEncode::start() {
@@ -56,14 +56,15 @@ void SinkEncode::start() {
     if(m_on_encoded != NULL) {
         auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
         g_object_set (G_OBJECT(sink_out), "emit-signals", TRUE, NULL);
-        m_signal_id = g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkEncode::on_sample), this);
-        std::cout << TAG << ": GOT signal id: " << m_signal_id << std::endl;
-        if(sink_out == NULL) {
-            m_error = true;
-        }
+        g_signal_connect (sink_out, "new-sample", G_CALLBACK (SinkEncode::on_sample), this);
+        gst_element_set_state(m_pipe, GST_STATE_PLAYING);
         gst_object_unref (sink_out);
-        startPipe();
     }
+}
+
+void SinkEncode::pause() {
+    std::lock_guard<std::mutex> lock(m_lock);
+    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
 }
 
 void SinkEncode::putData(uint8_t* data, uint32_t len) {

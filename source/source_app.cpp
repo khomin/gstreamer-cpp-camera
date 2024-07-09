@@ -61,8 +61,6 @@ SourceApp::SourceApp(std::string format, int width, int height, int framerate) {
     bus = gst_element_get_bus(m_pipe);
     bus_source = gst_bus_create_watch(bus);
     g_source_set_callback(bus_source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
-    g_source_unref(bus_source);
-    g_signal_connect (G_OBJECT(bus), "message::error", G_CALLBACK(SinkBase::on_error), this);
 
     auto source = gst_bin_get_by_name(GST_BIN (m_pipe), "source_to_out");
     g_object_set(
@@ -80,6 +78,7 @@ SourceApp::SourceApp(std::string format, int width, int height, int framerate) {
     g_signal_connect (sink_out, "new-sample", G_CALLBACK(SourceApp::on_sample), this);
 
     /* free resources */
+    g_source_unref(bus_source);
     gst_object_unref(bus);
     gst_object_unref(sink_out);
     gst_object_unref(source);
@@ -90,6 +89,11 @@ SourceApp::~SourceApp() {
     auto bus = gst_element_get_bus(m_pipe);
     auto sink_out = gst_bin_get_by_name(GST_BIN (m_pipe), "sink_out");
     g_signal_handlers_disconnect_by_data(sink_out, this);
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+    }
     gst_object_unref(sink_out);
     gst_object_unref(bus);
     std::cout << TAG << ": destroyed" << std::endl;
@@ -97,11 +101,11 @@ SourceApp::~SourceApp() {
 
 void SourceApp::start() {
     std::lock_guard<std::mutex> lk(m_lock);
-    startPipe();
+    gst_element_set_state(m_pipe, GST_STATE_PLAYING);
 }
 
 void SourceApp::pause() {
-    pausePipe();
+    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
 }
 
 void SourceApp::putData(uint8_t *data, uint32_t len) {
@@ -132,7 +136,7 @@ GstFlowReturn SourceApp::on_sample(GstElement *elt, SourceApp *data) {
             if (data != nullptr) {
                 auto sinks = data->getSinks();
                 for (auto it: sinks) {
-                    if (it != nullptr && it->isRunning()) {
+                    if (it != nullptr) {
                         it->putSample(sample);
                     }
                 }

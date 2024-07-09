@@ -12,6 +12,8 @@ public:
     ~SinkImage() override;
 
     void start() override;
+    void pause() override;
+
     void putSample(GstSample* sample) override;
     void putData(uint8_t *data, uint32_t len) override;
     void setImage(std::shared_ptr<ImageProviderAbstract> imageProvider);

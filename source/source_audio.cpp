@@ -2,21 +2,31 @@
 #include "config.h"
 #include <iostream>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 SourceAudio::SourceAudio() {
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
-            CMD,
-#if defined(__APPLE__)
-            CMD_DESKTOPS
-#elif defined(_WIN32)
-            CMD_DESKTOPS
-#elif defined (__linux__)
-    #ifdef __ANDROID__
-            CMD_ANDROID
-    #else
-            CMD_DESKTOPS
-    #endif
-#endif
+        CMD,
+        #if defined(__ANDROID__)
+            "openslessrc"
+        #elif defined(__linux__)
+            "autoaudiosrc"
+        #elif defined(__APPLE__)
+        #if TARGET_OS_IPHONE && TARGET_IPHONE_SIMULATOR
+            "autoaudiosrc"
+        #elif TARGET_OS_MAC
+            "autoaudiosrc"
+        #else
+        #error "Unknown Apple platform"
+        #endif
+        #elif defined(_WIN32) || defined(_WIN64)
+            "autoaudiosrc"
+        #else
+        #error "Unknown platform"
+        #endif
     );
     GError *error = NULL;
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
@@ -47,6 +57,11 @@ SourceAudio::~SourceAudio() {
     auto bus = gst_element_get_bus (m_pipe);
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_signal_handlers_disconnect_by_data(sink_out, this);
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+    }
     gst_object_unref (sink_out);
     gst_object_unref (bus);
     std::cout << TAG << ": destroyed" << std::endl;
@@ -62,7 +77,6 @@ void SourceAudio::pause() {
     gst_element_set_state (m_pipe, GST_STATE_PAUSED);
 }
 
-
 GstFlowReturn SourceAudio::on_sample(GstElement * elt, SourceAudio* data) {
     GstSample *sample;
     GstBuffer *buffer;
@@ -76,7 +90,7 @@ GstFlowReturn SourceAudio::on_sample(GstElement * elt, SourceAudio* data) {
             if (data != nullptr) {
                 auto sinks = data->getSinks();
                 for (auto it: sinks) {
-                    if (it != nullptr && it->isRunning()) {
+                    if (it != nullptr) {
                         // if you need caps info
                         //GstCaps *caps = gst_sample_get_caps(sample);
                         //const GstStructure *capStr = gst_caps_get_structure(caps, 0);

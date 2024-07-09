@@ -12,6 +12,8 @@ public:
     virtual ~SinkFile();
 
     void start() override;
+    void pause() override;
+
     void putSample(GstSample* sample) override;
 private:
     static GstFlowReturn on_sample(GstElement * elt, std::ofstream* file);

@@ -15,6 +15,8 @@ public:
     virtual ~SinkEncode();
 
     void start() override;
+    void pause() override;
+
     void putSample(GstSample* sample) override;
     void putData(uint8_t* data, uint32_t len) override;
     void setOnEncoded(OnEncoded cb);
