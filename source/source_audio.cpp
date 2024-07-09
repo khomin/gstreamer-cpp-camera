@@ -1,6 +1,7 @@
 #include "source_audio.h"
 #include "config.h"
 #include <iostream>
+#include <thread>
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
@@ -16,9 +17,9 @@ SourceAudio::SourceAudio() {
             "autoaudiosrc"
         #elif defined(__APPLE__)
         #if TARGET_OS_IPHONE && TARGET_IPHONE_SIMULATOR
-            "autoaudiosrc"
+            "osxaudiosrc"
         #elif TARGET_OS_MAC
-            "autoaudiosrc"
+            "osxaudiosrc"
         #else
         #error "Unknown Apple platform"
         #endif
@@ -54,22 +55,21 @@ SourceAudio::SourceAudio() {
 
 SourceAudio::~SourceAudio() {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto bus = gst_element_get_bus (m_pipe);
     auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
     g_signal_handlers_disconnect_by_data(sink_out, this);
+    gst_object_unref (sink_out);
     if (m_pipe) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
         gst_object_unref(GST_OBJECT(m_pipe));
         m_pipe = nullptr;
     }
-    gst_object_unref (sink_out);
-    gst_object_unref (bus);
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
 void SourceAudio::start() {
     if(m_pipe != NULL) {
         gst_element_set_state (m_pipe, GST_STATE_PLAYING);
+        std::cout << TAG << ": start" << std::endl;
     }
 }
 

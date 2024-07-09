@@ -16,13 +16,18 @@ SinkCallback::~SinkCallback() {
 }
 
 void SinkCallback::start() {
-    gst_element_set_state(m_pipe, GST_STATE_PLAYING);
+    std::lock_guard<std::mutex> lock(m_lock);
+    if(m_pipe != nullptr) {
+        gst_element_set_state(m_pipe, GST_STATE_PLAYING);
+    }
     std::cout << TAG << ": started" << std::endl;
 }
 
 void SinkCallback::pause() {
     std::lock_guard<std::mutex> lock(m_lock);
-    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
+    if(m_pipe != nullptr) {
+        gst_element_set_state(m_pipe, GST_STATE_PAUSED);
+    }
 }
 
 
@@ -33,11 +38,6 @@ void SinkCallback::setDataCb(std::function<void(uint8_t *, uint32_t)> cb) {
 void SinkCallback::putSample(GstSample* sample) {
     std::lock_guard<std::mutex> lock(m_lock);
     if(sample != NULL) {
-#ifdef USE_TEST_PUT
-        if(m_data_cb != NULL) {
-            m_data_cb(sample);
-        }
-#else
         auto buffer = gst_sample_get_buffer(sample);
         if(buffer != NULL) {
             GstMapInfo mapInfo;
@@ -46,11 +46,10 @@ void SinkCallback::putSample(GstSample* sample) {
                 GstCaps *caps = gst_sample_get_caps(sample);
                 GstStructure *capStr = gst_caps_get_structure(caps, 0);
                 std::string capsStr2 = gst_structure_to_string(capStr);
-//                std::cout << TAG << ": sink-callback caps: " << capsStr2.c_str() << std::endl;
+                //std::cout << TAG << ": sink-callback caps: " << capsStr2.c_str() << std::endl;
                 m_data_cb((uint8_t*)mapInfo.data, mapInfo.size);
             }
             gst_buffer_unmap(buffer, &mapInfo);
         }
-#endif
     }
 }

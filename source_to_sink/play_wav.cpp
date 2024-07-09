@@ -30,14 +30,11 @@ PlayWav::PlayWav(std::string path, bool loop) {
 
 PlayWav::~PlayWav() {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto bus = gst_element_get_bus (m_pipe);
     if (m_pipe) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
         gst_object_unref(GST_OBJECT(m_pipe));
         m_pipe = nullptr;
     }
-    gst_bus_remove_watch(bus);
-    gst_object_unref (bus);
     std::cout << TAG << ": destroyed" << std::endl;
 }
 

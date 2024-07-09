@@ -4,6 +4,7 @@
 #include <gst/app/gstappsink.h>
 #include <gst/app/app.h>
 #include <vector>
+#include <thread>
 
 SinkAudio::SinkAudio() {
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
