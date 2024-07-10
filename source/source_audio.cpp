@@ -33,7 +33,6 @@ SourceAudio::SourceAudio() {
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (!m_pipe) {
         std::cerr << TAG << "pipe failed" << std::endl;
-        m_error = true;
     }
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
@@ -68,7 +67,11 @@ SourceAudio::~SourceAudio() {
 
 void SourceAudio::start() {
     if(m_pipe != NULL) {
+        GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(m_pipe));
+        gst_bus_add_watch(bus, bus_call, (gpointer) this);
         gst_element_set_state (m_pipe, GST_STATE_PLAYING);
+        gst_object_unref(bus);
+//        g_main_loop_run(m_loop);
         std::cout << TAG << ": start" << std::endl;
     }
 }
@@ -105,4 +108,32 @@ GstFlowReturn SourceAudio::on_sample(GstElement * elt, SourceAudio* data) {
         gst_sample_unref(sample);
     }
     return GstFlowReturn::GST_FLOW_OK;
+}
+
+gboolean SourceAudio::bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
+    SourceAudio *self = static_cast<SourceAudio*>(data);
+    switch (GST_MESSAGE_TYPE(msg)) {
+        case GST_MESSAGE_EOS:
+            g_print("End of stream\n");
+//            g_main_loop_quit(self->m_loop);
+            break;
+
+        case GST_MESSAGE_ERROR: {
+            gchar *debug;
+            GError *error;
+
+            gst_message_parse_error(msg, &error, &debug);
+            g_free(debug);
+
+            g_printerr("Error: %s\n", error->message);
+            g_error_free(error);
+
+//            g_main_loop_quit(self->m_loop);
+            break;
+        }
+        default:
+            break;
+    }
+
+    return TRUE;
 }

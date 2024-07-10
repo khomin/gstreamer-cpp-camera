@@ -23,8 +23,6 @@ public:
 protected:
     GstElement* m_pipe = NULL;
     std::mutex m_lock;
-    bool m_is_running = false;
-    bool m_error = false;
 private:
     std::vector<std::shared_ptr<SinkBase>> m_sinks;
 };

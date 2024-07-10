@@ -18,13 +18,11 @@ SourceDecode::SourceDecode(DecoderConfig config) {
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (m_pipe == NULL) {
         std::cerr << TAG << "pipe failed" << std::endl;
-        m_error = true;
     }
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
         g_clear_error (&error);
         g_free (message);
-        m_error = true;
     }
     std::cout << TAG << ": created" << std::endl;
 }

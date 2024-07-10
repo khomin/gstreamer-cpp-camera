@@ -6,9 +6,7 @@
 #include <utility>
 #include <iostream>
 
-#ifdef __ANDROID__
-#include "api/jni/jni_api.h"
-#elif _WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -20,22 +18,8 @@ public:
         std::string description;
     } Size;
 
-    static std::vector<Size> getCameras() {
+    static std::vector<Size> getCamerasDesktop() {
         std::vector<Size> res;
-#ifdef __ANDROID__
-        auto instance = AndroidDevicePlatform::instance();
-        auto size = instance->getCameraSize("0");
-        auto size_ = Size();
-        size_.description = "0";
-        size_.width = size.first;
-        size_.height = size.second;
-        res.emplace_back(size_);
-        size = instance->getCameraSize("1");
-        size_.description = "1";
-        size_.width = size.first;
-        size_.height = size.second;
-        res.emplace_back(size_);
-#else
         GstDeviceMonitor *monitor = gst_device_monitor_new();
         auto monCaps = gst_caps_new_empty_simple("video/x-raw");
         gst_device_monitor_add_filter(monitor, "Video/Source", monCaps);
@@ -79,7 +63,6 @@ public:
         }
         g_list_free(devices);
         gst_device_monitor_stop(monitor);
-#endif
         return res;
     }
 };
