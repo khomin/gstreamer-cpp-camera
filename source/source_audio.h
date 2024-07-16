@@ -16,11 +16,6 @@ public:
 private:
     static GstFlowReturn on_sample(GstElement * elt, SourceAudio* data);
     static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data);
-    
-//    GMainLoop *m_loop;
-//    GstElement *m_pipe;
-//    pthread_t m_loop_thread;
-//    gboolean m_quit;
 
     static constexpr const char* CMD = "%s ! queue leaky=downstream max-size-buffers=100 ! audioconvert ! volume volume=1.5 ! audioresample ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! appsink name=sink_out";
 

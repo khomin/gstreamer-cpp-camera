@@ -21,7 +21,7 @@ private:
     bool m_loop = false;
     std::atomic<bool> m_running;
 
-    static constexpr const char* CMD = "filesrc location=%s ! queue leaky=downstream max-size-buffers=100 ! wavparse ! audioconvert ! %s";
+    static constexpr const char* CMD = "filesrc location=%s ! wavparse ! audioconvert ! %s";
     static constexpr auto TAG = "SourceAudio: ";
 };
 

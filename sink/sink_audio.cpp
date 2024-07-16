@@ -16,9 +16,9 @@ SinkAudio::SinkAudio() {
             "autoaudiosink"
         #elif defined(__APPLE__)
         #if TARGET_OS_IPHONE && TARGET_IPHONE_SIMULATOR
-            "autoaudiosink"
+            "osxaudiosink sync=FALSE"
         #elif TARGET_OS_MAC
-            "autoaudiosink"
+            "osxaudiosink sync=FALSE"
         #else
         #error "Unknown Apple platform"
         #endif
@@ -57,6 +57,7 @@ void SinkAudio::start() {
     g_object_set (source, "format", GST_FORMAT_TIME, NULL);
     gst_element_set_state(m_pipe, GST_STATE_PLAYING);
     gst_object_unref (source);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     std::cout << TAG << ": started" << std::endl;
 }
 

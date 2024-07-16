@@ -1,6 +1,7 @@
 #include "play_wav.h"
 #include "config.h"
 #include <iostream>
+#include <thread>
 
 PlayWav::PlayWav(std::string path, bool loop) {
     GError *error = NULL;
@@ -15,9 +16,9 @@ PlayWav::PlayWav(std::string path, bool loop) {
             "autoaudiosink"
         #elif defined(__APPLE__)
         #if TARGET_OS_IPHONE && TARGET_IPHONE_SIMULATOR
-            "osxaudiosink"
+            "osxaudiosink name=sink_out sync=FALSE"
         #elif TARGET_OS_MAC
-            "osxaudiosink"
+            "osxaudiosink sync=FALSE"
         #else
         #error "Unknown Apple platform"
         #endif
@@ -44,7 +45,13 @@ PlayWav::~PlayWav() {
     if (m_running.load()) {
         m_running.store(false);
         if (m_pipe) {
-            g_main_context_wakeup(g_main_context_default());
+//            auto audioSink = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
+//            if (audioSink) {
+//                auto *baseSink = GST_AUDIO_BASE_SINK_CAST(audioSink);
+//                GstAudioRingBuffer *theBuffer = baseSink->ringbuffer;
+//                GstAudioRingBufferClass *theClass = GST_AUDIO_RING_BUFFER_GET_CLASS(theBuffer);
+//                theClass->pause = NULL;
+//            }
             gst_element_set_state(m_pipe, GST_STATE_NULL);
             gst_object_unref(GST_OBJECT(m_pipe));
             m_pipe = nullptr;
@@ -60,6 +67,7 @@ void PlayWav::start() {
         gst_bus_add_watch (bus, PlayWav::on_bus_cb, this);
         gst_element_set_state(m_pipe, GST_STATE_PLAYING);
         gst_object_unref (bus);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
