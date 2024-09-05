@@ -6,6 +6,7 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/app.h>
 #include <functional>
+#include <atomic>
 
 class PlayWav : public SourceBase {
 public:
