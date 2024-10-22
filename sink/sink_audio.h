@@ -16,7 +16,7 @@ public:
     void putData(uint8_t* data, uint32_t len) override;
 
 protected:
-    static constexpr const char* CMD = "appsrc name=source_to_out ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! queue leaky=downstream max-size-buffers=100 ! audioconvert ! volume volume=1.5 ! audioresample ! %s";
+    static constexpr const char* CMD = "appsrc name=source_to_out ! audio/x-raw,rate=16000,format=S16LE,channels=1,layout=interleaved ! queue leaky=downstream max-size-buffers=100 ! audioconvert ! audioresample ! %s";
     static constexpr auto TAG = "SinkAudio: ";
 };
 
