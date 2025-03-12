@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(PROJECT AudioSrcToSink)
+set(PROJECT audio_src_to_sink)
 project(${PROJECT} VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)

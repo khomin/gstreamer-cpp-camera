@@ -5,8 +5,8 @@ import ImageAdapter 1.0
 
 Window {
     id: window
-    width: 1000;
-    height: 800;
+    width: 600;
+    height: 500;
     visible: true
     title: qsTr("Hello World")
     color: "black"
