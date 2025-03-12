@@ -35,8 +35,11 @@ private:
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! appsink name=sink_out";
 
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! videoconvert !  xvimagesink";
+
     static constexpr const char* CMD = "filesrc location=%s \
-        ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! videoconvert !  xvimagesink";
+        ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! fakesink";
 
     static constexpr auto TAG = "SourceFile: ";
 };

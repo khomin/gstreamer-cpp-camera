@@ -6,6 +6,8 @@
 SourceFile::SourceFile(std::string path, Type type, bool loop) {
     GError *error = NULL;
     m_loop = loop;
+    m_pipe = NULL;
+    m_running = false;
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
         CMD,
