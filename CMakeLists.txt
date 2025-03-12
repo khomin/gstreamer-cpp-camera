@@ -4,10 +4,11 @@ if (APPLE)
     add_definitions(-DUSE_STATIC_GST)
 endif()
 
-set(PROJECT GSTREAMER_CPP_CAMERA_EXAMPLES)
+set(PROJECT gst_examples)
 project(${PROJECT} VERSION 0.1 LANGUAGES CXX)
 
 add_subdirectory(example/video_src_to_view)
+add_subdirectory(example/video_file_to_view)
 add_subdirectory(example/video_src_to_file)
 add_subdirectory(example/video_src_to_encoder)
 add_subdirectory(example/play_wav)

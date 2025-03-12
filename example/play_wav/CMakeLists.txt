@@ -13,12 +13,75 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 
 add_subdirectory(../ MyVariables)
 
-add_definitions(-DUSE_STATIC_GST)
-
 qt_add_executable(${PROJECT}
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
 )
+
+if (APPLE AND IOS)
+    #
+    # not supported
+    #
+elseif (APPLE)
+    set(LIBRARIES_INCLUDE ${LIBRARIES_INCLUDE}
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/include
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/Headers
+    )
+    file(GLOB_RECURSE GSTREAMER_LIBS
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/*.a
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/*.a
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/*.a
+      /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gio/modules/*.a
+    )
+    list(REMOVE_ITEM GSTREAMER_LIBS
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libopencore-amrwb.a"
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libavcodec.a"
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libavdevice.a"
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libavfilter.a"
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libavformat.a"
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libavutil.a"
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libswresample.a"
+        "/Library/Frameworks/GStreamer.framework/Versions/1.0/lib/libswscale.a"
+    )
+    set(LIBRARIES ${LIBRARIES}
+        ${GSTREAMER_LIBS}
+    )
+elseif (ANDROID OR __ANDROID__)
+    #
+    # not supported
+    #
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(SOURCES ${SOURCES}
+        ./api/api_lib.cpp
+        ./api/api_lib.h
+        ./api/desktop/desktop_lib.cpp
+        ./api/desktop/desktop_lib.h
+        ./local_notification/local_notification.cpp
+        ./local_notification/local_notification.h
+        ./local_notification/notification_interface.h
+    )
+    set(LIBRARIES_INCLUDE ${LIBRARIES_INCLUDE}
+        /usr/lib/x86_64-linux-gnu/glib-2.0/include
+        /usr/include/gstreamer-1.0/
+        /usr/include/glib-2.0/glib/
+        /usr/include/glib-2.0/
+        /usr/include/
+    )
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(GLIB REQUIRED glib-2.0)
+    pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
+    pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
+    pkg_check_modules(GST_VIDEO REQUIRED gstreamer-video-1.0)
+    set(LIBRARIES ${LIBRARIES}
+        -lpthread
+        -lz
+        -lX11
+        ${GST_APP_LIBRARIES}
+        ${GST_VIDEO_LIBRARIES}
+    )
+elseif (WIN32)
+    # not supported
+endif ()
 
 target_link_libraries(${PROJECT} PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
