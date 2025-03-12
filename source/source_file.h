@@ -1,5 +1,5 @@
-#ifndef SOURCE_WAV_H
-#define SOURCE_WAV_H
+#ifndef SOURCE_FILE_H
+#define SOURCE_FILE_H
 
 #include "source/source_base.h"
 #include <gst/gst.h>
@@ -12,7 +12,7 @@ class SourceFile : public SourceBase {
 public:
     enum Type { video, audio };
 
-    explicit SourceFile(std::string path, Type type, bool loop = false);
+    explicit SourceFile(std::string path, int width, int height, Type type, bool loop = false);
     SourceFile() = delete;
     virtual ~SourceFile();
 
@@ -38,10 +38,14 @@ private:
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! videoconvert !  xvimagesink";
 
+//    filesrc location=/home/khomin/Desktop/test-images/demo.mp4 ! qtdemux ! h264parse ! avdec_h264 ! fakesink
+
     static constexpr const char* CMD = "filesrc location=%s \
-        ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! fakesink";
+        ! decodebin name=demux demux. \
+        ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=30/1 ! appsink name=sink_out drop=true \
+        demux. ! queue ! audioconvert ! autoaudiosink";
 
     static constexpr auto TAG = "SourceFile: ";
 };
 
-#endif // SOURCE_WAV_H
+#endif // SOURCE_FILE_H

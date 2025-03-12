@@ -3,7 +3,9 @@
 #include <iostream>
 #include <thread>
 
-SourceFile::SourceFile(std::string path, Type type, bool loop) {
+SourceFile::SourceFile(std::string path,
+                       int width, int height,
+                       Type type, bool loop) {
     GError *error = NULL;
     m_loop = loop;
     m_pipe = NULL;
@@ -11,7 +13,8 @@ SourceFile::SourceFile(std::string path, Type type, bool loop) {
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
         CMD,
-        path.c_str()
+        path.c_str(),
+        width, height
     );
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (!m_pipe) {
@@ -22,26 +25,23 @@ SourceFile::SourceFile(std::string path, Type type, bool loop) {
         g_clear_error (&error);
         g_free (message);
     }
-//    auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
-//    if(!sink_out) {
-//        std::cout << TAG << ": sink is null" << std::endl;
-//    }
-//    g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
-//    g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceFile::on_sample), this);
-//    gst_object_unref (sink_out);
+    auto sink_out = gst_bin_get_by_name (GST_BIN (m_pipe), "sink_out");
+    if(!sink_out) {
+        std::cout << TAG << ": sink is null" << std::endl;
+    }
+    g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceFile::on_sample), this);
+    gst_object_unref (sink_out);
     std::cout << TAG << ": created" << std::endl;
 }
 
 SourceFile::~SourceFile() {
     std::lock_guard<std::mutex> lk(m_lock);
-//    if (m_running.load()) {
-//        m_running.store(false);
-        if (m_pipe) {
-            gst_element_set_state(m_pipe, GST_STATE_NULL);
-            gst_object_unref(GST_OBJECT(m_pipe));
-            m_pipe = nullptr;
-        }
-//    }
+    if (m_pipe) {
+        gst_element_set_state(m_pipe, GST_STATE_NULL);
+        gst_object_unref(GST_OBJECT(m_pipe));
+        m_pipe = nullptr;
+    }
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
