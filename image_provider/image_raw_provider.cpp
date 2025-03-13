@@ -2,14 +2,18 @@
 #include <cstring>
 #include <iostream>
 
-ImageRawProvider::ImageRawProvider() {}
+ImageRawProvider::ImageRawProvider(int id, int width, int height) {
+    _id = id;
+    m_width = width;
+    m_height = height;
+}
 
 ImageRawProvider::~ImageRawProvider() {
     std::lock_guard<std::mutex> lk(_lock);
     delete[] m_buf;
 }
 
-void ImageRawProvider::setImage(int width, int height, uint8_t* data, uint32_t len) {
+void ImageRawProvider::setFrame(uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lk(_lock);
     if(len == 0) {
         std::cerr << "setImage: invalid len: " << len << std::endl;
@@ -23,10 +27,7 @@ void ImageRawProvider::setImage(int width, int height, uint8_t* data, uint32_t l
         std::cerr << "setImage: len > buf: " << len << std::endl;
         return;
     }
-    memcpy(m_buf, data, len);
-    m_width = width;
-    m_height = height;
-}
+    memcpy(m_buf, data, len);}
 
 uint8_t * ImageRawProvider::getBuffer() {
     std::lock_guard<std::mutex> lk(_lock);
@@ -44,6 +45,10 @@ uint32_t ImageRawProvider::getWidth() {
 
 uint32_t ImageRawProvider::getHeight() {
     return m_height;
+}
+
+int ImageRawProvider::getId() {
+    return _id;
 }
 
 void ImageRawProvider::start() {}
