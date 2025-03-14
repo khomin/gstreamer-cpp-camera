@@ -143,7 +143,7 @@ SourceDevice::~SourceDevice() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void SourceDevice::start() {
+void SourceDevice::start(uint64_t position) {
     std::lock_guard<std::mutex> lk(m_lock);
     sinks_lock.lock();
     sinks = getSinks();

@@ -65,7 +65,7 @@ SourceAudio::~SourceAudio() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void SourceAudio::start() {
+void SourceAudio::start(uint64_t position) {
     if(m_pipe != NULL) {
         GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(m_pipe));
         gst_bus_add_watch(bus, bus_call, (gpointer) this);

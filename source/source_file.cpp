@@ -5,7 +5,8 @@
 
 SourceFile::SourceFile(std::string path,
                        int width, int height,
-                       Type type, bool loop) {
+                       Type type,
+                       bool loop) {
     GError *error = NULL;
     m_loop = loop;
     m_pipe = NULL;
@@ -31,6 +32,11 @@ SourceFile::SourceFile(std::string path,
     }
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
     g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceFile::on_sample), this);
+
+    auto bus = gst_pipeline_get_bus (GST_PIPELINE(m_pipe));
+    gst_bus_add_watch (bus, SourceFile::on_bus_cb, this);
+    gst_object_unref (bus);
+
     gst_object_unref (sink_out);
     std::cout << TAG << ": created" << std::endl;
 }
@@ -45,19 +51,30 @@ SourceFile::~SourceFile() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void SourceFile::start() {
-    if(m_pipe != NULL) {
+void SourceFile::start(uint64_t position) {
+    if(!m_running) {
         m_running.store(true);
-//        auto bus = gst_pipeline_get_bus (GST_PIPELINE(m_pipe));
-//        gst_bus_add_watch (bus, SourceFile::on_bus_cb, this);
+        //
         gst_element_set_state(m_pipe, GST_STATE_PLAYING);
-//        gst_object_unref (bus);
-//        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        if(position > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            gst_element_seek(
+                m_pipe,
+                1.0, // Rate (1.0 for normal speed)
+                GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+                GST_SEEK_TYPE_SET, position * GST_SECOND, // Seek position in nanoseconds
+                GST_SEEK_TYPE_NONE, // Stop type (not needed here)
+                GST_CLOCK_TIME_NONE // Stop position (not needed here)
+            );
+        }
     }
 }
 
 void SourceFile::pause() {
-    gst_element_set_state(m_pipe, GST_STATE_PAUSED);
+    if(m_running) {
+        gst_element_set_state(m_pipe, GST_STATE_PAUSED);
+        m_running.store(false);
+    }
 }
 
 GstFlowReturn SourceFile::on_sample(GstElement * elt, SourceFile* data) {
@@ -75,10 +92,10 @@ GstFlowReturn SourceFile::on_sample(GstElement * elt, SourceFile* data) {
                 for (auto it: sinks) {
                     if (it != nullptr) {
                         // if you need caps info
-//                        GstCaps *caps = gst_sample_get_caps(sample);
-//                        const GstStructure *capStr = gst_caps_get_structure(caps, 0);
-//                        std::string capsStr2 = gst_structure_to_string(capStr);
-//                        std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
+                        // GstCaps *caps = gst_sample_get_caps(sample);
+                        // const GstStructure *capStr = gst_caps_get_structure(caps, 0);
+                        // std::string capsStr2 = gst_structure_to_string(capStr);
+                        // std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
                         it->putSample(sample);
                     }
                 }
@@ -114,4 +131,40 @@ gboolean SourceFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointer dat
         break;
     }
     return TRUE;
+}
+
+bool SourceFile::seekTo(uint64_t sec) {
+    gint64 position = sec * GST_SECOND;  // to nanoseconds
+    gboolean success = gst_element_seek(
+        m_pipe,
+        1.0, // Rate (1.0 for normal speed)
+        GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+        GST_SEEK_TYPE_SET, position, // Seek position in nanoseconds
+        GST_SEEK_TYPE_NONE, // Stop type (not needed here)
+        GST_CLOCK_TIME_NONE // Stop position (not needed here)
+    );
+    if(success) {
+        GstState currentState, pendingState;
+        gst_element_get_state(m_pipe, &currentState, &pendingState, GST_CLOCK_TIME_NONE);
+        if (currentState == GST_STATE_PAUSED) {
+            // If paused, set to PLAYING to play one frame
+            gst_element_set_state(m_pipe, GST_STATE_PLAYING);
+            g_usleep(500000); // Allow time for one frame to be processed and rendered
+            gst_element_set_state(m_pipe, GST_STATE_PAUSED);
+        } else {
+            gst_element_set_state(m_pipe, GST_STATE_PLAYING);
+        }
+    }
+    return success;
+}
+
+uint64_t SourceFile::getPlaybackPosition() {
+    gint64 position = -1;
+    if (gst_element_query_position(m_pipe, GST_FORMAT_TIME, &position)) {
+        uint64_t sec = int(position / GST_SECOND);
+        return sec;
+    } else {
+        std::cerr << "Failed to query position" << std::endl;
+    }
+    return 0;
 }

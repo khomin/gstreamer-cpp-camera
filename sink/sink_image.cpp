@@ -140,7 +140,7 @@ GstFlowReturn SinkImage::on_sample(GstElement *elt, std::shared_ptr<ImageProvide
             Measure::instance()->onImageSampleReady();
 
             if (image != nullptr) {
-                image->setImage(imW, imH, (uint8_t *) mapInfo.data, mapInfo.size);
+                image->setFrame((uint8_t *) mapInfo.data, mapInfo.size);
             }
             gst_buffer_unmap(buffer, &mapInfo);
         }

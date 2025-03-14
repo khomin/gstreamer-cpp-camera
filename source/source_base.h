@@ -12,7 +12,7 @@ public:
     SourceBase();
     virtual ~SourceBase();
 
-    virtual void start() = 0;
+    virtual void start(uint64_t position = 0) = 0;
     virtual void pause() = 0;
 
     void addSink(std::shared_ptr<SinkBase> sink);

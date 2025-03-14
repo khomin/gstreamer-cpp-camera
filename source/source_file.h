@@ -16,8 +16,11 @@ public:
     SourceFile() = delete;
     virtual ~SourceFile();
 
-    void start() override;
+    void start(uint64_t position) override;
     void pause() override;
+
+    bool seekTo(uint64_t sec);
+    uint64_t getPlaybackPosition();
 private:
     static gboolean on_bus_cb(GstBus * bus, GstMessage * message, gpointer data);
 

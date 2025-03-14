@@ -16,7 +16,7 @@ public:
     SourceDevice() = delete;
     virtual ~SourceDevice();
 
-    void start() override;
+    void start(uint64_t position = 0) override;
     void pause() override;
 
     void putVideoFrame(uint8_t *data, uint32_t len, int width, int height);

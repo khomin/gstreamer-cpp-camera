@@ -11,7 +11,7 @@ public:
     SourceAudio();
     virtual ~SourceAudio();
 
-    void start() override;
+    void start(uint64_t position = 0) override;
     void pause() override;
 private:
     static GstFlowReturn on_sample(GstElement * elt, SourceAudio* data);

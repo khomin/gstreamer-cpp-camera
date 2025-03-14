@@ -60,7 +60,7 @@ PlayWav::~PlayWav() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void PlayWav::start() {
+void PlayWav::start(uint64_t position) {
     if(m_pipe != NULL) {
         m_running.store(true);
         auto bus = gst_pipeline_get_bus (GST_PIPELINE(m_pipe));

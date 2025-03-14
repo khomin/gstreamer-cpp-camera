@@ -14,7 +14,7 @@ public:
     PlayWav() = delete;
     virtual ~PlayWav();
 
-    void start() override;
+    void start(uint64_t position = 0) override;
     void pause() override;
 private:
     static gboolean on_bus_cb(GstBus * bus, GstMessage * message, gpointer data);

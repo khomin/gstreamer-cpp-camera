@@ -37,7 +37,7 @@ SourceDecode::~SourceDecode() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void SourceDecode::start() {
+void SourceDecode::start(uint64_t position) {
     std::lock_guard<std::mutex> lk(m_lock);
     auto source = gst_bin_get_by_name (GST_BIN (m_pipe), "source_to_out");
     if (source == NULL) {

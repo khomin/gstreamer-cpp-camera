@@ -2,10 +2,13 @@
 #include <cstring>
 #include <iostream>
 
-ImageRawProvider::ImageRawProvider(int id, int width, int height) {
+ImageRawProvider::ImageRawProvider(uint32_t id, int width, int height) {
     _id = id;
     m_width = width;
     m_height = height;
+    int len = width * height * 4;
+    m_buf = new uint8_t[len];
+    m_buf_len = len;
 }
 
 ImageRawProvider::~ImageRawProvider() {
@@ -16,15 +19,15 @@ ImageRawProvider::~ImageRawProvider() {
 void ImageRawProvider::setFrame(uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lk(_lock);
     if(len == 0) {
-        std::cerr << "setImage: invalid len: " << len << std::endl;
+        std::cerr << "setFrame: invalid len: " << len << std::endl;
         return;
     }
     if(m_buf == nullptr) {
-        m_buf = new uint8_t[len];
-        m_buf_len = len;
+        std::cerr << "setFrame: no buffer: " << len << std::endl;
+        return;
     }
     if(len > m_buf_len) {
-        std::cerr << "setImage: len > buf: " << len << std::endl;
+        std::cerr << "setFrame: len > buf: " << len << std::endl;
         return;
     }
     memcpy(m_buf, data, len);}
@@ -47,7 +50,7 @@ uint32_t ImageRawProvider::getHeight() {
     return m_height;
 }
 
-int ImageRawProvider::getId() {
+uint32_t ImageRawProvider::getId() {
     return _id;
 }
 
