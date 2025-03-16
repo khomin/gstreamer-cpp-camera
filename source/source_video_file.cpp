@@ -1,12 +1,13 @@
-#include "source_file.h"
+#include "source_video_file.h"
 #include "config.h"
 #include <iostream>
 #include <thread>
 
-SourceFile::SourceFile(std::string path,
-                       int width, int height,
-                       Type type,
-                       bool loop) {
+SourceVideoFile::SourceVideoFile(std::string path,
+                                 int width, int height,
+                                 int framerate,
+                                 float volume,
+                                 bool loop) {
     GError *error = NULL;
     m_loop = loop;
     m_pipe = NULL;
@@ -15,7 +16,8 @@ SourceFile::SourceFile(std::string path,
     sprintf((char*)cmdBuf.data(),
         CMD,
         path.c_str(),
-        width, height
+        width, height,
+        framerate
     );
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (!m_pipe) {
@@ -31,17 +33,21 @@ SourceFile::SourceFile(std::string path,
         std::cout << TAG << ": sink is null" << std::endl;
     }
     g_object_set (G_OBJECT (sink_out), "emit-signals", TRUE, "sync", TRUE, NULL);
-    g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceFile::on_sample), this);
+    g_signal_connect (sink_out, "new-sample", G_CALLBACK (SourceVideoFile::on_sample), this);
 
     auto bus = gst_pipeline_get_bus (GST_PIPELINE(m_pipe));
-    gst_bus_add_watch (bus, SourceFile::on_bus_cb, this);
-    gst_object_unref (bus);
+    gst_bus_add_watch (bus, SourceVideoFile::on_bus_cb, this);
 
+    if(volume <= 0) {
+        setVolume(volume);
+    }
+
+    gst_object_unref (bus);
     gst_object_unref (sink_out);
     std::cout << TAG << ": created" << std::endl;
 }
 
-SourceFile::~SourceFile() {
+SourceVideoFile::~SourceVideoFile() {
     std::lock_guard<std::mutex> lk(m_lock);
     if (m_pipe) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
@@ -51,7 +57,7 @@ SourceFile::~SourceFile() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void SourceFile::start(uint64_t position) {
+void SourceVideoFile::start(uint64_t position) {
     if(!m_running) {
         m_running.store(true);
         //
@@ -70,14 +76,22 @@ void SourceFile::start(uint64_t position) {
     }
 }
 
-void SourceFile::pause() {
+void SourceVideoFile::pause() {
     if(m_running) {
         gst_element_set_state(m_pipe, GST_STATE_PAUSED);
         m_running.store(false);
     }
 }
 
-GstFlowReturn SourceFile::on_sample(GstElement * elt, SourceFile* data) {
+void SourceVideoFile::setVolume(float value) {
+    GstElement *volume_element = gst_bin_get_by_name(GST_BIN(m_pipe), "volume_control");
+    if (volume_element) {
+        g_object_set(volume_element, "volume", value, NULL);
+        gst_object_unref(volume_element);
+    }
+}
+
+GstFlowReturn SourceVideoFile::on_sample(GstElement * elt, SourceVideoFile* data) {
     GstSample *sample;
     GstBuffer *buffer;
     sample = gst_app_sink_pull_sample (GST_APP_SINK (elt));
@@ -107,7 +121,7 @@ GstFlowReturn SourceFile::on_sample(GstElement * elt, SourceFile* data) {
     return GstFlowReturn::GST_FLOW_OK;
 }
 
-gboolean SourceFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointer data) {
+gboolean SourceVideoFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointer data) {
     g_print ("Got %s message\n", GST_MESSAGE_TYPE_NAME (message));
     switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:{
@@ -120,7 +134,7 @@ gboolean SourceFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointer dat
         break;
    }
     case GST_MESSAGE_EOS: {
-        auto player = (SourceFile*)data;
+        auto player = (SourceVideoFile*)data;
         if(player->m_running.load() && player->m_loop) {
             gst_element_seek_simple(player->m_pipe, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, 0);
         }
@@ -133,7 +147,7 @@ gboolean SourceFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointer dat
     return TRUE;
 }
 
-bool SourceFile::seekTo(uint64_t sec) {
+bool SourceVideoFile::seekTo(uint64_t sec) {
     gint64 position = sec * GST_SECOND;  // to nanoseconds
     gboolean success = gst_element_seek(
         m_pipe,
@@ -158,7 +172,7 @@ bool SourceFile::seekTo(uint64_t sec) {
     return success;
 }
 
-uint64_t SourceFile::getPlaybackPosition() {
+uint64_t SourceVideoFile::getPlaybackPosition() {
     gint64 position = -1;
     if (gst_element_query_position(m_pipe, GST_FORMAT_TIME, &position)) {
         uint64_t sec = int(position / GST_SECOND);

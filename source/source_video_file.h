@@ -8,16 +8,20 @@
 #include <functional>
 #include <atomic>
 
-class SourceFile : public SourceBase {
+class SourceVideoFile : public SourceBase {
 public:
-    enum Type { video, audio };
+    explicit SourceVideoFile(std::string path,
+                             int width, int height,
+                             int framerate,
+                             float volume,
+                             bool loop = false);
+    SourceVideoFile() = delete;
+    virtual ~SourceVideoFile();
 
-    explicit SourceFile(std::string path, int width, int height, Type type, bool loop = false);
-    SourceFile() = delete;
-    virtual ~SourceFile();
-
-    void start(uint64_t position) override;
+    void start(uint64_t position = 0) override;
     void pause() override;
+
+    void setVolume(float value);
 
     bool seekTo(uint64_t sec);
     uint64_t getPlaybackPosition();
@@ -26,9 +30,8 @@ private:
 
     bool m_loop = false;
     std::atomic<bool> m_running;
-    Type m_type;
 
-    static GstFlowReturn on_sample(GstElement * elt, SourceFile* data);
+    static GstFlowReturn on_sample(GstElement * elt, SourceVideoFile* data);
     static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data);
 
 //    static constexpr const char* CMD = "filesrc location=%s \
@@ -43,10 +46,18 @@ private:
 
 //    filesrc location=/home/khomin/Desktop/test-images/demo.mp4 ! qtdemux ! h264parse ! avdec_h264 ! fakesink
 
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! decodebin name=demux demux. \
+//        ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true \
+//        demux. ! queue ! audioconvert ! volume name=volume_control ! autoaudiosink";
+
     static constexpr const char* CMD = "filesrc location=%s \
-        ! decodebin name=demux demux. \
-        ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=30/1 ! appsink name=sink_out drop=true \
-        demux. ! queue ! audioconvert ! autoaudiosink";
+        ! qtdemux ! h264parse ! avdec_h264 \
+        ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink  name=sink_out drop=true sync=false";
+
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux ! h264parse ! avdec_h264 \
+//        ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! fakesink name=sink_out drop=true sync=false";
 
     static constexpr auto TAG = "SourceFile: ";
 };

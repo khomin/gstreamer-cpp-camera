@@ -12,8 +12,8 @@
 #include <QJsonDocument>
 
 Launch::Launch() {
-    imageLeft = std::make_shared<ImageProvider>();
-    imageRight = std::make_shared<ImageProvider>();
+    imageLeft = std::make_shared<ImageProvider>(1920, 1080);
+    imageRight = std::make_shared<ImageProvider>(1920, 1080);
 }
 
 int Launch::runLoop(int argc, char *argv[], std::function<void()> v) {

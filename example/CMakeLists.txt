@@ -23,8 +23,8 @@ set(PROJECT_SOURCES
     ../../source/source_decode.cpp
     ../../source/source_audio.cpp
     ../../source/source_audio.h
-    ../../source/source_file.cpp
-    ../../source/source_file.h
+    ../../source/source_video_file.cpp
+    ../../source/source_video_file.h
     # sinks
     ../../sink/sink_base.h
     ../../sink/sink_base.cpp

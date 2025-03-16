@@ -12,7 +12,7 @@ public:
     SourceApp(std::string format, int width, int height, int framerate);
     virtual ~SourceApp();
 
-    void start() override;
+    void start(uint64_t position = 0) override;
     void pause() override;
     void putData(uint8_t *data, uint32_t len);
 

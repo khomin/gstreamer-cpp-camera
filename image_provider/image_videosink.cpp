@@ -36,7 +36,7 @@ void ImageVideoSink::start() {
     gst_object_unref (source);
 }
 
-void ImageVideoSink::setImage(int width, int height, uint8_t* data, uint32_t len) {
+void ImageVideoSink::setFrame(uint8_t* data, uint32_t len) {
     std::lock_guard<std::mutex> lk(_lock);
     GstBuffer *buffer = gst_buffer_new_and_alloc(len);
     gst_buffer_fill(buffer, 0, data, len);

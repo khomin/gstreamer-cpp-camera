@@ -11,10 +11,10 @@ class ImageProvider : public QObject, public ImageProviderAbstract
     Q_OBJECT
     Q_PROPERTY(QImage image MEMBER m_image READ image WRITE setImage NOTIFY imageChanged)
 public:
-    explicit ImageProvider(QObject *parent = nullptr);
+    explicit ImageProvider(uint32_t width, uint32_t height, QObject *parent = nullptr);
     virtual ~ImageProvider();
 
-    void setImage(int width, int height, uint8_t* data, uint32_t len) override;
+    void setFrame(uint8_t* data, uint32_t len) override;
     void setImage(QImage const &image);
     QImage image() const;
 
@@ -24,6 +24,8 @@ signals:
 
 private:
     QImage m_image;
+    uint32_t m_width = 0;
+    uint32_t m_height = 0;
 };
 
 #endif // IMAGE_PROVIDER_H

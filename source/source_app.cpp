@@ -99,7 +99,7 @@ SourceApp::~SourceApp() {
     std::cout << TAG << ": destroyed" << std::endl;
 }
 
-void SourceApp::start() {
+void SourceApp::start(uint64_t position) {
     std::lock_guard<std::mutex> lk(m_lock);
     gst_element_set_state(m_pipe, GST_STATE_PLAYING);
 }
