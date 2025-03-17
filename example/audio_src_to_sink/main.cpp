@@ -13,8 +13,8 @@ int main(int argc, char *argv[]) {
             auto sinkAudio = std::make_shared<SinkAudio>();
             auto sinkCallback = std::make_shared<SinkCallback>();
             srcAudio->addSink(sinkCallback);
-
-            sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
+            
+            sinkCallback->onData([=](uint8_t *data, uint32_t len) {
                 sinkAudio->putData(data, len);
             });
             srcAudio->start();

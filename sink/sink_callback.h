@@ -2,7 +2,6 @@
 #define SINK_CALLBACK_H
 
 #include "sink_base.h"
-#include "image_provider/image_provider_abstract.h"
 #include <functional>
 
 class SinkCallback : public SinkBase {
@@ -14,10 +13,10 @@ public:
     void pause() override;
 
     void putSample(GstSample* sample) override;
-    void setDataCb(std::function<void(uint8_t *, uint32_t)> cb);
+    void onData(std::function<void(uint8_t *, uint32_t)> cb);
 
 private:
-    std::function<void(uint8_t *, uint32_t)> m_data_cb;
+    std::function<void(uint8_t *, uint32_t)> m_on_data;
 protected:
     static constexpr auto TAG = "SinkCallback: ";
 };

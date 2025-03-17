@@ -93,11 +93,13 @@ GstFlowReturn SourceAudio::on_sample(GstElement * elt, SourceAudio* data) {
                 auto sinks = data->getSinks();
                 for (auto it: sinks) {
                     if (it != nullptr) {
-                        // if you need caps info
-                        //GstCaps *caps = gst_sample_get_caps(sample);
-                        //const GstStructure *capStr = gst_caps_get_structure(caps, 0);
-                        //std::string capsStr2 = gst_structure_to_string(capStr);
-                        //std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
+#ifdef PRINT_CAPS
+                        GstCaps *caps = gst_sample_get_caps(sample);
+                        const GstStructure *capStr = gst_caps_get_structure(caps, 0);
+                        std::string capsStr2 = gst_structure_to_string(capStr);
+                        std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
+                        gst_caps_unref(caps);
+#endif
                         it->putSample(sample);
                     }
                 }

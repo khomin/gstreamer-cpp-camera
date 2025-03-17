@@ -34,9 +34,29 @@ private:
     static GstFlowReturn on_sample(GstElement * elt, SourceVideoFile* data);
     static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data);
 
+    static constexpr const char* CMD = "filesrc location=%s ! decodebin name=demux demux. ! videoconvert ! fakesink name=sink_out";
+
 //    static constexpr const char* CMD = "filesrc location=%s \
-//            ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! appsink name=sink_out demux. \
-//            ! queue ! audioconvert ! autoaudiosink";
+//            ! decodebin name=demux demux. ! videoconvert ! videoscale ! videorate  \
+//            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out \
+//            demux. ! audioconvert ! autoaudiosink";
+
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux name=demux \
+//        demux.audio_0 ! avdec_aac ! audioconvert ! autoaudiosink sync=false \
+//        demux.video_0 ! avdec_h264 ! videoconvert ! videoscale ! videorate ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false";
+
+//    // works video
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux name=demux \
+//        demux.video_0 ! avdec_h264 ! videoconvert ! videoscale ! videorate ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out";
+
+
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! videorate \
+//        ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 \
+//        ! appsink name=sink_out drop=true sync=false";
+
 
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! decodebin name=demux demux. ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=1280,height=720,framerate=30/1 ! appsink name=sink_out";
@@ -46,14 +66,54 @@ private:
 
 //    filesrc location=/home/khomin/Desktop/test-images/demo.mp4 ! qtdemux ! h264parse ! avdec_h264 ! fakesink
 
+    // 800mb
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! decodebin name=demux demux. \
-//        ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true \
+//        ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true sync=false \
 //        demux. ! queue ! audioconvert ! volume name=volume_control ! autoaudiosink";
 
-    static constexpr const char* CMD = "filesrc location=%s \
-        ! qtdemux ! h264parse ! avdec_h264 \
-        ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink  name=sink_out drop=true sync=false";
+//    leaky=downstream max-size-buffers=1
+
+// try2
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! decodebin name=demux demux. \
+//        ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true sync=false \
+//        demux. ! queue leaky=downstream max-size-buffers=1 ! audioconvert ! volume name=volume_control ! autoaudiosink";
+
+//    // 306mb
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux ! h264parse ! avdec_h264 \
+//        ! queue leaky=downstream max-size-buffers=1 ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true sync=false";
+
+    // good 316mb
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! videorate \
+//        ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 \
+//        ! appsink name=sink_out drop=true sync=false";
+
+//    static constexpr const char* CMD = "filesrc location=%s \
+//           ! qtdemux name=demux demux. \
+//           ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! videorate \
+//           ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 \
+//           ! appsink name=sink_out drop=true sync=false \
+//           demux. ! queue ! audioconvert ! volume name=volume_control ! autoaudiosink";
+
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux name=demux \
+//        demux. ! queue ! audioconvert ! volume name=volume_control ! autoaudiosink \
+//        demux. ! queue ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! videorate ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true sync=false";
+
+    // audiod doesn't work
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! qtdemux name=demux demux. \
+//        ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true sync=false \
+//        demux. ! queue ! audioconvert ! volume name=volume_control ! autoaudiosink";
+
+    // 830mb
+//    static constexpr const char* CMD = "filesrc location=%s \
+//        ! decodebin max-size-time=2000000000 name=demux demux. \
+//        ! queue ! videoconvert ! videoscale ! videorate  ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out drop=true sync=false \
+//        demux. ! queue ! audioconvert ! volume name=volume_control ! autoaudiosink";
 
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! qtdemux ! h264parse ! avdec_h264 \

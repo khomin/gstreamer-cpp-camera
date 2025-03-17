@@ -15,9 +15,9 @@ SourceVideoFile::SourceVideoFile(std::string path,
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
         CMD,
-        path.c_str(),
-        width, height,
-        framerate
+        path.c_str()
+//        width, height,
+//        framerate
     );
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (!m_pipe) {
@@ -41,7 +41,7 @@ SourceVideoFile::SourceVideoFile(std::string path,
     if(volume <= 0) {
         setVolume(volume);
     }
-
+//    GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(m_pipe), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
     gst_object_unref (bus);
     gst_object_unref (sink_out);
     std::cout << TAG << ": created" << std::endl;
@@ -52,6 +52,8 @@ SourceVideoFile::~SourceVideoFile() {
     if (m_pipe) {
         gst_element_set_state(m_pipe, GST_STATE_NULL);
         gst_object_unref(GST_OBJECT(m_pipe));
+        auto count = GST_OBJECT_REFCOUNT_VALUE(m_pipe);
+        std::cout << TAG << ": GST_OBJECT_REFCOUNT: " << count << std::endl;
         m_pipe = nullptr;
     }
     std::cout << TAG << ": destroyed" << std::endl;
@@ -105,11 +107,13 @@ GstFlowReturn SourceVideoFile::on_sample(GstElement * elt, SourceVideoFile* data
                 auto sinks = data->getSinks();
                 for (auto it: sinks) {
                     if (it != nullptr) {
-                        // if you need caps info
-                        // GstCaps *caps = gst_sample_get_caps(sample);
-                        // const GstStructure *capStr = gst_caps_get_structure(caps, 0);
-                        // std::string capsStr2 = gst_structure_to_string(capStr);
-                        // std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
+#ifdef PRINT_CAPS
+                        GstCaps *caps = gst_sample_get_caps(sample);
+                        const GstStructure *capStr = gst_caps_get_structure(caps, 0);
+                        std::string capsStr2 = gst_structure_to_string(capStr);
+                        std::cout << TAG << ": caps: " << capsStr2.c_str() << std::endl;
+                        gst_caps_unref(caps);
+#endif
                         it->putSample(sample);
                     }
                 }
@@ -144,6 +148,7 @@ gboolean SourceVideoFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointe
         /* unhandled message */
         break;
     }
+    gst_message_unref(message);
     return TRUE;
 }
 
