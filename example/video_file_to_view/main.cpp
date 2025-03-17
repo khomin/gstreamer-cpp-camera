@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         };
         int samplesIndex = 0;
 
-        for(int i=0; i<15; i++) {
+        for(int i=0; i<1000; i++) {
             if(samplesIndex >= samples.size()) {
                 samplesIndex = 0;
             }
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
             );
             auto sinkCallback = std::make_shared<SinkCallback>();
 
-            sinkCallback->setDataCb([=](uint8_t *data, uint32_t len) {
+            sinkCallback->onData([=](uint8_t *data, uint32_t len) {
                 launch->imageLeft->setFrame(data, len);
             });
 
@@ -43,10 +43,11 @@ int main(int argc, char *argv[]) {
             sinkCallback->start();
             srcFile->start();
             // let it run
-            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             // reset
             srcFile.reset();
             sinkCallback.reset();
+            std::cout << "round " << i << std::endl;
         }
         std::cout << "done" << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(30));

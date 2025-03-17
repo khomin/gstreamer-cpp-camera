@@ -34,12 +34,12 @@ private:
     static GstFlowReturn on_sample(GstElement * elt, SourceVideoFile* data);
     static gboolean bus_call(GstBus *bus, GstMessage *msg, gpointer data);
 
-    static constexpr const char* CMD = "filesrc location=%s ! decodebin name=demux demux. ! videoconvert ! fakesink name=sink_out";
+//    static constexpr const char* CMD = "filesrc location=%s ! decodebin name=demux demux. ! videoconvert ! fakesink name=sink_out";
 
-//    static constexpr const char* CMD = "filesrc location=%s \
-//            ! decodebin name=demux demux. ! videoconvert ! videoscale ! videorate  \
-//            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out \
-//            demux. ! audioconvert ! autoaudiosink";
+    static constexpr const char* CMD = "filesrc location=%s \
+            ! decodebin name=demux demux. ! videoconvert ! videoscale ! videorate  \
+            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out \
+            demux. ! audioconvert ! autoaudiosink";
 
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! qtdemux name=demux \

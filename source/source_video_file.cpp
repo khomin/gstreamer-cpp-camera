@@ -15,9 +15,9 @@ SourceVideoFile::SourceVideoFile(std::string path,
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
         CMD,
-        path.c_str()
-//        width, height,
-//        framerate
+        path.c_str(),
+        width, height,
+        framerate
     );
     m_pipe = gst_parse_launch((char*)cmdBuf.data(), &error);
     if (!m_pipe) {
@@ -41,7 +41,6 @@ SourceVideoFile::SourceVideoFile(std::string path,
     if(volume <= 0) {
         setVolume(volume);
     }
-//    GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(m_pipe), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
     gst_object_unref (bus);
     gst_object_unref (sink_out);
     std::cout << TAG << ": created" << std::endl;
@@ -135,6 +134,7 @@ gboolean SourceVideoFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointe
         g_print ("Error: %s\n", err->message);
         g_error_free (err);
         g_free (debug);
+        gst_message_unref(message);
         break;
    }
     case GST_MESSAGE_EOS: {
@@ -142,13 +142,13 @@ gboolean SourceVideoFile::on_bus_cb (GstBus * bus, GstMessage * message, gpointe
         if(player->m_running.load() && player->m_loop) {
             gst_element_seek_simple(player->m_pipe, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, 0);
         }
+        gst_message_unref(message);
     }
         break;
     default:
         /* unhandled message */
         break;
     }
-    gst_message_unref(message);
     return TRUE;
 }
 
