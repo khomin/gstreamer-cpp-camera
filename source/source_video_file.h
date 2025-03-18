@@ -36,10 +36,16 @@ private:
 
 //    static constexpr const char* CMD = "filesrc location=%s ! decodebin name=demux demux. ! videoconvert ! fakesink name=sink_out";
 
-    static constexpr const char* CMD = "filesrc location=%s \
-            ! decodebin name=demux demux. ! videoconvert ! videoscale ! videorate  \
-            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out \
-            demux. ! audioconvert ! autoaudiosink";
+    static constexpr const char* CMD_WITH_AUDIO = "filesrc location=%s \
+            ! decodebin name=demux \
+            demux. ! videoconvert ! videoscale ! videorate  \
+            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true \
+            demux. ! audioconvert ! autoaudiosink sync=false";
+
+    static constexpr const char* CMD_NO_AUDIO = "filesrc location=%s \
+            ! decodebin name=demux \
+            demux. ! videoconvert ! videoscale ! videorate  \
+            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true";
 
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! qtdemux name=demux \

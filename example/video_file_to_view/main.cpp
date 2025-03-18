@@ -16,9 +16,11 @@ int main(int argc, char *argv[]) {
 //            "/home/khomin/Desktop/test-images/big_buck_bunny.mp4",
 //            "/home/khomin/Desktop/test-images/sample-15s.mp4",
 //            "/home/khomin/Desktop/test-images/demo.mp4"
-            "/home/khomin/Desktop/test-images/demo.mp4",
-            "/home/khomin/Desktop/test-images/demo.mp4",
-            "/home/khomin/Desktop/test-images/demo.mp4"
+//            "/home/khomin/Desktop/test-images/demo.mp4",
+//            "/home/khomin/Desktop/test-images/demo.mp4",
+//            "/home/khomin/Desktop/test-images/demo.mp4"
+            "/home/khomin/Desktop/test-images/sample-videos/driver-action-recognition.mp4"
+//            "/home/khomin/Desktop/test-images/sample-videos/bolt-multi-size-detection.mp4"
         };
         int samplesIndex = 0;
 
@@ -43,7 +45,7 @@ int main(int argc, char *argv[]) {
             sinkCallback->start();
             srcFile->start();
             // let it run
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
             // reset
             srcFile.reset();
             sinkCallback.reset();

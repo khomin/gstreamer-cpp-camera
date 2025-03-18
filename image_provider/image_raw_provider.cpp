@@ -9,6 +9,7 @@ ImageRawProvider::ImageRawProvider(uint32_t id, int width, int height) {
     int len = width * height * 4;
     m_buf = new uint8_t[len];
     m_buf_len = len;
+    memset(m_buf, 0, m_buf_len);
 }
 
 ImageRawProvider::~ImageRawProvider() {

@@ -1,4 +1,5 @@
 #include "source_video_file.h"
+#include <gst/pbutils/pbutils.h>
 #include "config.h"
 #include <iostream>
 #include <thread>
@@ -12,9 +13,42 @@ SourceVideoFile::SourceVideoFile(std::string path,
     m_loop = loop;
     m_pipe = NULL;
     m_running = false;
+
+    GError *err = NULL;
+    GstDiscoverer *discoverer = gst_discoverer_new(5 * GST_SECOND, &err);
+    if (!discoverer) {
+        g_printerr("Failed to create discoverer: %s\n", err->message);
+        g_clear_error(&err);
+        return;
+    }
+    GstDiscovererInfo *info = gst_discoverer_discover_uri(discoverer, ("file:///" + path).c_str(), &err);
+    if (!info) {
+        g_printerr("Failed to get media info: %s\n", err->message);
+        g_clear_error(&err);
+        g_object_unref(discoverer);
+        return;
+    }
+    bool has_audio = false;
+    bool has_video = false;
+    // audio streams
+    auto streams = gst_discoverer_info_get_audio_streams(info);
+    for (const GList *l = streams; l != NULL; l = l->next) {
+        has_audio = true;
+    }
+    // video streams
+    streams = gst_discoverer_info_get_video_streams(info);
+    for (const GList *l = streams; l != NULL; l = l->next) {
+        has_video = true;
+    }
+
+    if(!has_audio && !has_video) {
+        std::cerr << TAG << "no streams" << std::endl;
+        return;
+    }
+
     auto cmdBuf = std::vector<uint8_t>(Config::CMD_BUFFER_LEN);
     sprintf((char*)cmdBuf.data(),
-        CMD,
+        has_audio ? CMD_WITH_AUDIO : CMD_NO_AUDIO,
         path.c_str(),
         width, height,
         framerate
@@ -41,6 +75,9 @@ SourceVideoFile::SourceVideoFile(std::string path,
     if(volume <= 0) {
         setVolume(volume);
     }
+    // Cleanup
+    gst_discoverer_info_unref(info);
+    g_object_unref(discoverer);
     gst_object_unref (bus);
     gst_object_unref (sink_out);
     std::cout << TAG << ": created" << std::endl;

@@ -98,6 +98,7 @@ elseif (UNIX AND NOT APPLE)
     pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
     pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
     pkg_check_modules(GST_VIDEO REQUIRED gstreamer-video-1.0)
+    pkg_check_modules(GST_VIDEO REQUIRED gstreamer-pbutils-1.0)
     set(LIBRARIES
         ${GST_APP_LIBRARIES}
         ${GST_VIDEO_LIBRARIES}
