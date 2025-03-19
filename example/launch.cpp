@@ -37,10 +37,10 @@ int Launch::runLoop(int argc, char *argv[], std::function<void()> v) {
     gst_init(NULL, NULL);
     gst_static_plugin_register();
     gst_debug_set_active(TRUE);
-        gst_debug_set_default_threshold(GstDebugLevel(GST_LEVEL_WARNING | GST_LEVEL_ERROR));
+    gst_debug_set_default_threshold(GstDebugLevel(GST_LEVEL_WARNING | GST_LEVEL_ERROR));
 //    gst_debug_set_default_threshold(GstDebugLevel(GST_LEVEL_WARNING | GST_LEVEL_INFO));
 
-    loop = g_main_loop_new(NULL, FALSE);
+//    loop = g_main_loop_new(NULL, FALSE);
 
     auto tr = QThread::create([&] {
         v();

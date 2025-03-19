@@ -36,16 +36,25 @@ private:
 
 //    static constexpr const char* CMD = "filesrc location=%s ! decodebin name=demux demux. ! videoconvert ! fakesink name=sink_out";
 
-    static constexpr const char* CMD_WITH_AUDIO = "filesrc location=%s \
-            ! decodebin name=demux \
-            demux. ! videoconvert ! videoscale ! videorate  \
-            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true \
-            demux. ! audioconvert ! autoaudiosink sync=false";
+//    static constexpr const char* CMD_WITH_AUDIO = "filesrc location=%s \
+//            ! decodebin name=demux \
+//            demux. ! videoconvert ! videoscale ! videorate  \
+//            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true \
+//            demux. ! audioconvert ! autoaudiosink sync=false";
 
-    static constexpr const char* CMD_NO_AUDIO = "filesrc location=%s \
-            ! decodebin name=demux \
-            demux. ! videoconvert ! videoscale ! videorate  \
-            ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true";
+//static constexpr const char* CMD_WITH_AUDIO = "filesrc location=%s ! qtdemux name=demux \
+//demux.audio_0 ! avdec_aac ! audioconvert ! autoaudiosink \
+//demux.video_0 ! avdec_h264 ! videoconvert ! videoscale ! videorate ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true";
+
+
+    static constexpr const char* CMD_WITH_AUDIO =
+        "filesrc location=%s ! qtdemux name=demux \
+        demux.audio_0 ! queue leaky=upstream max-size-buffers=10 ! avdec_aac ! audioconvert ! autoaudiosink \
+        demux.video_0 ! queue leaky=upstream max-size-buffers=10 ! avdec_h264  ! videoconvert ! videoscale ! videorate ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true";
+
+    static constexpr const char* CMD_NO_AUDIO =
+        "filesrc location=%s ! qtdemux name=demux \
+        demux.video_0 ! queue ! avdec_h264 ! videoconvert ! videoscale ! videorate ! video/x-raw,format=RGBA,width=%d,height=%d,framerate=%d/1 ! appsink name=sink_out sync=false drop=true";
 
 //    static constexpr const char* CMD = "filesrc location=%s \
 //        ! qtdemux name=demux \

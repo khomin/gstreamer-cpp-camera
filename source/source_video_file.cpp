@@ -86,7 +86,11 @@ SourceVideoFile::SourceVideoFile(std::string path,
 SourceVideoFile::~SourceVideoFile() {
     std::lock_guard<std::mutex> lk(m_lock);
     if (m_pipe) {
+        gst_element_send_event(m_pipe, gst_event_new_eos());
         gst_element_set_state(m_pipe, GST_STATE_NULL);
+        auto bus = gst_pipeline_get_bus (GST_PIPELINE(m_pipe));
+        gst_bus_remove_watch(bus);
+        gst_object_unref (bus);
         gst_object_unref(GST_OBJECT(m_pipe));
         auto count = GST_OBJECT_REFCOUNT_VALUE(m_pipe);
         std::cout << TAG << ": GST_OBJECT_REFCOUNT: " << count << std::endl;
