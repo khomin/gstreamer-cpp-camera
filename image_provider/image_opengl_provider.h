@@ -6,7 +6,7 @@
 
 class ImageOpenGlProvider : public ImageProviderAbstract {
 public:
-    ImageOpenGlProvider(uint32_t width, uint32_t height, uint64_t fl_texture_id, uint64_t texture_addr, uint64_t frame_buf_addr);
+    ImageOpenGlProvider(uint32_t width, uint32_t height, uint64_t fl_texture_id,  uint64_t frame_buf_addr);
     ~ImageOpenGlProvider() override;
     void setFrame(uint8_t* data, uint32_t len) override;
     void start() override;
@@ -21,11 +21,8 @@ public:
 private:
     uint32_t _width = 0;
     uint32_t _height = 0;
-    uint64_t _texture_addr = 0;
     uint64_t _frame_buf_addr = 0;
     uint64_t _fl_texture_id = 0;
-    uint32_t _gl_id = 0;
-    uint32_t _fbo = 0;
 };
 
 #endif // IMG_OPENGL_PROVIDER_H
